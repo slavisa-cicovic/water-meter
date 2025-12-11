@@ -19,7 +19,6 @@ import { componentsOverrides } from './overrides';
 import { presets } from './options/presets';
 import { darkMode } from './options/dark-mode';
 import { contrast } from './options/contrast';
-import RTL, { direction } from './options/right-to-left';
 //
 import NextAppDirEmotionCacheProvider from './next-emotion-cache';
 
@@ -40,8 +39,6 @@ export default function ThemeProvider({ children }: Props) {
 
   const contrastOption = contrast(settings.themeContrast === 'bold', settings.themeMode);
 
-  const directionOption = direction(settings.themeDirection);
-
   const baseOption = useMemo(
     () => ({
       palette: palette('light'),
@@ -59,7 +56,6 @@ export default function ThemeProvider({ children }: Props) {
         // Base
         baseOption,
         // Direction: remove if not in use
-        directionOption,
         // Dark mode: remove if not in use
         darkModeOption,
         // Presets: remove if not in use
@@ -67,7 +63,7 @@ export default function ThemeProvider({ children }: Props) {
         // Contrast: remove if not in use
         contrastOption.theme
       ),
-    [baseOption, directionOption, darkModeOption, presetsOption, contrastOption.theme]
+    [baseOption, darkModeOption, presetsOption, contrastOption.theme]
   );
 
   const theme = createTheme(memoizedValue as ThemeOptions);
@@ -82,10 +78,8 @@ export default function ThemeProvider({ children }: Props) {
   return (
     <NextAppDirEmotionCacheProvider options={{ key: 'css' }}>
       <MuiThemeProvider theme={themeWithLocale}>
-        <RTL themeDirection={settings.themeDirection}>
           <CssBaseline />
           {children}
-        </RTL>
       </MuiThemeProvider>
     </NextAppDirEmotionCacheProvider>
   );

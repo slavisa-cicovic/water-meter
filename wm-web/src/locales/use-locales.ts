@@ -23,7 +23,6 @@ export default function useLocales() {
   const onChangeLang = useCallback(
     (newlang: string) => {
       i18n.changeLanguage(newlang);
-      settings.onChangeDirectionByLang(newlang);
     },
     [i18n, settings]
   );

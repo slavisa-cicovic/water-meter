@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "AetherMobile",
-    "slug": "aether-mobile",
+    "name": "WaterMeterMobile",
+    "slug": "water-meter-mobile",
     "scheme": "aemobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -14,11 +14,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "bundleIdentifier": "com.aethernet.mobile",
+      "bundleIdentifier": "com.watermeter.mobile",
       "supportsTablet": true
     },
     "android": {
-      "package": "com.aethernet.mobile",
+      "package": "com.watermeter.mobile",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",

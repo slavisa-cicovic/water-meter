@@ -26,28 +26,20 @@ export const fetcher = async (args: string | [string, AxiosRequestConfig]) => {
 // ----------------------------------------------------------------------
 
 export const endpoints = {
-  chat: '/api/chat',
-  kanban: '/api/kanban',
-  calendar: '/api/calendar',
   auth: {
     me: '/api/auth/me',
     login: '/api/auth/login',
     register: '/api/auth/register',
   },
-  mail: {
-    list: '/api/mail/list',
-    details: '/api/mail/details',
-    labels: '/api/mail/labels',
+  accounts: {
+    list: '/api/accounts',
+    details: (id: string) => `/api/accounts/${id}`,
+    registerConsumer: '/api/accounts/consumer',
+    registerStaff: '/api/accounts/staff',
+    verify: '/api/accounts/verify',
   },
-  post: {
-    list: '/api/post/list',
-    details: '/api/post/details',
-    latest: '/api/post/latest',
-    search: '/api/post/search',
-  },
-  product: {
-    list: '/api/product/list',
-    details: '/api/product/details',
-    search: '/api/product/search',
+  domain: {
+    list: '/api/domain/list',
+    details: '/api/domain/details',
   },
 };

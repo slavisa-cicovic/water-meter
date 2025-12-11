@@ -15,7 +15,6 @@ import Logo from 'src/components/logo';
 import { RouterLink } from 'src/routes/components';
 //
 import { HEADER } from '../config-layout';
-import HeaderShadow from './header-shadow';
 import SettingsButton from './settings-button';
 
 // ----------------------------------------------------------------------
@@ -30,10 +29,6 @@ export default function HeaderSimple() {
       <Toolbar
         sx={{
           justifyContent: 'space-between',
-          height: {
-            xs: HEADER.H_MOBILE,
-            md: HEADER.H_DESKTOP,
-          },
           transition: theme.transitions.create(['height'], {
             easing: theme.transitions.easing.easeInOut,
             duration: theme.transitions.duration.shorter,
@@ -42,29 +37,14 @@ export default function HeaderSimple() {
             ...bgBlur({
               color: theme.palette.background.default,
             }),
-            height: {
-              md: HEADER.H_DESKTOP_OFFSET,
-            },
           }),
         }}
       >
         <Logo />
-
         <Stack direction="row" alignItems="center" spacing={1}>
           <SettingsButton />
-
-          <Link
-            href={paths.faqs}
-            component={RouterLink}
-            color="inherit"
-            sx={{ typography: 'subtitle2' }}
-          >
-            Need help?
-          </Link>
         </Stack>
       </Toolbar>
-
-      {offsetTop && <HeaderShadow />}
     </AppBar>
   );
 }

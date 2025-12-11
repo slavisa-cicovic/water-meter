@@ -192,6 +192,13 @@ export function useNavData() {
             ],
           },
 
+          // ACCOUNTS
+          {
+            title: 'accounts',
+            path: paths.dashboard.accounts.root,
+            icon: ICONS.user,
+          },
+
           // FILE MANAGER
           {
             title: t('file_manager'),

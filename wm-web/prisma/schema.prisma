@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum AccountRole {
+  consumer
+  staff_field
+  staff_backoffice
+}
+
+enum VerificationStatus {
+  pending
+  verified
+  rejected
+}
+
+enum StaffRole {
+  field
+  backoffice
+}
+
+model Account {
+  id                 String              @id @default(uuid())
+  firstName          String
+  lastName           String
+  email              String              @unique
+  phone              String?             @unique
+  address            String
+  passwordHash       String
+  role               AccountRole
+  verificationStatus VerificationStatus   @default(pending)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  consumerProfile ConsumerProfile?
+  staffProfile     StaffProfile?
+  verificationLogs VerificationLog[]
+}
+
+model ConsumerProfile {
+  id          Int     @id @default(autoincrement())
+  accountId   String  @unique
+  householdSize Int
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+model StaffProfile {
+  id        Int      @id @default(autoincrement())
+  accountId String   @unique
+  staffRole StaffRole
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+model VerificationLog {
+  id         String             @id @default(uuid())
+  accountId  String
+  reviewerId String
+  status     VerificationStatus
+  note       String?
+  reviewedAt DateTime           @default(now())
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
