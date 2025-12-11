@@ -2,6 +2,7 @@
 
 import { useTranslation } from 'react-i18next';
 import { useCallback } from 'react';
+import 'src/locales/i18n';
 // utils
 import { localStorageGetItem } from 'src/utils/storage-available';
 // components
