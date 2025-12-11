@@ -70,9 +70,17 @@ Serbian localization will be added later.
 - generate UI (list/create/edit/detail)
 - ensure imports, paths and structure follow rules above
 
+## Plan status legend (use in all plan documents)
+- `[ ]` not started
+- `[p]` in progress
+- `[d]` done
+- `[b]` blocked
+- `[r]` in review
+- `[t]` testing/QA
+- `[h]` on hold
+
 ## DO NOT:
 - add fancy UI components that aren't needed
 - add icons, illustrations, analytics, charts unless asked
 - change layout structure
 - install new libraries without confirmation
-

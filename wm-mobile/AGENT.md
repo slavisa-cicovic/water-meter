@@ -79,3 +79,12 @@ Agent MUST NOT implement offline engine automatically unless requested; only fol
 - sync with backend
 - local persistence of unsent readings
 - minimal UI, focus on functionality
+
+## Plan status legend (use in all plan documents)
+- `[ ]` not started
+- `[p]` in progress
+- `[d]` done
+- `[b]` blocked
+- `[r]` in review
+- `[t]` testing/QA
+- `[h]` on hold
