@@ -11,6 +11,7 @@ import 'simplebar-react/dist/simplebar.min.css';
 import { LocalizationProvider } from 'src/locales';
 // theme
 import ThemeProvider from 'src/theme';
+import { MotionLazy } from 'src/components/animate/motion-lazy';
 import { primaryFont } from 'src/theme/typography';
 // components
 import { SettingsProvider, SettingsDrawer } from 'src/components/settings';
@@ -58,8 +59,10 @@ export default function RootLayout({ children }: Props) {
               }}
             >
               <ThemeProvider>
+                 <MotionLazy>
                       <SettingsDrawer />
                       <AuthConsumer>{children}</AuthConsumer>
+                 </MotionLazy>
               </ThemeProvider>
             </SettingsProvider>
           </LocalizationProvider>
