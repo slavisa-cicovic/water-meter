@@ -1,29 +1,27 @@
 // @mui
-import { useTheme } from '@mui/material/styles';
+import AppBar from '@mui/material/AppBar';
+import Badge, { badgeClasses } from '@mui/material/Badge';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Container from '@mui/material/Container';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
-import AppBar from '@mui/material/AppBar';
-import Button from '@mui/material/Button';
+import { useTheme } from '@mui/material/styles';
 import Toolbar from '@mui/material/Toolbar';
-import Container from '@mui/material/Container';
-import Badge, { badgeClasses } from '@mui/material/Badge';
 // hooks
 import { useOffSetTop } from 'src/hooks/use-off-set-top';
 // theme
 import { bgBlur } from 'src/theme/css';
-// routes
-import { paths } from 'src/routes/paths';
 // components
-import Logo from 'src/components/logo';
+import pkg from 'package.json';
 import Label from 'src/components/label';
-import { version } from 'package.json';
+import Logo from 'src/components/logo';
 //
 import { HEADER } from '../config-layout';
 import { navConfig } from './config-navigation';
 import NavDesktop from './nav/desktop';
 //
-import { SettingsButton, LoginButton } from '../_common';
+import { LoginButton, SettingsButton } from '../_common';
 
 // ----------------------------------------------------------------------
 
@@ -62,7 +60,7 @@ export default function Header() {
             badgeContent={
               <Link href='paths.changelog' target="_blank" rel="noopener" underline="none" sx={{ mt: 2 }}>
                 <Label color="info" sx={{ textTransform: 'unset', height: 22 }}>
-                  v{version}
+                  v{pkg.version}
                 </Label>
               </Link>
             }
