@@ -17,10 +17,8 @@ export const paths = {
   page500: '/error/500',
   // AUTH
   auth: {
-    jwt: {
-      login: `${ROOTS.AUTH}/jwt/login`,
-      register: `${ROOTS.AUTH}/jwt/register`,
-    },
+      login: `${ROOTS.AUTH}/login`,
+      register: `${ROOTS.AUTH}/register`,
   },
   // DASHBOARD
   dashboard: {
