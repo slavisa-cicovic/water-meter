@@ -27,10 +27,8 @@ export default function AuthModernLayout({ children }: Props) {
       }}>
         <Card
           sx={{
-            mt: 12,
-            ml: 4,
             width: 920,
-            height: 460,
+            height: 520,
           }}
         >
           {children}
