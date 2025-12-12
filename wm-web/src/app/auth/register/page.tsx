@@ -1,9 +1,9 @@
-import { AccountsListView } from 'src/sections/accounts/view/accounts-list-view';
+import { RegisterView } from "src/sections/auth";
 
 export const metadata = {
   title: 'Register',
 };
 
-export default function LoginPage() {
-  return <>AccountsListView </>;
+export default function RegistrationPage() {
+  return <RegisterView />;
 }
