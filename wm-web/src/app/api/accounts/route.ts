@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AccountsService } from 'src/services/accountsService';
+import { requireAccountsAccess } from 'src/services/authGuardAccounts';
 
 export const GET = async (req: NextRequest) => {
+  const guard = requireAccountsAccess(req);
+  if (!guard.ok) return guard.response;
+  const viewerRole = guard.role;
+
   const { searchParams } = new URL(req.url);
   const search = searchParams.get('search') || undefined;
   const orderBy = (searchParams.get('orderBy') || undefined) as
@@ -21,10 +26,11 @@ export const GET = async (req: NextRequest) => {
     search,
     orderBy,
     order,
-    type,
+    type: viewerRole === 'staff_backoffice' ? 'consumer' : type,
     status,
     page: page ? Number(page) : 0,
     pageSize: pageSize ? Number(pageSize) : 25,
+    viewerRole,
   });
 
   return NextResponse.json({ accounts, total });

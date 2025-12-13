@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AccountsService } from 'src/services/accountsService';
+import { requireAccountsAccess } from 'src/services/authGuardAccounts';
 
 export const POST = async (req: NextRequest) => {
+  const guard = requireAccountsAccess(req);
+  if (!guard.ok) return guard.response;
+
   const body = await req.json();
   const result = await AccountsService.verify(body);
 

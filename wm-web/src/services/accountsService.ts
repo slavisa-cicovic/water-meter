@@ -185,14 +185,25 @@ export const AccountsService = {
     status?: VerificationStatus;
     page?: number;
     pageSize?: number;
+    viewerRole?: 'admin' | 'staff_backoffice';
   } = {}): Promise<{ accounts: AccountRow[]; total: number }> {
     const { accounts, total } = await AccountRepository.list(params);
     return { accounts: accounts.map(mapAccountToRow), total };
   },
 
-  async findById(id: string): Promise<AccountRow | null> {
+  async findById(id: string, viewerRole?: 'admin' | 'staff_backoffice'): Promise<AccountRow | null> {
     const acct = await AccountRepository.findById(id);
 
-    return acct ? mapAccountToRow(acct) : null;
+    if (!acct) return null;
+
+    if (viewerRole === 'staff_backoffice' && acct.role !== 'consumer') {
+      return null;
+    }
+
+    if (viewerRole === 'admin' && acct.role === 'consumer') {
+      return null;
+    }
+
+    return mapAccountToRow(acct);
   },
 };

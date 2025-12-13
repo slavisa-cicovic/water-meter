@@ -111,16 +111,16 @@ export const AccountRepository = {
         }
       : undefined;
 
-    const where = {
+    const where: any = {
       ...(searchFilter && searchFilter),
-      ...(type && {
-        role:
-          type === "consumer"
-            ? AccountRole.consumer
-            : { in: [AccountRole.staff_field, AccountRole.staff_backoffice] },
-      }),
       ...(status && { verificationStatus: status }),
     };
+
+    if (type === "consumer") {
+      where.role = AccountRole.consumer;
+    } else if (type === "staff") {
+      where.role = { in: [AccountRole.staff_field, AccountRole.staff_backoffice] };
+    }
 
     const orderByClause =
       orderBy === "name"
