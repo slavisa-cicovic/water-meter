@@ -8,6 +8,7 @@ datasource db {
 }
 
 enum AccountRole {
+  admin
   consumer
   staff_field
   staff_backoffice

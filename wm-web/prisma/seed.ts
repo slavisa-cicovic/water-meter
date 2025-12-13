@@ -24,7 +24,29 @@ type StaffSeed = {
   password: string;
 };
 
+type AdminSeed = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+};
+
 const reviewerId = 'seed-admin';
+
+const admins: AdminSeed[] = [
+  {
+    firstName: 'System',
+    lastName: 'Admin',
+    email: 'admin@example.com',
+    password: 'password123',
+  },
+  {
+    firstName: 'Ops',
+    lastName: 'Lead',
+    email: 'ops.lead@example.com',
+    password: 'password123',
+  },
+];
 
 const consumers: ConsumerSeed[] = [
   {
@@ -139,7 +161,7 @@ async function seedConsumers() {
         phone: c.phone,
         address: c.address,
         passwordHash: c.password, // intentionally plain text per current choice
-        role: 'consumer',
+        role: AccountRole.consumer,
         verificationStatus: c.verificationStatus,
         consumerProfile: {
           create: {
@@ -160,6 +182,120 @@ async function seedConsumers() {
     });
     console.log(`Seeded consumer ${account.email} (${account.verificationStatus})`);
   }
+}
+
+async function seedAdmins() {
+  for (const a of admins) {
+    const account = await prisma.account.create({
+      data: {
+        firstName: a.firstName,
+        lastName: a.lastName,
+        email: a.email,
+        passwordHash: a.password,
+        role: AccountRole.admin,
+        address: 'HQ',
+        verificationStatus: 'verified',
+        verificationLogs: {
+          create: {
+            reviewerId,
+            status: 'verified',
+            note: 'Seeded admin',
+          },
+        },
+      },
+    });
+    console.log(`Seeded admin ${account.email}`);
+  }
+}
+
+async function seedBulkConsumers() {
+  const bulk: ConsumerSeed[] = [];
+  for (let i = 1; i <= 50; i += 1) {
+    bulk.push({
+      firstName: `Consumer${i}`,
+      lastName: 'Test',
+      email: `consumer${i}@example.com`,
+      address: `Test Address ${i}`,
+      householdSize: (i % 5) + 1,
+      verificationStatus: i % 3 === 0 ? 'pending' : 'verified',
+      password: 'password123',
+    });
+  }
+
+  for (const c of bulk) {
+    await prisma.account.create({
+      data: {
+        firstName: c.firstName,
+        lastName: c.lastName,
+        email: c.email,
+        address: c.address,
+        passwordHash: c.password,
+        role: AccountRole.consumer,
+        verificationStatus: c.verificationStatus,
+        consumerProfile: {
+          create: {
+            householdSize: c.householdSize,
+          },
+        },
+        verificationLogs:
+          c.verificationStatus !== 'pending'
+            ? {
+                create: {
+                  reviewerId,
+                  status: c.verificationStatus,
+                  note: `Seeded as ${c.verificationStatus}`,
+                },
+              }
+            : undefined,
+      },
+    });
+  }
+  console.log('Seeded 50 bulk consumers');
+}
+
+async function seedExtraStaffField(count = 3) {
+  const extra: StaffSeed[] = [];
+  for (let i = 1; i <= count; i += 1) {
+    extra.push({
+      firstName: `Field${i}`,
+      lastName: 'Worker',
+      email: `field${i}@example.com`,
+      address: `Field Address ${i}`,
+      staffRole: 'field',
+      verificationStatus: i % 2 === 0 ? 'verified' : 'pending',
+      password: 'password123',
+    });
+  }
+
+  for (const s of extra) {
+    await prisma.account.create({
+      data: {
+        firstName: s.firstName,
+        lastName: s.lastName,
+        email: s.email,
+        address: s.address,
+        passwordHash: s.password,
+        role: 'staff_field',
+        verificationStatus: s.verificationStatus,
+        staffProfile: {
+          create: {
+            staffRole: s.staffRole,
+          },
+        },
+        verificationLogs:
+          s.verificationStatus !== 'pending'
+            ? {
+                create: {
+                  reviewerId,
+                  status: s.verificationStatus,
+                  note: `Seeded as ${s.verificationStatus}`,
+                },
+              }
+            : undefined,
+      },
+    });
+  }
+  console.log(`Seeded ${count} extra staff_field`);
 }
 
 async function seedStaff() {
@@ -197,8 +333,11 @@ async function seedStaff() {
 
 async function main() {
   await clearData();
+  await seedAdmins();
   await seedConsumers();
+  await seedBulkConsumers();
   await seedStaff();
+  await seedExtraStaffField();
 }
 
 main()

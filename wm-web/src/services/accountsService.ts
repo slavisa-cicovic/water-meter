@@ -13,6 +13,7 @@ import {
   validateVerificationAction,
 } from 'src/validation/accounts';
 import { AccountRepository } from 'src/repositories/accountRepository';
+import { AccountRole } from '@prisma/client';
 
 const toAccountRole = (staffRole?: string) => (staffRole === 'backoffice' ? 'staff_backoffice' : 'staff_field');
 
@@ -187,7 +188,19 @@ export const AccountsService = {
     pageSize?: number;
     viewerRole?: 'admin' | 'staff_backoffice';
   } = {}): Promise<{ accounts: AccountRow[]; total: number }> {
-    const { accounts, total } = await AccountRepository.list(params);
+    const { viewerRole, ...rest } = params;
+
+    const allowedRoles =
+      viewerRole === 'staff_backoffice'
+        ? [AccountRole.consumer]
+        : viewerRole === 'admin'
+        ? [AccountRole.admin, AccountRole.staff_backoffice]
+        : undefined;
+
+    const { accounts, total } = await AccountRepository.list({
+      ...rest,
+      allowedRoles,
+    });
     return { accounts: accounts.map(mapAccountToRow), total };
   },
 
@@ -200,7 +213,7 @@ export const AccountsService = {
       return null;
     }
 
-    if (viewerRole === 'admin' && acct.role === 'consumer') {
+    if (viewerRole === 'admin' && (acct.role === 'consumer' || acct.role === 'staff_field')) {
       return null;
     }
 

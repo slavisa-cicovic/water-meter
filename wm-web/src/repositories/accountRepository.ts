@@ -10,6 +10,7 @@ type ListParams = {
   status?: VerificationStatus;
   page?: number;
   pageSize?: number;
+  allowedRoles?: AccountRole[];
 };
 
 export const AccountRepository = {
@@ -98,7 +99,16 @@ export const AccountRepository = {
   },
 
   async list(params: ListParams) {
-    const { search, type, status, orderBy = "createdAt", order = "desc", page = 0, pageSize = 25 } = params;
+    const {
+      search,
+      type,
+      status,
+      orderBy = "createdAt",
+      order = "desc",
+      page = 0,
+      pageSize = 25,
+      allowedRoles,
+    } = params;
 
     const searchFilter = search
       ? {
@@ -116,7 +126,9 @@ export const AccountRepository = {
       ...(status && { verificationStatus: status }),
     };
 
-    if (type === "consumer") {
+    if (allowedRoles && allowedRoles.length) {
+      where.role = { in: allowedRoles };
+    } else if (type === "consumer") {
       where.role = AccountRole.consumer;
     } else if (type === "staff") {
       where.role = { in: [AccountRole.staff_field, AccountRole.staff_backoffice] };
