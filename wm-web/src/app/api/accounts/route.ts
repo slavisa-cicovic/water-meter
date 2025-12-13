@@ -5,7 +5,7 @@ import { requireAccountsAccess } from 'src/services/authGuardAccounts';
 export const GET = async (req: NextRequest) => {
   const guard = requireAccountsAccess(req);
   if (!guard.ok) return guard.response;
-  const viewerRole = guard.role;
+  const viewerRole = guard.role === 'admin' || guard.role === 'staff_backoffice' ? guard.role : undefined;
 
   const { searchParams } = new URL(req.url);
   const search = searchParams.get('search') || undefined;
