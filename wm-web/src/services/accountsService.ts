@@ -1,6 +1,6 @@
-import prisma from 'src/utils/prisma';
 import { TokenService } from './tokenService';
 import {
+  AccountRow,
   ConsumerRegistrationInput,
   StaffRegistrationInput,
   VerificationAction,
@@ -12,8 +12,34 @@ import {
   validateStaffRegistration,
   validateVerificationAction,
 } from 'src/validation/accounts';
+import { AccountRepository } from 'src/repositories/accountRepository';
 
 const toAccountRole = (staffRole?: string) => (staffRole === 'backoffice' ? 'staff_backoffice' : 'staff_field');
+
+const mapAccountToRow = (acct: any): AccountRow => ({
+  id: acct.id,
+  type: acct.role === 'consumer' ? 'consumer' : 'staff',
+  verificationStatus: acct.verificationStatus as VerificationStatus,
+  createdAt: acct.createdAt?.toISOString?.() ?? acct.createdAt,
+  updatedAt: acct.updatedAt?.toISOString?.() ?? acct.updatedAt,
+  data: {
+    firstName: acct.firstName,
+    lastName: acct.lastName,
+    email: acct.email,
+    phone: acct.phone || undefined,
+    address: acct.address,
+    householdSize: acct.consumerProfile?.householdSize,
+    staffRole: acct.staffProfile?.staffRole,
+  },
+  verificationLog: acct.verificationLogs?.map((log: any) => ({
+    id: log.id,
+    accountId: log.accountId,
+    reviewerId: log.reviewerId,
+    status: log.status as VerificationStatus,
+    note: log.note || undefined,
+    reviewedAt: log.reviewedAt.toISOString(),
+  })),
+});
 
 export const AccountsService = {
   async registerConsumer(input: ConsumerRegistrationInput) {
@@ -23,21 +49,14 @@ export const AccountsService = {
     }
 
     try {
-      const account = await prisma.account.create({
-        data: {
-          firstName: input.firstName,
-          lastName: input.lastName,
-          email: input.email,
-          phone: input.phone,
-          address: input.address,
-          passwordHash: input.password, // TODO: hash password
-          role: 'consumer',
-          consumerProfile: {
-            create: {
-              householdSize: input.householdSize,
-            },
-          },
-        },
+      const account = await AccountRepository.createConsumer({
+        firstName: input.firstName,
+        lastName: input.lastName,
+        email: input.email,
+        phone: input.phone,
+        address: input.address,
+        password: input.password, // TODO: hash password
+        householdSize: input.householdSize,
       });
 
       return {
@@ -67,21 +86,15 @@ export const AccountsService = {
     }
 
     try {
-      const account = await prisma.account.create({
-        data: {
-          firstName: input.firstName,
-          lastName: input.lastName,
-          email: input.email,
-          phone: input.phone,
-          address: input.address,
-          passwordHash: input.password, // TODO: hash password
-          role: toAccountRole(input.staffRole),
-          staffProfile: {
-            create: {
-              staffRole: input.staffRole,
-            },
-          },
-        },
+      const account = await AccountRepository.createStaff({
+        firstName: input.firstName,
+        lastName: input.lastName,
+        email: input.email,
+        phone: input.phone,
+        address: input.address,
+        password: input.password, // TODO: hash password
+        staffRole: input.staffRole,
+        role: toAccountRole(input.staffRole),
       });
 
       return {
@@ -111,10 +124,7 @@ export const AccountsService = {
     }
 
     try {
-      const account = await prisma.account.findUnique({
-        where: { id: action.accountId },
-        include: { verificationLogs: true },
-      });
+      const account = await AccountRepository.findById(action.accountId);
 
       if (!account) {
         return { success: false, error: 'NOT_FOUND' };
@@ -128,21 +138,17 @@ export const AccountsService = {
         return { success: false, error: 'INVALID_TRANSITION' };
       }
 
-      const updated = await prisma.account.update({
-        where: { id: action.accountId },
-        data: {
-          verificationStatus: action.status,
-          verificationLogs: {
-            create: {
-              reviewerId: action.reviewerId,
-              status: action.status,
-              note: action.note,
-              reviewedAt: action.reviewedAt ? new Date(action.reviewedAt) : undefined,
-            },
-          },
-        },
-        include: { verificationLogs: { orderBy: { reviewedAt: 'desc' }, take: 1 } },
-      });
+      if (!action.reviewerId) {
+        return { success: false, error: 'MISSING_REVIEWER' };
+      }
+
+      const updated = await AccountRepository.updateVerification(
+        action.accountId,
+        action.status,
+        action.reviewerId,
+        action.note,
+        action.reviewedAt
+      );
 
       const auditEntry = updated.verificationLogs[0];
 
@@ -171,50 +177,22 @@ export const AccountsService = {
     }
   },
 
-  async list() {
-    const accounts = await prisma.account.findMany({
-      include: {
-        consumerProfile: true,
-        staffProfile: true,
-        verificationLogs: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    return accounts.map((acct) => ({
-      id: acct.id,
-      type: acct.role === 'consumer' ? 'consumer' : 'staff',
-      verificationStatus: acct.verificationStatus as VerificationStatus,
-      createdAt: acct.createdAt.toISOString(),
-      updatedAt: acct.updatedAt.toISOString(),
-      data: {
-        firstName: acct.firstName,
-        lastName: acct.lastName,
-        email: acct.email,
-        phone: acct.phone || undefined,
-        address: acct.address,
-        householdSize: acct.consumerProfile?.householdSize,
-        staffRole: acct.staffProfile?.staffRole,
-      },
-      verificationLog: acct.verificationLogs.map((log) => ({
-        id: log.id,
-        accountId: log.accountId,
-        reviewerId: log.reviewerId,
-        status: log.status as VerificationStatus,
-        note: log.note || undefined,
-        reviewedAt: log.reviewedAt.toISOString(),
-      })),
-    }));
+  async list(params: {
+    search?: string;
+    orderBy?: 'createdAt' | 'verificationStatus' | 'email' | 'name' | 'type';
+    order?: 'asc' | 'desc';
+    type?: 'consumer' | 'staff';
+    status?: VerificationStatus;
+    page?: number;
+    pageSize?: number;
+  } = {}): Promise<{ accounts: AccountRow[]; total: number }> {
+    const { accounts, total } = await AccountRepository.list(params);
+    return { accounts: accounts.map(mapAccountToRow), total };
   },
 
-  async findById(id: string) {
-    return prisma.account.findUnique({
-      where: { id },
-      include: {
-        consumerProfile: true,
-        staffProfile: true,
-        verificationLogs: true,
-      },
-    });
+  async findById(id: string): Promise<AccountRow | null> {
+    const acct = await AccountRepository.findById(id);
+
+    return acct ? mapAccountToRow(acct) : null;
   },
 };

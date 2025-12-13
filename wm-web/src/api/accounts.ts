@@ -1,42 +1,43 @@
 import { useMemo } from 'react';
 import useSWR from 'swr';
 import axiosInstance, { endpoints, fetcher } from 'src/utils/axios';
-import { VerificationAuditEntry, VerificationStatus } from 'src/types/accounts';
+import { AccountRow, VerificationStatus } from 'src/types/accounts';
 
-export type AccountRow = {
-  id: string;
-  type: 'consumer' | 'staff';
-  verificationStatus: VerificationStatus;
-  createdAt?: string;
-  updatedAt?: string;
-  data: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone?: string;
-    address: string;
-    householdSize?: number;
-    staffRole?: string;
-  };
-  verificationLog?: VerificationAuditEntry[];
+type AccountsQuery = {
+  search?: string;
+  orderBy?: string;
+  order?: 'asc' | 'desc';
+  type?: 'consumer' | 'staff';
+  status?: string;
+  page?: number;
+  pageSize?: number;
 };
 
+export function useGetAccounts(params?: AccountsQuery) {
+  const query = new URLSearchParams();
+  if (params?.search) query.set('search', params.search);
+  if (params?.orderBy) query.set('orderBy', params.orderBy);
+  if (params?.order) query.set('order', params.order);
+  if (params?.type) query.set('type', params.type);
+  if (params?.status) query.set('status', params.status);
+   if (params?.page !== undefined) query.set('page', String(params.page));
+   if (params?.pageSize !== undefined) query.set('pageSize', String(params.pageSize));
 
-export function useGetAccounts() {
-  const URL = endpoints.accounts.list;
+  const URL = params ? `${endpoints.accounts.list}?${query.toString()}` : endpoints.accounts.list;
 
   const { data, isLoading, error, isValidating, mutate } = useSWR(URL, fetcher);
 
   return useMemo(
     () => ({
-      accounts: data?.accounts as AccountRow[] || [],
+      accounts: (data?.accounts as AccountRow[]) || [],
+      total: data?.total as number || 0,
       accountsLoading: isLoading,
       accountsError: error,
       accountsValidating: isValidating,
-      accountsEmpty: !isLoading && !data?.accounts.length,
+      accountsEmpty: !isLoading && !data?.accounts?.length,
       mutate,
     }),
-    [data?.accounts, error, isLoading, isValidating, mutate]
+    [data?.accounts, data?.total, error, isLoading, isValidating, mutate]
   );
 }
 

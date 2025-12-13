@@ -1,6 +1,6 @@
 export type VerificationStatus = 'pending' | 'verified' | 'rejected';
 
-export type AccountRole = 'consumer' | 'staff_field' | 'staff_backoffice';
+export type AccountRole = 'admin' | 'consumer' | 'staff_field' | 'staff_backoffice';
 
 export type StaffRole = 'field' | 'backoffice';
 
@@ -82,4 +82,30 @@ export type AccountTokenPayload = {
   role: AccountRole;
   verificationStatus: VerificationStatus;
   issuedAt: string;
+};
+
+export type AccountRow = {
+  id: string;
+  type: 'consumer' | 'staff';
+  verificationStatus: VerificationStatus;
+  createdAt?: string;
+  updatedAt?: string;
+  data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    address: string;
+    householdSize?: number;
+    staffRole?: string;
+  };
+  verificationLog?: VerificationAuditEntry[];
+};
+
+export type IAccountTableFilterValue = string;
+
+export type IAccountTableFilters = {
+  name: string;
+  type: '' | 'consumer' | 'staff';
+  status: '' | VerificationStatus;
 };

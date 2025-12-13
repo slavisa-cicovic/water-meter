@@ -1,0 +1,156 @@
+import { AccountRole } from "@prisma/client";
+import prisma from "src/utils/prisma";
+import { StaffRole, VerificationStatus } from "src/types/accounts";
+
+type ListParams = {
+  search?: string;
+  orderBy?: "createdAt" | "verificationStatus" | "email" | "name" | "type";
+  order?: "asc" | "desc";
+  type?: "consumer" | "staff";
+  status?: VerificationStatus;
+  page?: number;
+  pageSize?: number;
+};
+
+export const AccountRepository = {
+  async createConsumer(data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    address: string;
+    password: string;
+    householdSize: number;
+  }) {
+    return prisma.account.create({
+      data: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        passwordHash: data.password,
+        role: "consumer",
+        consumerProfile: {
+          create: {
+            householdSize: data.householdSize,
+          },
+        },
+      },
+    });
+  },
+
+  async createStaff(data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    address: string;
+    password: string;
+    staffRole: StaffRole;
+    role: "staff_field" | "staff_backoffice";
+  }) {
+    return prisma.account.create({
+      data: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        passwordHash: data.password,
+        role: data.role,
+        staffProfile: {
+          create: {
+            staffRole: data.staffRole,
+          },
+        },
+      },
+    });
+  },
+
+  async findById(id: string) {
+    return prisma.account.findUnique({
+      where: { id },
+      include: {
+        consumerProfile: true,
+        staffProfile: true,
+        verificationLogs: true,
+      },
+    });
+  },
+
+  async updateVerification(accountId: string, status: VerificationStatus, reviewerId: string, note?: string, reviewedAt?: string) {
+    return prisma.account.update({
+      where: { id: accountId },
+      data: {
+        verificationStatus: status,
+        verificationLogs: {
+          create: {
+            reviewerId,
+            status,
+            note,
+            reviewedAt: reviewedAt ? new Date(reviewedAt) : undefined,
+          },
+        },
+      },
+      include: { verificationLogs: { orderBy: { reviewedAt: "desc" }, take: 1 } },
+    });
+  },
+
+  async list(params: ListParams) {
+    const { search, type, status, orderBy = "createdAt", order = "desc", page = 0, pageSize = 25 } = params;
+
+    const searchFilter = search
+      ? {
+          OR: [
+            { firstName: { contains: search } },
+            { lastName: { contains: search } },
+            { email: { contains: search } },
+            { address: { contains: search } },
+          ],
+        }
+      : undefined;
+
+    const where = {
+      ...(searchFilter && searchFilter),
+      ...(type && {
+        role:
+          type === "consumer"
+            ? AccountRole.consumer
+            : { in: [AccountRole.staff_field, AccountRole.staff_backoffice] },
+      }),
+      ...(status && { verificationStatus: status }),
+    };
+
+    const orderByClause =
+      orderBy === "name"
+        ? [
+            { lastName: order },
+            { firstName: order },
+          ]
+        : orderBy === "email"
+        ? [{ email: order }]
+        : orderBy === "verificationStatus"
+        ? [{ verificationStatus: order }]
+        : orderBy === "type"
+        ? [{ role: order }]
+        : [{ createdAt: order }];
+
+    const [total, accounts] = await Promise.all([
+      prisma.account.count({ where }),
+      prisma.account.findMany({
+        include: {
+          consumerProfile: true,
+          staffProfile: true,
+          verificationLogs: true,
+        },
+        where,
+        orderBy: orderByClause,
+        skip: page * pageSize,
+        take: pageSize,
+      }),
+    ]);
+
+    return { total, accounts };
+  },
+};

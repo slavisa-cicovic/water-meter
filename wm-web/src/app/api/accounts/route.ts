@@ -1,8 +1,31 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { AccountsService } from 'src/services/accountsService';
 
-export const GET = async () =>
-  NextResponse.json({
-    success: true,
-    data: await AccountsService.list(),
+export const GET = async (req: NextRequest) => {
+  const { searchParams } = new URL(req.url);
+  const search = searchParams.get('search') || undefined;
+  const orderBy = (searchParams.get('orderBy') || undefined) as
+    | 'createdAt'
+    | 'verificationStatus'
+    | 'email'
+    | 'name'
+    | 'type'
+    | undefined;
+  const order = (searchParams.get('order') || undefined) as 'asc' | 'desc' | undefined;
+  const type = (searchParams.get('type') || undefined) as 'consumer' | 'staff' | undefined;
+  const status = (searchParams.get('status') || undefined) as any;
+  const page = searchParams.get('page');
+  const pageSize = searchParams.get('pageSize');
+
+  const { accounts, total } = await AccountsService.list({
+    search,
+    orderBy,
+    order,
+    type,
+    status,
+    page: page ? Number(page) : 0,
+    pageSize: pageSize ? Number(pageSize) : 25,
   });
+
+  return NextResponse.json({ accounts, total });
+};
