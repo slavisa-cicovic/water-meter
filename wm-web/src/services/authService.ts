@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "src/utils/prisma";
 import { TokenService } from "./tokenService";
-import { VerificationStatus } from "src/types/accounts";
+import { AccountRole, VerificationStatus } from "src/types/accounts";
 
 type LoginInput = {
   identifier: string;
@@ -22,6 +22,12 @@ export const AuthService = {
 
     // TODO: use password hash/compare
     if (account.passwordHash !== password) {
+      return NextResponse.json({ success: false, error: "INVALID_CREDENTIALS" }, { status: 401 });
+    }
+
+    const allowedRoles: AccountRole[] = ["admin", "staff_backoffice"];
+    if (!allowedRoles.includes(account.role as AccountRole)) {
+      // Return generic invalid credentials to avoid leaking role info
       return NextResponse.json({ success: false, error: "INVALID_CREDENTIALS" }, { status: 401 });
     }
 

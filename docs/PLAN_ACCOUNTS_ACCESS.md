@@ -18,5 +18,5 @@
 2. `[d]` Add API guard middleware/helper for `/api/accounts*` that rejects non-admin/backoffice.
 3. `[d]` Update `AccountsService.list/findById` to accept viewer role and constrain results (staff_backoffice -> consumers only; admin -> admin + staff_backoffice [+ others if desired]).
 4. `[d]` Apply guard/role to API routes (`/api/accounts`, `/api/accounts/[id]`, `/api/accounts/verify`, etc.) passing viewer role to service.
-5. `[ ]` Optional UI handling: surface 403 errors and hide entry points if user lacks role.
+5. `[d]` Optional UI handling: surface 403 errors and hide entry points if user lacks role.
 6. `[ ]` QA: verify role-based visibility and access denials for unauthenticated/unauthorized roles.

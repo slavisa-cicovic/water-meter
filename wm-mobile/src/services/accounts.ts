@@ -1,6 +1,5 @@
 import { AccountsApi } from "@src/api/accounts";
 import {
-  ApiResponse,
   ConsumerRegistrationInput,
   RegistrationResult,
   StaffRegistrationInput,
