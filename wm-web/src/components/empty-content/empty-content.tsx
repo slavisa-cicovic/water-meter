@@ -1,5 +1,6 @@
 // @mui
 import { alpha } from '@mui/material/styles';
+import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Stack, { StackProps } from '@mui/material/Stack';
 
@@ -24,17 +25,14 @@ export default function EmptyContent({
 }: EmptyContentProps) {
   return (
     <Stack
-      direction="row" // Change direction to row
       flexGrow={1}
       alignItems="center"
       justifyContent="center"
-      spacing={0} // Adjust spacing between items
       sx={{
         px: 3,
-        my: 1,
         height: 1,
         ...(filled && {
-          borderRadius: 1,
+          borderRadius: 2,
           bgcolor: (theme) => alpha(theme.palette.grey[500], 0.04),
           border: (theme) => `dashed 1px ${alpha(theme.palette.grey[500], 0.08)}`,
         }),
@@ -42,22 +40,18 @@ export default function EmptyContent({
       }}
       {...other}
     >
-
-    {/* Image disabaled, requested in ticket #1311 */} 
-    {/* 
       <Box
         component="img"
         alt="empty content"
         src={imgUrl || '/assets/icons/empty/ic_content.svg'}
-        sx={{ width: 1, maxWidth: 100, height: 62 }}
+        sx={{ width: 1, maxWidth: 160 }}
       />
-    */}  
 
       {title && (
         <Typography
           variant="h6"
           component="span"
-          sx={{ mt: 0, color: 'text.disabled', textAlign: 'center' }}
+          sx={{ mt: 1, color: 'text.disabled', textAlign: 'center' }}
         >
           {title}
         </Typography>
