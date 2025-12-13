@@ -30,6 +30,7 @@ export const endpoints = {
     me: '/api/auth/me',
     login: '/api/auth/login',
     register: '/api/auth/register',
+    forgotPassword: '/api/auth/forgot-password',
   },
   accounts: {
     list: '/api/accounts',

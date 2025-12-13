@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { yupResolver } from "@hookform/resolvers/yup";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { SubmitHandler, useForm } from "react-hook-form";
 import * as Yup from "yup";
 
@@ -20,6 +21,8 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 import Logo from "src/components/logo";
+import { useAuthContext } from "src/auth/hooks";
+import { paths } from "src/routes/paths";
 
 export default function LoginView() {
     type LoginFormValues = {
@@ -34,11 +37,11 @@ export default function LoginView() {
         remember: Yup.boolean().required().default(false),
     }).required();
 
-    const {
-        register,
-        handleSubmit,
-        formState: { errors, isSubmitting },
-    } = useForm<LoginFormValues>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormValues>({
         mode: "onBlur",
         resolver: yupResolver(schema),
         defaultValues: {
@@ -46,14 +49,27 @@ export default function LoginView() {
             password: "",
             remember: false,
         },
-    });
+  });
 
-    const [showPassword, setShowPassword] = useState(false);
+  const { login } = useAuthContext();
+  const router = useRouter();
+  const [formError, setFormError] = useState<string | null>(null);
 
-    const onSubmit: SubmitHandler<LoginFormValues> = async (values) => {
-        // TODO: wire to auth service
-        console.log("login submit", values);
-    };
+  const [showPassword, setShowPassword] = useState(false);
+
+  const onSubmit: SubmitHandler<LoginFormValues> = async (values) => {
+    setFormError(null);
+    try {
+      await login?.(values.identifier, values.password);
+      router.push(paths.dashboard.root);
+    } catch (error: any) {
+      const message =
+        typeof error === "string"
+          ? error
+          : error?.message || "Unable to sign in. Please check your credentials.";
+      setFormError(message);
+    }
+  };
 
     return (
         <CardContent>
@@ -72,10 +88,16 @@ export default function LoginView() {
                         component="form"
                         noValidate
                         onSubmit={handleSubmit(onSubmit)}
-                    >
-                        <TextField
-                            fullWidth
-                            label="Email or Username"
+      >
+        {formError && (
+          <Typography variant="body2" color="error">
+            {formError}
+          </Typography>
+        )}
+
+        <TextField
+          fullWidth
+          label="Email or Username"
                             autoComplete="username"
                             type="text"
                             error={Boolean(errors.identifier)}
