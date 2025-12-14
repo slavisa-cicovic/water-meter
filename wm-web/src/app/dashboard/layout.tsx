@@ -11,7 +11,7 @@ type Props = {
 export default function Layout({ children }: Props) {
   return (
     <AuthGuard>
-      <RoleBasedGuard roles={["admin", "staff_backoffice"]}>
+      <RoleBasedGuard roles={["admin", "staff_backoffice"]} hasContent sx={{ my: '2%' }}>
         <DashboardLayout>{children}</DashboardLayout>
       </RoleBasedGuard>
     </AuthGuard>

@@ -133,7 +133,10 @@ export function AuthProvider({ children }: Props) {
 
     const response = await axios.post(endpoints.auth.login, data);
 
-    const { accessToken, user } = response.data;
+    const { accessToken, user } = response.data.data || response.data;
+    if (!accessToken || !user) {
+      throw new Error('Invalid login response');
+    }
 
     setSession(accessToken);
 
@@ -157,7 +160,7 @@ export function AuthProvider({ children }: Props) {
 
       const response = await axios.post(endpoints.auth.register, data);
 
-      const { accessToken, user } = response.data;
+      const { accessToken, user } = response.data.data || response.data;
 
       sessionStorage.setItem(STORAGE_KEY, accessToken);
 

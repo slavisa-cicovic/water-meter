@@ -1,3 +1,5 @@
+'use client';
+
 import { m } from 'framer-motion';
 // @mui
 import { Theme, SxProps } from '@mui/material/styles';
@@ -22,7 +24,7 @@ type RoleBasedGuardProp = {
 export default function RoleBasedGuard({ hasContent, roles, children, sx }: RoleBasedGuardProp) {
   const { user, loading } = useAuthContext();
 
-  const currentRole = (user as any)?.role as string | undefined;
+  const currentRole = user?.role;
 
   if (loading) {
     return null;
@@ -47,7 +49,7 @@ export default function RoleBasedGuard({ hasContent, roles, children, sx }: Role
           <ForbiddenIllustration
             sx={{
               height: 260,
-              my: { xs: 5, sm: 10 },
+              my: 10,
             }}
           />
         </m.div>
