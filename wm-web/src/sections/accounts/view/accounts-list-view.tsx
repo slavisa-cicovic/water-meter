@@ -37,12 +37,12 @@ const defaultFilters: IAccountTableFilters = {
 };
 
 const TABLE_HEAD = [
-  { id: 'name', label: 'Name' },
-  { id: 'email', label: 'Email' },
-  { id: 'type', label: 'Type' },
-  { id: 'verificationStatus', label: 'Status' },
-  { id: 'createdAt', label: 'Created' },
-  { id: '', label: 'Actions', align: 'right' },
+  { id: 'name', label: 'Name', width: 320 },
+  { id: 'email', label: 'Email', minWidth: 620 },
+  { id: 'type', label: 'Type', width: 100 },
+  { id: 'verificationStatus', label: 'Status', width: 120 },
+  { id: 'createdAt', label: 'Created', width: 120 },
+  { id: '', label: 'Actions', align: 'right', width: 140 },
 ];
 
 
@@ -141,7 +141,7 @@ export function AccountsListView() {
 
           {!accountsLoading && !accountsError && accounts && accounts.length > 0 && (
             <TableContainer>
-              <Table size="small">
+              <Table size="small" sx={{ minWidth: 960 }}>
                 <TableHeadCustom
                   order={table.order}
                   orderBy={table.orderBy}
@@ -153,7 +153,11 @@ export function AccountsListView() {
                 <TableBody>
                   {accountsLoading
                     ? [...Array(table.rowsPerPage)].map((_i, index) => (
-                        <AccountTableSkeleton key={index} sx={{ height: denseHeight }} />
+                        <AccountTableSkeleton
+                          key={index}
+                          columns={TABLE_HEAD.map(el => el.width || el.minWidth || 100)}
+                          sx={{ height: denseHeight }}
+                        />
                       ))
                     : accounts.map((row) => (
                         <AccountTableRow key={row.id} row={row} onVerify={(status: VerificationStatus) => onVerify(row.id, status)} />

@@ -3,8 +3,13 @@ import Stack from '@mui/material/Stack';
 import Skeleton from '@mui/material/Skeleton';
 import Paper, { PaperProps } from '@mui/material/Paper';
 import Grid, { Grid2Props } from '@mui/material/Grid2';
-import TableRow, { TableRowProps } from "@mui/material/TableRow";
-import TableCell from "@mui/material/TableCell";
+import TableRow, { TableRowProps } from '@mui/material/TableRow';
+import TableCell from '@mui/material/TableCell';
+
+type TableSkeletonCell = {
+  width: number | string;
+  align?: 'left' | 'right' | 'center';
+};
 
 // ----------------------------------------------------------------------
 
@@ -54,17 +59,25 @@ export function AccountDetailsSkeleton({ ...other }: Grid2Props) {
   );
 }
 
-export default function AccountTableSkeleton({ ...other }: TableRowProps) {
+export default function AccountTableSkeleton({
+  columns = [],
+  ...other
+}: TableRowProps & { columns?: number[] }) {
   return (
     <TableRow {...other}>
-      <TableCell colSpan={12}>
-        <Stack spacing={3} direction="row" alignItems="center">
-          <Skeleton sx={{ borderRadius: 0.5, width: 20, height: 20, flexShrink: 0 }} />
-          <Skeleton sx={{ width: 450, height: 12 }} />
-          <Skeleton sx={{ width: 450, height: 12 }} />
-          <Skeleton sx={{ width: 130, height: 12 }} />
-        </Stack>
-      </TableCell>
+      {
+        columns.map((col, idx) => (
+          <TableCell key={idx} >
+            <Skeleton
+              sx={{
+                width: col,
+                height: 14,
+                borderRadius: 0.5,
+              }}
+            />
+          </TableCell>
+        ))
+      }
     </TableRow>
   );
 }
