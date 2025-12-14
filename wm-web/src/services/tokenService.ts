@@ -1,8 +1,8 @@
-import jwt from 'jsonwebtoken';
+import jwt, { Secret, SignOptions } from 'jsonwebtoken';
 import { AccountRole, AccountTokenPayload, VerificationStatus } from 'src/types/accounts';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '3d';
+const JWT_SECRET: Secret = process.env.JWT_SECRET || 'dev-secret';
+const JWT_EXPIRES_IN: SignOptions['expiresIn'] = (process.env.JWT_EXPIRES_IN as any) || '3d';
 
 export const TokenService = {
   issueAccountToken(account: { id: string; role: AccountRole; verificationStatus: VerificationStatus }) {
