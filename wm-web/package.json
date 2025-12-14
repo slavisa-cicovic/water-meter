@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "prisma:seed": "prisma db seed"
+    "prisma:seed": "prisma db seed",
+    "test": "vitest",
+    "test:watch": "vitest watch",
+    "test:ci": "vitest run --coverage"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
@@ -49,13 +52,16 @@
     "@types/node": "^22.7.4",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "@types/supertest": "^2.0.16",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.11.1",
     "eslint-config-next": "^15.0.0",
+    "jsdom": "^27.3.0",
     "postcss": "^8.4.47",
     "prisma": "^5.22.0",
     "tailwindcss": "^3.4.12",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^1.6.0"
   }
 }
