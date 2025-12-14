@@ -26,7 +26,7 @@ export const GET = async (req: NextRequest) => {
     search,
     orderBy,
     order,
-    type: viewerRole === 'staff_backoffice' ? 'consumer' : type,
+    type: viewerRole === 'staff_backoffice' ? undefined : type,
     status,
     page: page ? Number(page) : 0,
     pageSize: pageSize ? Number(pageSize) : 25,

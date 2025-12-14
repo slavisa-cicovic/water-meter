@@ -192,7 +192,7 @@ export const AccountsService = {
 
     const allowedRoles =
       viewerRole === 'staff_backoffice'
-        ? [AccountRole.consumer]
+        ? [AccountRole.consumer, AccountRole.staff_field]
         : viewerRole === 'admin'
         ? [AccountRole.admin, AccountRole.staff_backoffice]
         : undefined;
@@ -209,7 +209,7 @@ export const AccountsService = {
 
     if (!acct) return null;
 
-    if (viewerRole === 'staff_backoffice' && acct.role !== 'consumer') {
+    if (viewerRole === 'staff_backoffice' && !(acct.role === 'consumer' || acct.role === 'staff_field')) {
       return null;
     }
 
