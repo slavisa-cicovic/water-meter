@@ -37,8 +37,8 @@ const defaultFilters: IAccountTableFilters = {
 };
 
 const TABLE_HEAD = [
-  { id: 'name', label: 'name' },
-  { id: 'email', label: 'owner' },
+  { id: 'name', label: 'Name' },
+  { id: 'email', label: 'Email' },
   { id: 'type', label: 'Type' },
   { id: 'verificationStatus', label: 'Status' },
   { id: 'createdAt', label: 'Created' },
