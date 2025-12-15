@@ -4,12 +4,11 @@ import Stack from '@mui/material/Stack';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
-// locales
-import { useLocales } from 'src/locales';
 // components
 import Iconify from 'src/components/iconify';
 // types
 import { IAccountTableFilters, IAccountTableFilterValue } from 'src/types/accounts';
+import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
@@ -23,7 +22,28 @@ export default function AccountTableToolbar({
     filters,
     onFilters,
 }: Props) {
-    const { t } = useLocales();
+    const { user } = useAuthContext();
+    const role = (user as any)?.role as string | undefined;
+
+    const typeOptions =
+      role === 'admin'
+        ? [
+            { value: '', label: 'All' },
+            { value: 'admin', label: 'admin' },
+            { value: 'staff_backoffice', label: 'staff_backoffice' },
+          ]
+        : role === 'staff_backoffice'
+        ? [
+            { value: '', label: 'All' },
+            { value: 'consumer', label: 'consumer' },
+            { value: 'staff_field', label: 'staff_field' },
+            { value: 'staff_backoffice', label: 'staff_backoffice' },
+          ]
+        : [
+            { value: '', label: 'All' },
+            { value: 'consumer', label: 'consumer' },
+            { value: 'staff', label: 'staff' },
+          ];
 
     const handleFilterName = useCallback(
         (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -82,9 +102,11 @@ export default function AccountTableToolbar({
                     onChange={handleFilterType}
                     sx={{ minWidth: 160 }}
                 >
-                    <MenuItem value="">All</MenuItem>
-                    <MenuItem value="consumer">Consumer</MenuItem>
-                    <MenuItem value="staff">Staff</MenuItem>
+                    {typeOptions.map((opt) => (
+                        <MenuItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                        </MenuItem>
+                    ))}
                 </TextField>
 
                 <TextField

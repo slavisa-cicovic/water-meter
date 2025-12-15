@@ -86,7 +86,7 @@ export type AccountTokenPayload = {
 
 export type AccountRow = {
   id: string;
-  type: 'consumer' | 'staff';
+  type: AccountRole;
   verificationStatus: VerificationStatus;
   createdAt?: string;
   updatedAt?: string;
@@ -106,6 +106,6 @@ export type IAccountTableFilterValue = string;
 
 export type IAccountTableFilters = {
   name: string;
-  type: '' | 'consumer' | 'staff';
+  type: '' | 'consumer' | 'staff' | 'admin' | 'staff_backoffice' | 'staff_field';
   status: '' | VerificationStatus;
 };

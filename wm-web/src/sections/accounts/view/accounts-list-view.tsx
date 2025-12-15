@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 // @mui
 import {
   Alert,
@@ -39,14 +40,14 @@ const defaultFilters: IAccountTableFilters = {
 const TABLE_HEAD = [
   { id: 'name', label: 'Name', width: 320 },
   { id: 'email', label: 'Email', minWidth: 620 },
-  { id: 'type', label: 'Type', width: 100 },
+  { id: 'type', label: 'Type', width: 120 },
   { id: 'verificationStatus', label: 'Status', width: 120 },
   { id: 'createdAt', label: 'Created', width: 120 },
   { id: '', label: 'Actions', align: 'right', width: 140 },
 ];
 
 
-export function AccountsListView() {
+export default function AccountsListView() {
 
   const settings = useSettingsContext();
   const [filters, setFilters] = useState(defaultFilters);
@@ -113,7 +114,7 @@ export function AccountsListView() {
             //
             onResetFilters={handleResetFilters}
             //
-            results={accounts.length}
+            results={total}
             sx={{ p: 2.5, pt: 0 }}
           />
         )}

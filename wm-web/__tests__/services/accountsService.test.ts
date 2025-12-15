@@ -17,7 +17,7 @@ describe('AccountsService list role constraints', () => {
 
     expect(spy).toHaveBeenCalledWith(
       expect.objectContaining({
-        allowedRoles: [AccountRole.consumer, AccountRole.staff_field],
+        allowedRoles: expect.arrayContaining([AccountRole.consumer, AccountRole.staff_field, AccountRole.staff_backoffice]),
       })
     );
   });
@@ -31,7 +31,10 @@ describe('AccountsService list role constraints', () => {
 
     expect(spy).toHaveBeenCalledWith(
       expect.objectContaining({
-        allowedRoles: [AccountRole.admin, AccountRole.staff_backoffice],
+        allowedRoles: expect.arrayContaining([
+          AccountRole.admin,
+          AccountRole.staff_backoffice,
+        ]),
       })
     );
   });

@@ -6,7 +6,7 @@ type ListParams = {
   search?: string;
   orderBy?: "createdAt" | "verificationStatus" | "email" | "name" | "type";
   order?: "asc" | "desc";
-  type?: "consumer" | "staff";
+  type?: "consumer" | "staff" | "admin" | "staff_backoffice" | "staff_field";
   status?: VerificationStatus;
   page?: number;
   pageSize?: number;

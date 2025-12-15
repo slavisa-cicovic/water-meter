@@ -17,7 +17,13 @@ export const GET = async (req: NextRequest) => {
     | 'type'
     | undefined;
   const order = (searchParams.get('order') || undefined) as 'asc' | 'desc' | undefined;
-  const type = (searchParams.get('type') || undefined) as 'consumer' | 'staff' | undefined;
+  const type = (searchParams.get('type') || undefined) as
+    | 'consumer'
+    | 'staff'
+    | 'admin'
+    | 'staff_backoffice'
+    | 'staff_field'
+    | undefined;
   const status = (searchParams.get('status') || undefined) as any;
   const page = searchParams.get('page');
   const pageSize = searchParams.get('pageSize');
@@ -26,7 +32,7 @@ export const GET = async (req: NextRequest) => {
     search,
     orderBy,
     order,
-    type: viewerRole === 'staff_backoffice' ? undefined : type,
+    type,
     status,
     page: page ? Number(page) : 0,
     pageSize: pageSize ? Number(pageSize) : 25,

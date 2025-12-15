@@ -4,6 +4,9 @@ if (typeof window === 'undefined') {
   global.window = {};
 }
 
+// Add testing-library matchers
+import '@testing-library/jest-dom';
+
 if (typeof (window as any).atob === 'undefined') {
   (window as any).atob = (str: string) => Buffer.from(str, 'base64').toString('binary');
 }

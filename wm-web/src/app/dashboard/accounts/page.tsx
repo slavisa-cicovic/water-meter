@@ -1,4 +1,4 @@
-import { AccountsListView } from 'src/sections/accounts/view/accounts-list-view';
+import { AccountsListView } from 'src/sections/accounts/view';
 
 export const metadata = {
   title: 'Accounts',

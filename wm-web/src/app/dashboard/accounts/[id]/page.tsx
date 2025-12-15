@@ -1,4 +1,4 @@
-import { AccountDetailView } from 'src/sections/accounts/view/account-detail-view';
+import { AccountDetailView } from 'src/sections/accounts/view';
 
 type Props = {
   params: { id: string };

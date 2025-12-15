@@ -19,7 +19,7 @@ const toAccountRole = (staffRole?: string) => (staffRole === 'backoffice' ? 'sta
 
 const mapAccountToRow = (acct: any): AccountRow => ({
   id: acct.id,
-  type: acct.role === 'consumer' ? 'consumer' : 'staff',
+  type: acct.role as AccountRole,
   verificationStatus: acct.verificationStatus as VerificationStatus,
   createdAt: acct.createdAt?.toISOString?.() ?? acct.createdAt,
   updatedAt: acct.updatedAt?.toISOString?.() ?? acct.updatedAt,
@@ -182,20 +182,27 @@ export const AccountsService = {
     search?: string;
     orderBy?: 'createdAt' | 'verificationStatus' | 'email' | 'name' | 'type';
     order?: 'asc' | 'desc';
-    type?: 'consumer' | 'staff';
+    type?: 'consumer' | 'staff' | 'admin' | 'staff_backoffice' | 'staff_field';
     status?: VerificationStatus;
     page?: number;
     pageSize?: number;
     viewerRole?: 'admin' | 'staff_backoffice';
   } = {}): Promise<{ accounts: AccountRow[]; total: number }> {
     const { viewerRole, ...rest } = params;
+    let allowedRoles: AccountRole[] | undefined;
 
-    const allowedRoles =
-      viewerRole === 'staff_backoffice'
-        ? [AccountRole.consumer, AccountRole.staff_field]
-        : viewerRole === 'admin'
-        ? [AccountRole.admin, AccountRole.staff_backoffice]
-        : undefined;
+    if (viewerRole === 'staff_backoffice') {
+      const base = [AccountRole.consumer, AccountRole.staff_field, AccountRole.staff_backoffice];
+      if (rest.type === 'consumer') allowedRoles = [AccountRole.consumer];
+      else if (rest.type === 'staff_field') allowedRoles = [AccountRole.staff_field];
+      else if (rest.type === 'staff_backoffice') allowedRoles = [AccountRole.staff_backoffice];
+      else allowedRoles = base;
+    } else if (viewerRole === 'admin') {
+      const base = [AccountRole.admin, AccountRole.staff_backoffice];
+      if (rest.type === 'admin') allowedRoles = [AccountRole.admin];
+      else if (rest.type === 'staff_backoffice') allowedRoles = [AccountRole.staff_backoffice];
+      else allowedRoles = base;
+    }
 
     const { accounts, total } = await AccountRepository.list({
       ...rest,
