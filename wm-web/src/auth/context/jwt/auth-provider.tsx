@@ -6,6 +6,7 @@ import axios, { endpoints } from 'src/utils/axios';
 //
 import { AuthContext } from './auth-context';
 import { isValidToken, setSession } from './utils';
+import { getStoredAccessToken, setStoredAccessToken } from './token-storage';
 import { ActionMapType, AuthStateType, AuthUserType } from '../../types';
 
 // ----------------------------------------------------------------------
@@ -75,8 +76,6 @@ const reducer = (state: AuthStateType, action: ActionsType) => {
 
 // ----------------------------------------------------------------------
 
-const STORAGE_KEY = 'accessToken';
-
 type Props = {
   children: React.ReactNode;
 };
@@ -86,7 +85,7 @@ export function AuthProvider({ children }: Props) {
 
   const initialize = useCallback(async () => {
     try {
-      const accessToken = sessionStorage.getItem(STORAGE_KEY);
+      const { accessToken } = getStoredAccessToken();
 
       if (accessToken && isValidToken(accessToken)) {
         setSession(accessToken);
@@ -125,7 +124,7 @@ export function AuthProvider({ children }: Props) {
   }, [initialize]);
 
   // LOGIN
-  const login = useCallback(async (identifier: string, password: string) => {
+  const login = useCallback(async (identifier: string, password: string, remember = false) => {
     const data = {
       identifier,
       password,
@@ -138,6 +137,7 @@ export function AuthProvider({ children }: Props) {
       throw new Error('Invalid login response');
     }
 
+    setStoredAccessToken(accessToken, remember);
     setSession(accessToken);
 
     dispatch({
@@ -162,7 +162,12 @@ export function AuthProvider({ children }: Props) {
 
       const { accessToken, user } = response.data.data || response.data;
 
-      sessionStorage.setItem(STORAGE_KEY, accessToken);
+      if (!accessToken || !user) {
+        throw new Error('Invalid register response');
+      }
+
+      setStoredAccessToken(accessToken, false);
+      setSession(accessToken);
 
       dispatch({
         type: Types.REGISTER,

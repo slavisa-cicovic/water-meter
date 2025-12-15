@@ -167,6 +167,6 @@ describe('Accounts filters', () => {
     });
 
     // Should reflect total from API (not just page length)
-    expect(screen.getByText(/30/)).toBeInTheDocument();
+    expect(screen.getByText(/of 30/)).toBeInTheDocument();
   });
 });

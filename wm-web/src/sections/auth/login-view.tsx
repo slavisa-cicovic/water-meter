@@ -60,7 +60,7 @@ export default function LoginView() {
   const onSubmit: SubmitHandler<LoginFormValues> = async (values) => {
     setFormError(null);
     try {
-      await login?.(values.identifier, values.password);
+      await login?.(values.identifier, values.password, values.remember);
       router.push(paths.dashboard.root);
     } catch (error: any) {
       const message =
