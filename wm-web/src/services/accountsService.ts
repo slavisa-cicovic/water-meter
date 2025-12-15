@@ -20,6 +20,7 @@ const toAccountRole = (staffRole?: string) => (staffRole === 'backoffice' ? 'sta
 const mapAccountToRow = (acct: any): AccountRow => ({
   id: acct.id,
   type: acct.role as AccountRole,
+  ...(acct.role === 'consumer' ? {} : { avatar: (acct.avatarUrl ?? acct.avatar ?? undefined) as string | undefined }),
   verificationStatus: acct.verificationStatus as VerificationStatus,
   createdAt: acct.createdAt?.toISOString?.() ?? acct.createdAt,
   updatedAt: acct.updatedAt?.toISOString?.() ?? acct.updatedAt,

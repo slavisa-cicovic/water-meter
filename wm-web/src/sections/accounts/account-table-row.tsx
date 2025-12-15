@@ -1,4 +1,4 @@
-import { Button, Chip, Stack, TableCell, TableRow, Typography } from "@mui/material";
+import { Avatar, Button, Chip, Stack, TableCell, TableRow, Typography } from "@mui/material";
 import { AccountRow, VerificationStatus } from "src/types/accounts";
 
 type Props = {
@@ -25,9 +25,16 @@ export default function AccountTableRow({
         createdAt
     } = row;
 
+    const initials = `${data.firstName?.[0] ?? ''}${data.lastName?.[0] ?? ''}`.toUpperCase();
+    const avatarSrc = type !== 'consumer' ? row.avatar : undefined;
     
     return (
         <TableRow key={row.id}>
+            <TableCell sx={{ width: 72 }}>
+                <Avatar src={avatarSrc || undefined} alt={`${data.firstName} ${data.lastName}`} sx={{ width: 32, height: 32 }}>
+                    {initials}
+                </Avatar>
+            </TableCell>
             <TableCell>
                 <Stack spacing={0.5}>
                     <Typography variant="subtitle2">

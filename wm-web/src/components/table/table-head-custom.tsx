@@ -73,7 +73,7 @@ const TableHeadCustom = forwardRef<HTMLTableSectionElement, Props>(({
             sortDirection={orderBy === headCell.id ? order : false}
             sx={{ width: headCell.width, minWidth: headCell.minWidth }}
           >
-            {onSort ? (
+            {onSort && !headCell.disableSort ? (
               <TableSortLabel
                 hideSortIcon
                 active={orderBy === headCell.id}

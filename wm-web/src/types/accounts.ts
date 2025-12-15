@@ -30,11 +30,13 @@ export type BaseAccount = {
 export type ConsumerAccount = BaseAccount & {
   role: 'consumer';
   householdSize: number;
+  avatar?: never;
 };
 
 export type StaffAccount = BaseAccount & {
-  role: 'staff_field' | 'staff_backoffice';
+  role: 'admin' | 'staff_field' | 'staff_backoffice';
   staffRole: StaffRole;
+  avatar?: string;
 };
 
 export type ConsumerRegistrationInput = {
@@ -84,7 +86,7 @@ export type AccountTokenPayload = {
   issuedAt: string;
 };
 
-export type AccountRow = {
+type BaseAccountRow = {
   id: string;
   type: AccountRole;
   verificationStatus: VerificationStatus;
@@ -101,6 +103,18 @@ export type AccountRow = {
   };
   verificationLog?: VerificationAuditEntry[];
 };
+
+export type ConsumerAccountRow = BaseAccountRow & {
+  type: 'consumer';
+  avatar?: never;
+};
+
+export type NonConsumerAccountRow = BaseAccountRow & {
+  type: Exclude<AccountRole, 'consumer'>;
+  avatar?: string;
+};
+
+export type AccountRow = ConsumerAccountRow | NonConsumerAccountRow;
 
 export type IAccountTableFilterValue = string;
 

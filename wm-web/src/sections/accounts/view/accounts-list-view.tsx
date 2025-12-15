@@ -38,12 +38,13 @@ const defaultFilters: IAccountTableFilters = {
 };
 
 const TABLE_HEAD = [
+  { id: 'avatar', label: '', width: 72, disableSort: true },
   { id: 'name', label: 'Name', width: 320 },
   { id: 'email', label: 'Email', minWidth: 620 },
   { id: 'type', label: 'Type', width: 120 },
   { id: 'verificationStatus', label: 'Status', width: 120 },
   { id: 'createdAt', label: 'Created', width: 120 },
-  { id: '', label: 'Actions', align: 'right', width: 140 },
+  { id: '', label: 'Actions', align: 'right', width: 140, disableSort: true },
 ];
 
 
