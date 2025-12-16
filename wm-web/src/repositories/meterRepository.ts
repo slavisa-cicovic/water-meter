@@ -1,0 +1,99 @@
+import prisma from 'src/utils/prisma';
+import { MeterCreateInput, MeterListParams, MeterUpdateInput } from 'src/types/meters';
+
+const toDateOrNull = (value: string | null | undefined) => (value == null ? null : new Date(value));
+
+export const MeterRepository = {
+  async create(input: MeterCreateInput) {
+    return prisma.meter.create({
+      data: {
+        serialNumber: input.serialNumber,
+        groupCode: input.groupCode ?? null,
+        address: input.address,
+        status: input.status ?? 'active',
+        installedAt: toDateOrNull(input.installedAt),
+        notes: input.notes ?? null,
+      },
+    });
+  },
+
+  async softDelete(id: string) {
+    return prisma.meter.update({
+      where: { id },
+      data: { status: 'removed' },
+    });
+  },
+
+  async update(input: MeterUpdateInput) {
+    return prisma.meter.update({
+      where: { id: input.id },
+      data: {
+        ...(input.serialNumber !== undefined ? { serialNumber: input.serialNumber } : {}),
+        ...(input.groupCode !== undefined ? { groupCode: input.groupCode } : {}),
+        ...(input.address !== undefined ? { address: input.address } : {}),
+        ...(input.status !== undefined ? { status: input.status } : {}),
+        ...(input.installedAt !== undefined ? { installedAt: toDateOrNull(input.installedAt) } : {}),
+        ...(input.notes !== undefined ? { notes: input.notes } : {}),
+      },
+    });
+  },
+
+  async findById(id: string) {
+    return prisma.meter.findUnique({
+      where: { id },
+      include: { consumers: true },
+    });
+  },
+
+  async list(params: MeterListParams) {
+    const { search, status, groupCode, consumerAccountId, page = 0, pageSize = 25 } = params;
+
+    const where: any = {
+      ...(status ? { status } : {}),
+      ...(groupCode ? { groupCode } : {}),
+      ...(search
+        ? {
+            OR: [
+              { serialNumber: { contains: search } },
+              { address: { contains: search } },
+              { groupCode: { contains: search } },
+            ],
+          }
+        : {}),
+      ...(consumerAccountId ? { consumers: { some: { accountId: consumerAccountId } } } : {}),
+    };
+
+    const [total, meters] = await Promise.all([
+      prisma.meter.count({ where }),
+      prisma.meter.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: page * pageSize,
+        take: pageSize,
+        include: { consumers: true },
+      }),
+    ]);
+
+    return { total, meters };
+  },
+
+  async addConsumerLink(meterId: string, accountId: string) {
+    return prisma.meterConsumer.create({
+      data: { meterId, accountId },
+    });
+  },
+
+  async removeConsumerLink(meterId: string, accountId: string) {
+    return prisma.meterConsumer.delete({
+      where: { meterId_accountId: { meterId, accountId } },
+    });
+  },
+
+  async listConsumersForMeter(meterId: string) {
+    return prisma.meterConsumer.findMany({
+      where: { meterId },
+      include: { account: true },
+      orderBy: { accountId: 'asc' },
+    });
+  },
+};

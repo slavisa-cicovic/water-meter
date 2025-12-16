@@ -25,6 +25,12 @@ enum StaffRole {
   backoffice
 }
 
+enum MeterStatus {
+  active
+  inactive
+  removed
+}
+
 model Account {
   id                 String              @id @default(uuid())
   firstName          String
@@ -41,6 +47,7 @@ model Account {
   consumerProfile ConsumerProfile?
   staffProfile     StaffProfile?
   verificationLogs VerificationLog[]
+  meterConsumers   MeterConsumer[]
 }
 
 model ConsumerProfile {
@@ -68,4 +75,31 @@ model VerificationLog {
   reviewedAt DateTime           @default(now())
 
   account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+model Meter {
+  id           String      @id @default(uuid())
+  serialNumber String      @unique
+  groupCode    String?
+  address      String
+  status       MeterStatus @default(active)
+  installedAt  DateTime?
+  notes        String?     @db.Text
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  consumers MeterConsumer[]
+
+  @@index([groupCode])
+}
+
+model MeterConsumer {
+  meterId   String
+  accountId String
+
+  meter   Meter   @relation(fields: [meterId], references: [id], onDelete: Cascade)
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@id([meterId, accountId])
+  @@index([accountId])
 }
