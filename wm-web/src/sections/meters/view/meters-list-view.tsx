@@ -1,0 +1,154 @@
+'use client';
+
+import React, { useCallback, useState } from 'react';
+import { Alert, Button, Card, CardContent, Container, Stack, Table, TableBody, TableContainer, Typography } from '@mui/material';
+import { isEqual } from 'lodash';
+import EmptyContent from 'src/components/empty-content';
+import Iconify from 'src/components/iconify';
+import { useSettingsContext } from 'src/components/settings';
+import { TableHeadCustom, TableNoData, TablePaginationCustom, useTable } from 'src/components/table';
+import { useGetMeters } from 'src/api/meters';
+import { RouterLink } from 'src/routes/components';
+import { paths } from 'src/routes/paths';
+import { MeterTableFiltersResult } from '../meter-table-filters-result';
+import { MeterTableRow } from '../meter-table-row';
+import { MeterTableSkeleton } from '../meter-skeleton';
+import { MeterTableToolbar, IMeterTableFilters, IMeterTableFilterValue } from '../meter-table-toolbar';
+
+const defaultFilters: IMeterTableFilters = {
+  search: '',
+  status: '',
+  groupCode: '',
+};
+
+const TABLE_HEAD = [
+  { id: 'serialNumber', label: 'Serial', width: 220 },
+  { id: 'groupCode', label: 'Group', width: 120 },
+  { id: 'address', label: 'Address', minWidth: 420 },
+  { id: 'status', label: 'Status', width: 120, disableSort: true },
+  { id: 'consumersCount', label: 'Consumers', width: 120, disableSort: true },
+  { id: 'createdAt', label: 'Created', width: 160, disableSort: true },
+  { id: '', label: 'Actions', align: 'right', width: 140, disableSort: true },
+];
+
+export function MetersListView() {
+  const settings = useSettingsContext();
+  const [filters, setFilters] = useState(defaultFilters);
+  const table = useTable({ defaultRowsPerPage: 25, defaultDense: true, defaultOrderBy: 'createdAt', defaultOrder: 'desc' });
+
+  const { meters, metersLoading, metersError, metersEmpty, total } = useGetMeters({
+    search: filters.search,
+    status: filters.status || undefined,
+    groupCode: filters.groupCode || undefined,
+    page: table.page,
+    pageSize: table.rowsPerPage,
+  });
+
+  const denseHeight = table.dense ? 60 : 80;
+
+  const canReset = !isEqual(defaultFilters, filters);
+  const notFound = (!meters.length && canReset) || metersEmpty;
+
+  const handleFilters = useCallback(
+    (name: string, value: IMeterTableFilterValue) => {
+      table.onResetPage();
+      setFilters((prevState) => ({ ...prevState, [name]: value }));
+    },
+    [table]
+  );
+
+  const handleResetFilters = useCallback(() => {
+    setFilters(defaultFilters);
+  }, []);
+
+  return (
+    <Container maxWidth={settings.themeStretch ? false : 'lg'}>
+      <Stack spacing={2} mb={3}>
+        <Typography variant="h4">Meters</Typography>
+        <Typography variant="body2" color="text.secondary">
+          Manage water meters and their consumer assignments.
+        </Typography>
+      </Stack>
+
+      <Card>
+        <MeterTableToolbar filters={filters} onFilters={handleFilters} />
+
+        {canReset && (
+          <MeterTableFiltersResult
+            filters={filters}
+            onFilters={handleFilters}
+            onResetFilters={handleResetFilters}
+            results={total}
+            sx={{ p: 2.5, pt: 0 }}
+          />
+        )}
+
+        <CardContent>
+          {metersError && (
+            <EmptyContent
+              filled
+              title="Failed to load meters."
+              action={
+                <Button
+                  component={RouterLink}
+                  href={paths.dashboard.root}
+                  startIcon={<Iconify icon="eva:arrow-ios-back-fill" width={16} />}
+                  sx={{ mt: 3 }}
+                >
+                  Back to dashboard
+                </Button>
+              }
+              sx={{ py: 6 }}
+            />
+          )}
+
+          {!metersLoading && metersEmpty && <Alert severity="info">No meters found.</Alert>}
+
+          {!metersLoading && !metersError && meters && meters.length > 0 && (
+            <TableContainer>
+              <Table size="small" sx={{ minWidth: 960 }}>
+                <TableHeadCustom
+                  order={table.order}
+                  orderBy={table.orderBy}
+                  headLabel={TABLE_HEAD}
+                  rowCount={meters.length}
+                  numSelected={table.selected.length}
+                  onSort={table.onSort}
+                />
+                <TableBody>
+                  {metersLoading
+                    ? [...Array(table.rowsPerPage)].map((_i, index) => (
+                        <MeterTableSkeleton
+                          key={index}
+                          columns={TABLE_HEAD.map((el) => el.width || el.minWidth || 100)}
+                          sx={{ height: denseHeight }}
+                        />
+                      ))
+                    : meters.map((row) => (
+                        <MeterTableRow
+                          key={row.id}
+                          row={{
+                            ...row,
+                          }}
+                        />
+                      ))}
+                  <TableNoData notFound={notFound} />
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+
+          <TablePaginationCustom
+            count={total}
+            page={table.page}
+            rowsPerPage={table.rowsPerPage}
+            onPageChange={table.onChangePage}
+            onRowsPerPageChange={table.onChangeRowsPerPage}
+            dense={table.dense}
+            onChangeDense={table.onChangeDense}
+          />
+        </CardContent>
+      </Card>
+    </Container>
+  );
+}

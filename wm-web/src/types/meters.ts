@@ -8,6 +8,7 @@ export type Meter = {
   groupCode?: GroupCode;
   address: string;
   status: MeterStatus;
+  consumersCount?: number;
   installedAt?: string;
   notes?: string;
   createdAt?: string;
@@ -51,4 +52,3 @@ export type ValidationResult = {
   valid: boolean;
   errors: Record<string, string[]>;
 };
-

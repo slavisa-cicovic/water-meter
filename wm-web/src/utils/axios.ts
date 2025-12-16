@@ -39,8 +39,9 @@ export const endpoints = {
     registerStaff: '/api/accounts/staff',
     verify: '/api/accounts/verify',
   },
-  domain: {
-    list: '/api/domain/list',
-    details: '/api/domain/details',
-  },
+  meters: {
+    list: '/api/meters',
+    details: (id: string) => `/api/meters/${id}`,
+    consumers: (id: string) => `/api/meters/${id}/consumers`,
+  },  
 };

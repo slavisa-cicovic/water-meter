@@ -146,6 +146,8 @@ const staff: StaffSeed[] = [
 
 async function clearData() {
   await prisma.verificationLog.deleteMany({});
+  await prisma.meterConsumer.deleteMany({});
+  await prisma.meter.deleteMany({});
   await prisma.consumerProfile.deleteMany({});
   await prisma.staffProfile.deleteMany({});
   await prisma.account.deleteMany({});
@@ -331,6 +333,76 @@ async function seedStaff() {
   }
 }
 
+const pad2 = (value: number) => String(value).padStart(2, '0');
+
+async function seedMeters() {
+  const consumerAccounts = await prisma.account.findMany({
+    where: { role: AccountRole.consumer },
+    orderBy: { email: 'asc' },
+    take: 55,
+    select: { id: true, email: true, address: true },
+  });
+
+  if (consumerAccounts.length < 55) {
+    throw new Error(`Expected at least 55 consumer accounts, got ${consumerAccounts.length}`);
+  }
+
+  // 40 meters, linked 1:1 to first 40 consumers
+  for (let i = 0; i < 40; i += 1) {
+    const consumer = consumerAccounts[i];
+    const meter = await prisma.meter.create({
+      data: {
+        serialNumber: `SN-${pad2(i + 1)}-${consumer.id.slice(0, 6)}`,
+        groupCode: pad2(i + 1),
+        address: consumer.address,
+        status: 'active',
+      },
+    });
+
+    await prisma.meterConsumer.create({
+      data: { meterId: meter.id, accountId: consumer.id },
+    });
+  }
+  console.log('Seeded 40 meters (1:1) linked to first 40 consumers');
+
+  // 1 shared meter linked to remaining 15 consumers (building scenario)
+  const sharedAddress = 'Shared Building 1, Entrance A';
+  const sharedMeter = await prisma.meter.create({
+    data: {
+      serialNumber: `SN-99-SHARED`,
+      groupCode: '99',
+      address: sharedAddress,
+      status: 'active',
+    },
+  });
+
+  for (let i = 40; i < 55; i += 1) {
+    await prisma.account.update({
+      where: { id: consumerAccounts[i].id },
+      data: { address: sharedAddress },
+    });
+    await prisma.meterConsumer.create({
+      data: { meterId: sharedMeter.id, accountId: consumerAccounts[i].id },
+    });
+  }
+  console.log('Seeded 1 shared meter linked to remaining 15 consumers');
+
+  // 1 extra meter for a consumer that already has a meter (one consumer has two meters)
+  const extraConsumer = consumerAccounts[0];
+  const extraMeter = await prisma.meter.create({
+    data: {
+      serialNumber: `SN-41-EXTRA-${extraConsumer.id.slice(0, 6)}`,
+      groupCode: '41',
+      address: extraConsumer.address,
+      status: 'active',
+    },
+  });
+  await prisma.meterConsumer.create({
+    data: { meterId: extraMeter.id, accountId: extraConsumer.id },
+  });
+  console.log('Seeded 1 extra meter linked to a consumer with existing meter');
+}
+
 async function main() {
   await clearData();
   await seedAdmins();
@@ -338,6 +410,7 @@ async function main() {
   await seedBulkConsumers();
   await seedStaff();
   await seedExtraStaffField();
+  await seedMeters();
 }
 
 main()

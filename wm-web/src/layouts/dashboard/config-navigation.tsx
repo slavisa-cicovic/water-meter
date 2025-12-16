@@ -17,6 +17,7 @@ const icon = (name: string) => (
 const ICONS = {
   accounts: icon('ic_user'),
   dashboard: icon('ic_dashboard'),
+  meters: icon('ic_dashboard'),
 };
 
 // ----------------------------------------------------------------------
@@ -37,6 +38,11 @@ export function useNavData() {
             title: 'Accounts',
             path: paths.dashboard.accounts.root,
             icon: ICONS.accounts,
+          },
+          {
+            title: 'Meters',
+            path: paths.dashboard.meters.root,
+            icon: ICONS.meters,
           },
         ],
       },
