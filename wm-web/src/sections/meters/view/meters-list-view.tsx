@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useCallback, useState } from 'react';
-import { Alert, Button, Card, CardContent, Container, Stack, Table, TableBody, TableContainer, Typography } from '@mui/material';
+import { Alert, Button, Card, CardContent, Container, Table, TableBody, TableContainer } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import { isEqual } from 'lodash';
 import EmptyContent from 'src/components/empty-content';
 import Iconify from 'src/components/iconify';
 import { useSettingsContext } from 'src/components/settings';
 import { TableHeadCustom, TableNoData, TablePaginationCustom, useTable } from 'src/components/table';
+import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
 import { useGetMeters } from 'src/api/meters';
 import { RouterLink } from 'src/routes/components';
 import { paths } from 'src/routes/paths';
@@ -35,6 +37,7 @@ const TABLE_HEAD = [
 
 export function MetersListView() {
   const settings = useSettingsContext();
+  const theme = useTheme();
   const [filters, setFilters] = useState(defaultFilters);
   const table = useTable({ defaultRowsPerPage: 25, defaultDense: true, defaultOrderBy: 'createdAt', defaultOrder: 'desc' });
 
@@ -68,22 +71,34 @@ export function MetersListView() {
 
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
-      <Stack spacing={2} mb={3}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-          <Typography variant="h4">Meters</Typography>
+      <CustomBreadcrumbs
+        heading="Meters"
+        description="Manage water meters and their consumer assignments."
+        links={[
+          { name: 'App', href: paths.dashboard.root },
+          { name: 'Meters', href: paths.dashboard.meters.root },
+        ]}
+        action={
           <Button
             component={RouterLink}
-            href={paths.dashboard.meters.root + '/new'}
+            href={paths.dashboard.meters.new}
             variant="contained"
-            startIcon={<Iconify icon="eva:plus-fill" width={16} />}
+            startIcon={<Iconify icon="mingcute:add-line" width={16} />}
+            sx={{
+              minWidth: '100px',
+              backgroundColor: theme.palette.primary.main,
+              color: theme.palette.primary.contrastText,
+              '&:hover': {
+                backgroundColor: theme.palette.primary.dark,
+                borderColor: theme.palette.primary.dark,
+              },
+            }}
           >
-            New meter
+            New Meter
           </Button>
-        </Stack>
-        <Typography variant="body2" color="text.secondary">
-          Manage water meters and their consumer assignments.
-        </Typography>
-      </Stack>
+        }
+        sx={{ mb: { xs: 3, md: 5 } }}
+      />
 
       <Card>
         <MeterTableToolbar filters={filters} onFilters={handleFilters} />

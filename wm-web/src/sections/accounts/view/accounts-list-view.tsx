@@ -24,6 +24,7 @@ import AccountTableSkeleton from '../account-skeleton';
 import { useSettingsContext } from 'src/components/settings';
 import { useCallback, useState } from 'react';
 import { TableHeadCustom, TableNoData, TablePaginationCustom, useTable } from 'src/components/table';
+import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
 import { isEqual } from 'lodash';
 import AccountTableToolbar from '../account-table-toolbar';
 import AccountTableFiltersResult from '../account-table-filters-result';
@@ -95,12 +96,15 @@ export default function AccountsListView() {
 
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
-      <Stack spacing={2} mb={3}>
-        <Typography variant="h4">Accounts</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Pending consumers and staff. Verify or reject to allow access.
-        </Typography>
-      </Stack>
+      <CustomBreadcrumbs
+        heading="Accounts"
+        description="Pending consumers and staff. Verify or reject to allow access."
+        links={[
+          { name: 'App', href: paths.dashboard.root },
+          { name: 'Accounts', href: paths.dashboard.accounts.root },
+        ]}
+        sx={{ mb: { xs: 3, md: 5 } }}
+      />
 
       <Card>
         <AccountTableToolbar

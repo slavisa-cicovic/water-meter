@@ -5,6 +5,8 @@ import { useSettingsContext } from 'src/components/settings';
 import { useGetInvoice } from 'src/api/billing';
 import EmptyContent from 'src/components/empty-content';
 import { useMemo } from 'react';
+import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
+import { paths } from 'src/routes/paths';
 
 type Props = {
   id: string;
@@ -25,12 +27,16 @@ export function InvoiceDetailView({ id }: Props) {
 
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
-      <Stack spacing={2} mb={3}>
-        <Typography variant="h4">Invoice Detail</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Detailed invoice with readings, tariff snapshot, and line items.
-        </Typography>
-      </Stack>
+      <CustomBreadcrumbs
+        heading="Invoice Detail"
+        description="Detailed invoice with readings, tariff snapshot, and line items."
+        links={[
+          { name: 'App', href: paths.dashboard.root },
+          { name: 'Billing', href: paths.dashboard.billing.root },
+          { name: id },
+        ]}
+        sx={{ mb: { xs: 3, md: 5 } }}
+      />
 
       {invoiceError && <EmptyContent filled title="Failed to load invoice." sx={{ py: 6 }} />}
       {invoiceLoading && <Alert severity="info">Loading invoice...</Alert>}
@@ -124,4 +130,3 @@ export function InvoiceDetailView({ id }: Props) {
     </Container>
   );
 }
-

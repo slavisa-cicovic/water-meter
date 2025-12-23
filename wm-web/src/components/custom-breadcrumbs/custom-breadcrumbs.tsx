@@ -14,6 +14,7 @@ export default function CustomBreadcrumbs({
   links,
   action,
   heading,
+  description,
   moreLink,
   activeLast,
   sx,
@@ -29,6 +30,12 @@ export default function CustomBreadcrumbs({
           {heading && (
             <Typography variant="h4" gutterBottom>
               {heading}
+            </Typography>
+          )}
+
+          {description && (
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+              {description}
             </Typography>
           )}
 

@@ -75,7 +75,7 @@ export const BillingRepository = {
         orderBy: { periodStart: 'desc' },
         skip: page * pageSize,
         take: pageSize,
-        include: { lines: true },
+        include: { lines: true, meter: true },
       }),
     ]);
 

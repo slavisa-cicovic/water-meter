@@ -14,7 +14,7 @@ export function BillingTableRow({ row }: Props) {
   return (
     <TableRow hover>
       <TableCell sx={{ minWidth: 200 }}>{row.accountId}</TableCell>
-      <TableCell sx={{ minWidth: 200 }}>{row.meterId || '-'}</TableCell>
+      <TableCell sx={{ minWidth: 200 }}>{row.meter?.serialNumber || row.meterId || '-'}</TableCell>
       <TableCell sx={{ minWidth: 200 }}>{period}</TableCell>
       <TableCell sx={{ width: 120 }}>{row.consumption}</TableCell>
       <TableCell sx={{ width: 140 }}>{row.totalAmount}</TableCell>
@@ -33,4 +33,3 @@ export function BillingTableRow({ row }: Props) {
     </TableRow>
   );
 }
-

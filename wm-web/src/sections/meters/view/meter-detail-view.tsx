@@ -8,6 +8,7 @@ import { useGetMeter } from 'src/api/meters';
 import { useSettingsContext } from 'src/components/settings';
 import EmptyContent from 'src/components/empty-content';
 import Iconify from 'src/components/iconify';
+import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
 import { MeterEditForm } from '../meter-edit-form';
 
 type Props = {
@@ -38,10 +39,19 @@ export function MeterDetailView({ id }: Props) {
 
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
+      <CustomBreadcrumbs
+        heading={meter?.serialNumber ? `Meter ${meter.serialNumber}` : 'Meter'}
+        description="Meter details and billing history."
+        links={[
+          { name: 'App', href: paths.dashboard.root },
+          { name: 'Meters', href: paths.dashboard.meters.root },
+          { name: 'Details' },
+        ]}
+        sx={{ mb: { xs: 3, md: 5 } }}
+      />
       {meterLoading && null}
       {meterError && renderError}
       {meter && <MeterEditForm currentMeter={meter} />}
     </Container>
   );
 }
-

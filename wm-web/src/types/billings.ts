@@ -21,6 +21,7 @@ export type Invoice = {
   id: string;
   accountId: string;
   meterId?: string;
+  meter?: { serialNumber?: string };
   periodStart: string;
   periodEnd: string;
   status: InvoiceStatus;
@@ -102,4 +103,3 @@ export type ValidationResult = {
   valid: boolean;
   errors: Record<string, string[]>;
 };
-

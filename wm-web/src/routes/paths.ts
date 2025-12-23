@@ -28,6 +28,7 @@ export const paths = {
     meters: {
       root: `${ROOTS.DASHBOARD}/meters`,
       details: (id: string) => `${ROOTS.DASHBOARD}/meters/${id}`,
+      new: `${ROOTS.DASHBOARD}/meters/new`,
     },
     billing: {
       root: `${ROOTS.DASHBOARD}/billing`,

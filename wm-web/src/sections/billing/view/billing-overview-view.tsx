@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useCallback, useState } from 'react';
-import { Alert, Button, Card, CardContent, Container, Stack, Table, TableBody, TableContainer, Typography } from '@mui/material';
+import { Alert, Button, Card, CardContent, Container, Table, TableBody, TableContainer } from '@mui/material';
 import { isEqual } from 'lodash';
 import EmptyContent from 'src/components/empty-content';
 import Iconify from 'src/components/iconify';
 import { useSettingsContext } from 'src/components/settings';
 import { TableHeadCustom, TableNoData, TablePaginationCustom, useTable } from 'src/components/table';
+import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
 import { useGetInvoices } from 'src/api/billing';
 import { RouterLink } from 'src/routes/components';
 import { paths } from 'src/routes/paths';
@@ -66,12 +67,15 @@ export function BillingOverviewView() {
 
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
-      <Stack spacing={2} mb={3}>
-        <Typography variant="h4">Billing Overview</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Back-office billing overview with invoice status and totals.
-        </Typography>
-      </Stack>
+      <CustomBreadcrumbs
+        heading="Billing Overview"
+        description="Back-office billing overview with invoice status and totals."
+        links={[
+          { name: 'App', href: paths.dashboard.root },
+          { name: 'Billing', href: paths.dashboard.billing.root },
+        ]}
+        sx={{ mb: { xs: 3, md: 5 } }}
+      />
 
       <Card>
         <BillingTableToolbar filters={filters} onFilters={handleFilters} />
@@ -148,4 +152,3 @@ export function BillingOverviewView() {
     </Container>
   );
 }
-

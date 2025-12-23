@@ -14,6 +14,7 @@ import {useLocales} from 'src/locales';
 import {useSettingsContext} from 'src/components/settings';
 import EmptyContent from "src/components/empty-content";
 import Iconify from "src/components/iconify";
+import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
 //
 import { AccountDetailsSkeleton } from '../account-skeleton';
 import AccountEditForm from '../account-edit-form';
@@ -53,12 +54,32 @@ export default function AccountEditView({id}: Props) {
     />
   );
 
+  const accountName = currentAccount
+    ? `${currentAccount.data.firstName} ${currentAccount.data.lastName}`
+    : `Account ${id}`;
+  const description =
+    currentAccount?.type === 'consumer'
+      ? 'Billing history and profile.'
+      : currentAccount?.type === 'staff_field'
+      ? 'Readings history and profile.'
+      : 'Account profile.';
+
   const renderAccount = currentAccount && (
       <AccountEditForm currentAccount={currentAccount}/>
   )
 
   return (
       <Container maxWidth={settings.themeStretch ? false : 'lg'}>
+        <CustomBreadcrumbs
+          heading={accountName}
+          description={description}
+        links={[
+          { name: 'App', href: paths.dashboard.root },
+          { name: 'Accounts', href: paths.dashboard.accounts.root },
+          { name: 'Details' },
+        ]}
+          sx={{ mb: { xs: 3, md: 5 } }}
+        />
         {accountLoading && renderSkeleton}
         {accountError && renderError}
         {currentAccount && renderAccount}
