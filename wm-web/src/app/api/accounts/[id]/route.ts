@@ -9,7 +9,7 @@ type Params = {
 export const GET = async (req: NextRequest, { params }: Params) => {
   const guard = requireAccountsAccess(req);
   if (!guard.ok) return guard.response;
-  const viewerRole = guard.role;
+  const viewerRole = guard.role as 'admin' | 'staff_backoffice';
 
   const { id } = await params;
   const account = await AccountsService.findById(id, viewerRole);
