@@ -3,6 +3,7 @@ export type ReadingMethod = 'remote' | 'manual' | 'photo_ocr';
 export type Reading = {
   id: string;
   meterId: string;
+  meter?: { serialNumber?: string };
   readerAccountId: string;
   readAt: string;
   method: ReadingMethod;
@@ -57,4 +58,3 @@ export type ValidationResult = {
   valid: boolean;
   errors: Record<string, string[]>;
 };
-

@@ -15,6 +15,7 @@ import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
 import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -135,8 +136,9 @@ export default function AccountEditForm({ currentAccount }: Props) {
     isConsumer && accountId ? { accountId } : undefined
   );
 
-  const [readingFrom, setReadingFrom] = useState('');
-  const [readingTo, setReadingTo] = useState('');
+  const currentYear = new Date().getFullYear();
+  const [readingFrom, setReadingFrom] = useState(`${currentYear}-01-01`);
+  const [readingTo, setReadingTo] = useState(`${currentYear}-12-31`);
   const { readings, readingsLoading, readingsEmpty } = useGetReadings(
     isStaffField && accountId
       ? { accountId, from: readingFrom || undefined, to: readingTo || undefined }
@@ -218,15 +220,34 @@ export default function AccountEditForm({ currentAccount }: Props) {
           {!readingsLoading && readings && readings.length > 0 && (
             <TableContainer>
               <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ width: 140 }}>Date</TableCell>
+                    <TableCell sx={{ width: 140 }}>Method</TableCell>
+                    <TableCell sx={{ width: 120 }}>Value</TableCell>
+                    <TableCell sx={{ width: 140 }}>Consumption</TableCell>
+                    <TableCell sx={{ width: 200 }}>Edit</TableCell>
+                    <TableCell>Meter</TableCell>
+                  </TableRow>
+                </TableHead>
                 <TableBody>
-                  {readings.map((reading) => (
+                  {readings.map((reading, index) => {
+                    const prev = readings[index + 1];
+                    const consumption = prev ? reading.value - prev.value : undefined;
+                    const latestEdit = reading.edits && reading.edits.length ? reading.edits[0] : undefined;
+                    const editInfo = latestEdit ? `Edited by ${latestEdit.editorRole}` : '';
+
+                    return (
                     <TableRow key={reading.id}>
-                      <TableCell sx={{ width: 160 }}>{reading.readAt?.slice(0, 10)}</TableCell>
-                      <TableCell sx={{ width: 120 }}>{reading.method}</TableCell>
+                      <TableCell sx={{ width: 140 }}>{reading.readAt?.slice(0, 10)}</TableCell>
+                      <TableCell sx={{ width: 140 }}>{reading.method}</TableCell>
                       <TableCell sx={{ width: 120 }}>{reading.value}</TableCell>
-                      <TableCell>{reading.meterId}</TableCell>
+                      <TableCell sx={{ width: 140 }}>{consumption !== undefined ? consumption : '-'}</TableCell>
+                      <TableCell sx={{ width: 200 }}>{editInfo}</TableCell>
+                      <TableCell>{reading.meter?.serialNumber || reading.meterId}</TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -271,4 +292,3 @@ export default function AccountEditForm({ currentAccount }: Props) {
     </FormProvider>
   );
 }
-

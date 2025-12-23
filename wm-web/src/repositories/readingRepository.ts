@@ -61,7 +61,7 @@ export const ReadingRepository = {
         orderBy: { readAt: 'desc' },
         skip: page * pageSize,
         take: pageSize,
-        include: { edits: true },
+        include: { edits: true, meter: true },
       }),
     ]);
 
