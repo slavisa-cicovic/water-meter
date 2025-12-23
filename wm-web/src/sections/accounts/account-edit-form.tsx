@@ -210,7 +210,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
   };
 
   const renderDetails = (
-    <Grid>
+    <Grid size={{ xs: 12, md: 5 }}>
       <Card>
         {!mdUp && <CardHeader title="Edit account" />}
         <CardContent>
@@ -220,6 +220,11 @@ export default function AccountEditForm({ currentAccount }: Props) {
             <RHFTextField name="lastName" label="Last name" disabled={!canEdit} />
             <RHFTextField name="address" label="Address" disabled={!canEdit} />
             <RHFTextField name="email" label="Email" disabled />
+            <Stack direction="row" justifyContent="flex-end">
+              <LoadingButton type="submit" variant="contained" size="large" loading={isSubmitting} disabled={!canEdit}>
+                save_changes
+              </LoadingButton>
+            </Stack>
           </Stack>
         </CardContent>
       </Card>
@@ -227,7 +232,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
   );
 
   const renderBillingHistory = isConsumer && (
-    <Grid>
+    <Grid size={{ xs: 12, md: 8 }}>
       <Card>
         <CardHeader title="Billing history" />
         <CardContent>
@@ -256,7 +261,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
   );
 
   const renderReadingsHistory = isStaffField && (
-    <Grid>
+    <Grid size={{ xs: 12, md: 8 }}>
       <Card>
         <CardHeader title="Readings history" />
         <CardContent>
@@ -334,24 +339,12 @@ export default function AccountEditForm({ currentAccount }: Props) {
     </Grid>
   );
 
-  const renderActions = (
-    <>
-      {mdUp && <Grid />}
-      <Grid sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', columnGap: 1 }}>
-        <LoadingButton type="submit" variant="contained" size="large" loading={isSubmitting} disabled={!canEdit}>
-          save_changes
-        </LoadingButton>
-      </Grid>
-    </>
-  );
-
   return (
     <FormProvider methods={methods} onSubmit={handleSubmit(onSubmit)}>
-      <Grid container spacing={3}>
+      <Grid container spacing={3} columns={{ xs: 12, md: 13 }}>
         {renderDetails}
         {renderBillingHistory}
         {renderReadingsHistory}
-        {renderActions}
       </Grid>
 
       <Dialog open={addressPromptOpen} onClose={() => setAddressPromptOpen(false)}>
