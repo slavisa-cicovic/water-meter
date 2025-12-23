@@ -3,7 +3,7 @@ import { AccountsService } from "src/services/accountsService";
 import { requireAccountsAccess } from "src/services/authGuardAccounts";
 
 type Params = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export const GET = async (req: NextRequest, { params }: Params) => {
@@ -11,7 +11,8 @@ export const GET = async (req: NextRequest, { params }: Params) => {
   if (!guard.ok) return guard.response;
   const viewerRole = guard.role;
 
-  const account = await AccountsService.findById(params.id, viewerRole);
+  const { id } = await params;
+  const account = await AccountsService.findById(id, viewerRole);
 
   if (!account) {
     return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });

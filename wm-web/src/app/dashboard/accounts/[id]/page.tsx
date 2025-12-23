@@ -1,13 +1,14 @@
 import { AccountEditView } from 'src/sections/accounts/view';
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export const metadata = {
   title: 'Account Details',
 };
 
-export default function Page({ params }: Props) {
-  return <AccountEditView id={params.id} />;
+export default async function Page({ params }: Props) {
+  const { id } = await params;
+  return <AccountEditView id={id} />;
 }
