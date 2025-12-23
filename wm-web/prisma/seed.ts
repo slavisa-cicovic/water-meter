@@ -518,6 +518,50 @@ async function seedReadings() {
   console.log('Seeded monthly readings (Jan-Nov) with extra readings and one edit entry');
 }
 
+async function seedTariffs() {
+  const existing = await prisma.tariff.count();
+  if (existing > 0) {
+    console.log('Tariffs already seeded');
+    return;
+  }
+
+  await prisma.tariff.create({
+    data: {
+      name: 'Default tariff',
+      basePrice: 1.0,
+      greenLimit: 15,
+      blueLimit: 30,
+      blueMultiplier: 1.2,
+      redMultiplier: 2.0,
+      validFrom: new Date(new Date().getFullYear(), 0, 1),
+    },
+  });
+
+  console.log('Seeded default tariff');
+}
+
+async function seedInvoices() {
+  const billingService = await import('../src/services/billingService');
+
+  const year = new Date().getFullYear();
+  const periodStart = new Date(Date.UTC(year, 0, 1)).toISOString();
+  const periodEnd = new Date(Date.UTC(year, 0, 31)).toISOString();
+
+  const result = await billingService.BillingService.generateForPeriod({
+    accountId: 'seed',
+    periodStart,
+    periodEnd,
+    vatRate: 0.19,
+  });
+
+  if (!result.success) {
+    console.log('Billing seed skipped:', result.error);
+    return;
+  }
+
+  console.log(`Seeded invoices: ${result.data.invoices.length} (skipped ${result.data.skipped.length})`);
+}
+
 async function main() {
   await clearData();
   await seedAdmins();
@@ -527,6 +571,8 @@ async function main() {
   await seedExtraStaffField();
   await seedMeters();
   await seedReadings();
+  await seedTariffs();
+  await seedInvoices();
 }
 
 main()

@@ -42,6 +42,24 @@ enum ReadingMethod {
   photo_ocr
 }
 
+enum InvoiceStatus {
+  draft
+  issued
+  paid
+  void
+}
+
+enum InvoiceLineType {
+  consumption
+  fee
+  vat
+}
+
+enum InvoiceReadingRole {
+  start
+  end
+}
+
 model Account {
   id                 String              @id @default(uuid())
   firstName          String
@@ -61,6 +79,7 @@ model Account {
   meterConsumers   MeterConsumer[]
   readingsAsReader Reading[] @relation("ReadingReader")
   readingEdits     ReadingEdit[]
+  invoices         Invoice[]
 }
 
 model ConsumerProfile {
@@ -104,6 +123,7 @@ model Meter {
 
   consumers MeterConsumer[]
   readings  Reading[]
+  invoices  Invoice[]
 
   @@index([groupCode])
 }
@@ -134,6 +154,7 @@ model Reading {
   meter           Meter    @relation(fields: [meterId], references: [id], onDelete: Cascade)
   readerAccount   Account  @relation("ReadingReader", fields: [readerAccountId], references: [id], onDelete: Cascade)
   edits           ReadingEdit[]
+  invoiceLinks    InvoiceReadingLink[]
 
   @@index([meterId])
   @@index([readerAccountId])
@@ -155,4 +176,78 @@ model ReadingEdit {
   @@index([readingId])
   @@index([accountId])
   @@index([editedAt])
+}
+
+model Tariff {
+  id             String   @id @default(uuid())
+  name           String
+  basePrice      Decimal  @db.Decimal(12, 2)
+  greenLimit     Int
+  blueLimit      Int
+  blueMultiplier Decimal  @db.Decimal(5, 2)
+  redMultiplier  Decimal  @db.Decimal(5, 2)
+  validFrom      DateTime
+  validTo        DateTime?
+  groupCode      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  invoices Invoice[]
+}
+
+model Invoice {
+  id           String        @id @default(uuid())
+  accountId    String
+  meterId      String?
+  periodStart  DateTime
+  periodEnd    DateTime
+  status       InvoiceStatus @default(draft)
+  consumption  Int
+  unitPrice    Decimal       @db.Decimal(12, 2)
+  subtotal     Decimal       @db.Decimal(12, 2)
+  vatRate      Decimal       @db.Decimal(5, 2)
+  vatAmount    Decimal       @db.Decimal(12, 2)
+  totalAmount  Decimal       @db.Decimal(12, 2)
+  tariffId     String?
+  tariffSnapshot Json?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  account  Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  meter    Meter?  @relation(fields: [meterId], references: [id], onDelete: SetNull)
+  tariff   Tariff? @relation(fields: [tariffId], references: [id], onDelete: SetNull)
+  lines    InvoiceLine[]
+  readings InvoiceReadingLink[]
+
+  @@index([accountId])
+  @@index([meterId])
+  @@index([periodStart])
+  @@index([periodEnd])
+}
+
+model InvoiceLine {
+  id          String          @id @default(uuid())
+  invoiceId   String
+  type        InvoiceLineType
+  description String?
+  quantity    Decimal?        @db.Decimal(12, 3)
+  unitPrice   Decimal?        @db.Decimal(12, 2)
+  amount      Decimal         @db.Decimal(12, 2)
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+}
+
+model InvoiceReadingLink {
+  id        String             @id @default(uuid())
+  invoiceId String
+  readingId String
+  role      InvoiceReadingRole
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  reading Reading @relation(fields: [readingId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@index([readingId])
 }

@@ -118,8 +118,12 @@ export const MeterRepository = {
   async listConsumersForMeter(meterId: string) {
     return prisma.meterConsumer.findMany({
       where: { meterId },
-      include: { account: true },
+      include: { account: { include: { consumerProfile: true } } },
       orderBy: { accountId: 'asc' },
     });
+  },
+
+  async listAll() {
+    return prisma.meter.findMany({ orderBy: { createdAt: 'asc' } });
   },
 };

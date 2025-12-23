@@ -68,6 +68,14 @@ export const ReadingRepository = {
     return { total, readings };
   },
 
+  async findLatestForMeterBefore(meterId: string, before: Date) {
+    return prisma.reading.findFirst({
+      where: { meterId, readAt: { lte: before } },
+      orderBy: { readAt: 'desc' },
+      include: { edits: true },
+    });
+  },
+
   async addEdit(params: {
     readingId: string;
     accountId: string;
@@ -86,4 +94,3 @@ export const ReadingRepository = {
     });
   },
 };
-
