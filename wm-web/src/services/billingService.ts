@@ -51,6 +51,13 @@ export const BillingService = {
     return { success: true, data: { invoices, total } };
   },
 
+  async findInvoiceById(id: string) {
+    if (!id) return { success: false, error: 'VALIDATION_FAILED', details: { id: ['Required'] } };
+    const invoice = await BillingRepository.findInvoiceById(id);
+    if (!invoice) return { success: false, error: 'NOT_FOUND' };
+    return { success: true, data: { invoice } };
+  },
+
   async generateForPeriod(input: InvoiceCreateInput) {
     const validation = validateInvoiceCreate(input);
     if (!validation.valid) return { success: false, error: 'VALIDATION_FAILED', details: validation.errors };
@@ -199,4 +206,3 @@ export const BillingService = {
     return { success: true, data: { invoices: created, skipped } };
   },
 };
-

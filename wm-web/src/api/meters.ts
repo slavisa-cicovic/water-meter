@@ -44,3 +44,19 @@ export function useGetMeters(params?: MetersQuery) {
     [data?.meters, data?.total, error, isLoading, isValidating, mutate]
   );
 }
+
+export function useGetMeter(id?: string) {
+  const URL = id ? endpoints.meters.details(id) : null;
+  const { data, isLoading, error, isValidating, mutate } = useSWR(URL, fetcher);
+
+  return useMemo(
+    () => ({
+      meter: data?.meter as Meter | undefined,
+      meterLoading: isLoading,
+      meterError: error,
+      meterValidating: isValidating,
+      mutate,
+    }),
+    [data?.meter, error, isLoading, isValidating, mutate]
+  );
+}

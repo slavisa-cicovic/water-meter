@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 import { GET as billingGet, POST as billingPost } from 'src/app/api/billing/route';
+import { GET as billingDetailGet } from 'src/app/api/billing/[id]/route';
 import { GET as tariffsGet, POST as tariffsPost, PUT as tariffsPut } from 'src/app/api/billing/tariffs/route';
 import { BillingService } from 'src/services/billingService';
 import { TokenService } from 'src/services/tokenService';
@@ -55,6 +56,24 @@ describe('API /billing', () => {
 
     const res = await billingPost(req as any);
     expect(res.status).toBe(201);
+  });
+
+  it('GET /billing/[id] returns 404 on NOT_FOUND', async () => {
+    vi.spyOn(TokenService, 'parseAccountToken').mockReturnValue({
+      accountId: 'admin',
+      role: 'admin',
+      verificationStatus: 'verified',
+      issuedAt: new Date().toISOString(),
+    } as any);
+    vi.spyOn(BillingService, 'findInvoiceById').mockResolvedValue({ success: false, error: 'NOT_FOUND' } as any);
+
+    const req = new NextRequest('http://localhost/api/billing/i1', {
+      method: 'GET',
+      headers: { Authorization: 'Bearer token' },
+    });
+
+    const res = await billingDetailGet(req as any, { params: { id: 'i1' } });
+    expect(res.status).toBe(404);
   });
 });
 
@@ -118,4 +137,3 @@ describe('API /billing/tariffs', () => {
     expect(res.status).toBe(200);
   });
 });
-

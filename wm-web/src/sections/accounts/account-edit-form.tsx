@@ -1,11 +1,26 @@
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import * as Yup from 'yup';
 // @mui
 import LoadingButton from '@mui/lab/LoadingButton';
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
+import CardContent from '@mui/material/CardContent';
 import Grid from '@mui/material/Grid2';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableRow from '@mui/material/TableRow';
+import TableContainer from '@mui/material/TableContainer';
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import Button from '@mui/material/Button';
 // routes
 import { useRouter } from 'src/routes/hooks';
 import { paths } from 'src/routes/paths';
@@ -13,13 +28,15 @@ import { paths } from 'src/routes/paths';
 import { useLocales } from 'src/locales';
 // hooks
 import { useResponsive } from 'src/hooks/use-responsive';
-// utils
 // api
+import { useGetInvoices } from 'src/api/billing';
+import { useGetReadings } from 'src/api/readings';
+// auth
+import { useAuthContext } from 'src/auth/hooks';
 // components
-import FormProvider from 'src/components/hook-form';
+import FormProvider, { RHFTextField } from 'src/components/hook-form';
 // types
 import { AccountRow } from 'src/api/accounts';
-
 
 // ----------------------------------------------------------------------
 
@@ -28,40 +45,52 @@ type Props = {
 };
 
 export default function AccountEditForm({ currentAccount }: Props) {
-
   const { t } = useLocales();
-
   const router = useRouter();
-
   const mdUp = useResponsive('up', 'md');
+  const { user } = useAuthContext();
 
+  const AccountSchema = Yup.object().shape({
+    firstName: Yup.string().required('Required'),
+    lastName: Yup.string().required('Required'),
+    address: Yup.string().required('Required'),
+  });
 
   const defaultValues = useMemo(
     () => ({
       id: currentAccount?.id,
-      // TODO populate default values
-
+      firstName: currentAccount?.data.firstName || '',
+      lastName: currentAccount?.data.lastName || '',
+      address: currentAccount?.data.address || '',
+      email: currentAccount?.data.email || '',
     }),
-    [currentAccount],
+    [currentAccount]
   );
 
   const methods = useForm({
-    resolver: yupResolver(AccountSchema), // TODO create accountSchema
+    resolver: yupResolver(AccountSchema),
     defaultValues,
     mode: 'onChange',
   });
 
   const {
     watch,
-    setValue,
     reset,
     handleSubmit,
-    formState: { isSubmitting, errors },
+    formState: { isSubmitting },
   } = methods;
 
   const values = watch();
 
-  const [errorMsg, setErrorMsg] = useState('');
+  const [addressPromptOpen, setAddressPromptOpen] = useState(false);
+  const [pendingSubmit, setPendingSubmit] = useState<any>(null);
+
+  const viewerRole = (user as any)?.role as string | undefined;
+  const viewerId = (user as any)?.accountId || (user as any)?.id;
+  const canEdit =
+    (viewerRole === 'staff_backoffice' &&
+      (currentAccount?.type === 'consumer' || currentAccount?.type === 'staff_field' || currentAccount?.id === viewerId)) ||
+    (viewerRole === 'admin' && currentAccount?.id === viewerId);
 
   useEffect(() => {
     if (currentAccount) {
@@ -69,10 +98,9 @@ export default function AccountEditForm({ currentAccount }: Props) {
     }
   }, [currentAccount, defaultValues, reset]);
 
-
-  const onSubmit = async (data: any) => {
+  const applySubmit = async (data: any, updateMeterAddress: boolean) => {
     try {
-      const formData = new FormData();
+      console.info('[AccountEditForm] Save account', { data, updateMeterAddress });
       reset();
       router.push(paths.dashboard.accounts.root);
     } catch (error) {
@@ -80,30 +108,140 @@ export default function AccountEditForm({ currentAccount }: Props) {
     }
   };
 
+  const onSubmit = async (data: any) => {
+    if (!canEdit) return;
+    const addressChanged = currentAccount?.data.address !== data.address;
+    if (addressChanged) {
+      setPendingSubmit(data);
+      setAddressPromptOpen(true);
+      return;
+    }
+    await applySubmit(data, false);
+  };
 
+  const handleAddressDecision = async (updateMeterAddress: boolean) => {
+    setAddressPromptOpen(false);
+    if (pendingSubmit) {
+      await applySubmit(pendingSubmit, updateMeterAddress);
+      setPendingSubmit(null);
+    }
+  };
+
+  const accountId = currentAccount?.id;
+  const isConsumer = currentAccount?.type === 'consumer';
+  const isStaffField = currentAccount?.type === 'staff_field';
+
+  const { invoices, invoicesLoading, invoicesEmpty } = useGetInvoices(
+    isConsumer && accountId ? { accountId } : undefined
+  );
+
+  const [readingFrom, setReadingFrom] = useState('');
+  const [readingTo, setReadingTo] = useState('');
+  const { readings, readingsLoading, readingsEmpty } = useGetReadings(
+    isStaffField && accountId
+      ? { accountId, from: readingFrom || undefined, to: readingTo || undefined }
+      : undefined
+  );
 
   const renderDetails = (
     <Grid>
       <Card>
-        {!mdUp && <CardHeader title='Edit account' />}
-        <Grid>
-        // TODO put all editable account props
-        </Grid>
+        {!mdUp && <CardHeader title="Edit account" />}
+        <CardContent>
+          <Stack spacing={2}>
+            <Typography variant="subtitle2">Account details</Typography>
+            <RHFTextField name="firstName" label="First name" disabled={!canEdit} />
+            <RHFTextField name="lastName" label="Last name" disabled={!canEdit} />
+            <RHFTextField name="address" label="Address" disabled={!canEdit} />
+            <RHFTextField name="email" label="Email" disabled />
+          </Stack>
+        </CardContent>
+      </Card>
+    </Grid>
+  );
 
+  const renderBillingHistory = isConsumer && (
+    <Grid>
+      <Card>
+        <CardHeader title="Billing history" />
+        <CardContent>
+          {invoicesLoading && <Typography variant="body2">Loading invoices...</Typography>}
+          {!invoicesLoading && invoicesEmpty && <Typography variant="body2">No invoices found.</Typography>}
+          {!invoicesLoading && invoices && invoices.length > 0 && (
+            <TableContainer>
+              <Table size="small">
+                <TableBody>
+                  {invoices.map((invoice) => (
+                    <TableRow key={invoice.id}>
+                      <TableCell sx={{ width: 160 }}>
+                        {invoice.periodStart?.slice(0, 10)} → {invoice.periodEnd?.slice(0, 10)}
+                      </TableCell>
+                      <TableCell sx={{ width: 120 }}>{invoice.totalAmount}</TableCell>
+                      <TableCell sx={{ width: 120 }}>{invoice.status}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </CardContent>
+      </Card>
+    </Grid>
+  );
+
+  const renderReadingsHistory = isStaffField && (
+    <Grid>
+      <Card>
+        <CardHeader title="Readings history" />
+        <CardContent>
+          <Stack direction="row" spacing={2} mb={2}>
+            <TextField
+              label="From"
+              type="date"
+              value={readingFrom}
+              onChange={(event) => setReadingFrom(event.target.value)}
+              InputLabelProps={{ shrink: true }}
+              sx={{ minWidth: 160 }}
+            />
+            <TextField
+              label="To"
+              type="date"
+              value={readingTo}
+              onChange={(event) => setReadingTo(event.target.value)}
+              InputLabelProps={{ shrink: true }}
+              sx={{ minWidth: 160 }}
+            />
+          </Stack>
+
+          {readingsLoading && <Typography variant="body2">Loading readings...</Typography>}
+          {!readingsLoading && readingsEmpty && <Typography variant="body2">No readings found.</Typography>}
+          {!readingsLoading && readings && readings.length > 0 && (
+            <TableContainer>
+              <Table size="small">
+                <TableBody>
+                  {readings.map((reading) => (
+                    <TableRow key={reading.id}>
+                      <TableCell sx={{ width: 160 }}>{reading.readAt?.slice(0, 10)}</TableCell>
+                      <TableCell sx={{ width: 120 }}>{reading.method}</TableCell>
+                      <TableCell sx={{ width: 120 }}>{reading.value}</TableCell>
+                      <TableCell>{reading.meterId}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </CardContent>
       </Card>
     </Grid>
   );
 
   const renderActions = (
     <>
-      {mdUp && <Grid  />}
+      {mdUp && <Grid />}
       <Grid sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', columnGap: 1 }}>
-        <LoadingButton type="submit"
-          variant="contained"
-          size="large"
-          loading={isSubmitting}
-        >
-          'save_changes'
+        <LoadingButton type="submit" variant="contained" size="large" loading={isSubmitting} disabled={!canEdit}>
+          save_changes
         </LoadingButton>
       </Grid>
     </>
@@ -113,8 +251,24 @@ export default function AccountEditForm({ currentAccount }: Props) {
     <FormProvider methods={methods} onSubmit={handleSubmit(onSubmit)}>
       <Grid container spacing={3}>
         {renderDetails}
+        {renderBillingHistory}
+        {renderReadingsHistory}
         {renderActions}
       </Grid>
+
+      <Dialog open={addressPromptOpen} onClose={() => setAddressPromptOpen(false)}>
+        <DialogTitle>Update meter address?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">Address changed. Do you want to update the meter address as well?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => handleAddressDecision(false)}>Keep meter address</Button>
+          <Button onClick={() => handleAddressDecision(true)} variant="contained">
+            Update meter address
+          </Button>
+        </DialogActions>
+      </Dialog>
     </FormProvider>
   );
 }
+

@@ -82,6 +82,17 @@ export const BillingRepository = {
     return { total, invoices };
   },
 
+  async findInvoiceById(id: string) {
+    return prisma.invoice.findUnique({
+      where: { id },
+      include: {
+        lines: true,
+        readings: { include: { reading: true } },
+        tariff: true,
+      },
+    });
+  },
+
   async createInvoice(data: {
     accountId: string;
     meterId?: string | null;

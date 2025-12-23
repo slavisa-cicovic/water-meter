@@ -43,5 +43,14 @@ export const endpoints = {
     list: '/api/meters',
     details: (id: string) => `/api/meters/${id}`,
     consumers: (id: string) => `/api/meters/${id}/consumers`,
-  },  
+  },
+  readings: {
+    list: '/api/readings',
+    details: (id: string) => `/api/readings/${id}`,
+  },
+  billing: {
+    list: '/api/billing',
+    details: (id: string) => `/api/billing/${id}`,
+    tariffs: '/api/billing/tariffs',
+  },
 };
