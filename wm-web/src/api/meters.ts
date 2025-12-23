@@ -7,7 +7,10 @@ type MetersQuery = {
   search?: string;
   status?: string;
   groupCode?: string;
+  type?: string;
   consumerAccountId?: string;
+  orderBy?: string;
+  order?: 'asc' | 'desc';
   page?: number;
   pageSize?: number;
 };
@@ -17,7 +20,10 @@ export function useGetMeters(params?: MetersQuery) {
   if (params?.search) query.set('search', params.search);
   if (params?.status) query.set('status', params.status);
   if (params?.groupCode) query.set('groupCode', params.groupCode);
+  if (params?.type) query.set('type', params.type);
   if (params?.consumerAccountId) query.set('consumerAccountId', params.consumerAccountId);
+  if (params?.orderBy) query.set('orderBy', params.orderBy);
+  if (params?.order) query.set('order', params.order);
   if (params?.page !== undefined) query.set('page', String(params.page));
   if (params?.pageSize !== undefined) query.set('pageSize', String(params.pageSize));
 
@@ -38,4 +44,3 @@ export function useGetMeters(params?: MetersQuery) {
     [data?.meters, data?.total, error, isLoading, isValidating, mutate]
   );
 }
-

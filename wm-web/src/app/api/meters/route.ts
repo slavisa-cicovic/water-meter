@@ -10,7 +10,17 @@ export const GET = async (req: NextRequest) => {
   const search = searchParams.get('search') || undefined;
   const status = (searchParams.get('status') || undefined) as any;
   const groupCode = searchParams.get('groupCode') || undefined;
+  const type = (searchParams.get('type') || undefined) as any;
   const consumerAccountId = searchParams.get('consumerAccountId') || undefined;
+  const orderBy = (searchParams.get('orderBy') || undefined) as
+    | 'serialNumber'
+    | 'groupCode'
+    | 'address'
+    | 'type'
+    | 'status'
+    | 'createdAt'
+    | undefined;
+  const order = (searchParams.get('order') || undefined) as 'asc' | 'desc' | undefined;
   const page = searchParams.get('page');
   const pageSize = searchParams.get('pageSize');
 
@@ -18,7 +28,10 @@ export const GET = async (req: NextRequest) => {
     search,
     status,
     groupCode,
+    type,
     consumerAccountId,
+    orderBy,
+    order,
     page: page ? Number(page) : 0,
     pageSize: pageSize ? Number(pageSize) : 25,
   });
@@ -44,4 +57,3 @@ export const POST = async (req: NextRequest) => {
 
   return NextResponse.json(result.data, { status: 201 });
 };
-

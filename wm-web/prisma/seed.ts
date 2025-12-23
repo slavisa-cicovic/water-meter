@@ -356,6 +356,7 @@ async function seedMeters() {
         groupCode: pad2(i + 1),
         address: consumer.address,
         status: 'active',
+        type: i % 3 === 0 ? 'automatic' : 'mechanical',
       },
     });
 
@@ -373,6 +374,7 @@ async function seedMeters() {
       groupCode: '99',
       address: sharedAddress,
       status: 'active',
+      type: 'mechanical',
     },
   });
 
@@ -395,6 +397,7 @@ async function seedMeters() {
       groupCode: '41',
       address: extraConsumer.address,
       status: 'active',
+      type: 'automatic',
     },
   });
   await prisma.meterConsumer.create({

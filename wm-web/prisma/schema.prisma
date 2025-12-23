@@ -31,6 +31,11 @@ enum MeterStatus {
   removed
 }
 
+enum MeterType {
+  automatic
+  mechanical
+}
+
 model Account {
   id                 String              @id @default(uuid())
   firstName          String
@@ -83,6 +88,7 @@ model Meter {
   groupCode    String?
   address      String
   status       MeterStatus @default(active)
+  type         MeterType   @default(mechanical)
   installedAt  DateTime?
   notes        String?     @db.Text
   createdAt    DateTime    @default(now())

@@ -36,6 +36,7 @@ describe('MetersService validation', () => {
       groupCode: '01',
       address: 'Addr',
       status: 'active',
+      type: 'mechanical',
       installedAt: null,
       notes: null,
       createdAt: new Date(),
@@ -50,6 +51,17 @@ describe('MetersService validation', () => {
 
     const bad100 = await MetersService.create({ serialNumber: 'SN-100', address: 'Addr', groupCode: '100' as any });
     expect(bad100.success).toBe(false);
+  });
+
+  it('rejects invalid meter type', async () => {
+    const result = await MetersService.create({
+      serialNumber: 'SN-TYPE',
+      address: 'Addr',
+      type: 'smart' as any,
+    });
+
+    expect(result.success).toBe(false);
+    expect((result as any).error).toBe('VALIDATION_FAILED');
   });
 });
 
@@ -74,4 +86,3 @@ describe('MetersService consumer links', () => {
     expect(result.success).toBe(true);
   });
 });
-

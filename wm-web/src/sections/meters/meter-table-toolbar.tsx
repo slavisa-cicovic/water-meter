@@ -12,6 +12,7 @@ export type IMeterTableFilters = {
   search: string;
   status: '' | MeterStatus;
   groupCode: string;
+  type: '' | 'automatic' | 'mechanical';
 };
 
 type Props = {
@@ -37,6 +38,13 @@ export function MeterTableToolbar({ filters, onFilters }: Props) {
   const handleGroupCode = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       onFilters('groupCode', event.target.value);
+    },
+    [onFilters]
+  );
+
+  const handleType = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      onFilters('type', event.target.value);
     },
     [onFilters]
   );
@@ -77,6 +85,12 @@ export function MeterTableToolbar({ filters, onFilters }: Props) {
           placeholder="01-99"
           sx={{ minWidth: 160 }}
         />
+
+        <TextField select label="Type" value={filters.type} onChange={handleType} sx={{ minWidth: 160 }}>
+          <MenuItem value="">All</MenuItem>
+          <MenuItem value="automatic">automatic</MenuItem>
+          <MenuItem value="mechanical">mechanical</MenuItem>
+        </TextField>
       </Stack>
     </Stack>
   );

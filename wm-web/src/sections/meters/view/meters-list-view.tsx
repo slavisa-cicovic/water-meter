@@ -19,15 +19,17 @@ const defaultFilters: IMeterTableFilters = {
   search: '',
   status: '',
   groupCode: '',
+  type: '',
 };
 
 const TABLE_HEAD = [
   { id: 'serialNumber', label: 'Serial', width: 220 },
   { id: 'groupCode', label: 'Group', width: 120 },
   { id: 'address', label: 'Address', minWidth: 420 },
-  { id: 'status', label: 'Status', width: 120, disableSort: true },
+  { id: 'type', label: 'Type', width: 140 },
+  { id: 'status', label: 'Status', width: 120 },
   { id: 'consumersCount', label: 'Consumers', width: 120, disableSort: true },
-  { id: 'createdAt', label: 'Created', width: 160, disableSort: true },
+  { id: 'createdAt', label: 'Created', width: 160 },
   { id: '', label: 'Actions', align: 'right', width: 140, disableSort: true },
 ];
 
@@ -40,6 +42,9 @@ export function MetersListView() {
     search: filters.search,
     status: filters.status || undefined,
     groupCode: filters.groupCode || undefined,
+    type: filters.type || undefined,
+    orderBy: table.orderBy,
+    order: table.order,
     page: table.page,
     pageSize: table.rowsPerPage,
   });

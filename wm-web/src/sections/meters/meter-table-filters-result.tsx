@@ -24,6 +24,10 @@ export function MeterTableFiltersResult({ filters, onFilters, onResetFilters, re
     chips.push({ key: 'groupCode', label: `Group: ${filters.groupCode}`, onDelete: () => onFilters('groupCode', '') });
   }
 
+  if (filters.type) {
+    chips.push({ key: 'type', label: `Type: ${filters.type}`, onDelete: () => onFilters('type', '') });
+  }
+
   return (
     <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={sx}>
       {chips.map((chip) => (

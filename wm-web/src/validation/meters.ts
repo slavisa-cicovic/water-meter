@@ -1,4 +1,4 @@
-import { MeterCreateInput, MeterStatus, MeterUpdateInput, ValidationResult } from 'src/types/meters';
+import { MeterCreateInput, MeterStatus, MeterType, MeterUpdateInput, ValidationResult } from 'src/types/meters';
 
 const groupCodePattern = /^(0[1-9]|[1-9][0-9])$/;
 
@@ -26,6 +26,12 @@ const validateMeterStatus = (status: MeterStatus | undefined, errors: Record<str
   if (!allowed.includes(status)) pushError(errors, 'status', 'Invalid status');
 };
 
+const validateMeterType = (type: MeterType | undefined, errors: Record<string, string[]>) => {
+  if (!type) return;
+  const allowed: MeterType[] = ['automatic', 'mechanical'];
+  if (!allowed.includes(type)) pushError(errors, 'type', 'Invalid type');
+};
+
 const validateIsoDate = (value: string | null | undefined, field: string, errors: Record<string, string[]>) => {
   if (value == null) return;
   if (isBlank(value)) {
@@ -44,6 +50,7 @@ export const validateMeterCreate = (input: MeterCreateInput): ValidationResult =
 
   validateGroupCode(input.groupCode, errors);
   validateMeterStatus(input.status, errors);
+  validateMeterType(input.type, errors);
   validateIsoDate(input.installedAt, 'installedAt', errors);
 
   return { valid: Object.keys(errors).length === 0, errors };
@@ -58,8 +65,8 @@ export const validateMeterUpdate = (input: MeterUpdateInput): ValidationResult =
 
   validateGroupCode(input.groupCode, errors);
   validateMeterStatus(input.status, errors);
+  validateMeterType(input.type, errors);
   validateIsoDate(input.installedAt, 'installedAt', errors);
 
   return { valid: Object.keys(errors).length === 0, errors };
 };
-

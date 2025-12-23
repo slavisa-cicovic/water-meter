@@ -9,6 +9,7 @@ const toMeter = (row: any): Meter => ({
   groupCode: row.groupCode ?? undefined,
   address: row.address,
   status: row.status,
+  type: row.type,
   consumersCount: Array.isArray(row.consumers) ? row.consumers.length : undefined,
   installedAt: row.installedAt?.toISOString?.() ?? row.installedAt ?? undefined,
   notes: row.notes ?? undefined,

@@ -67,11 +67,11 @@ describe('API /meters routes', () => {
     const req = new NextRequest('http://localhost/api/meters', {
       method: 'POST',
       headers: { Authorization: 'Bearer token' },
-      body: JSON.stringify({ serialNumber: 'SN-1', address: 'Addr' }),
+      body: JSON.stringify({ serialNumber: 'SN-1', address: 'Addr', type: 'automatic' }),
     } as any);
 
     // NextRequest in tests may not parse body unless json() is mocked
-    (req as any).json = async () => ({ serialNumber: 'SN-1', address: 'Addr' });
+    (req as any).json = async () => ({ serialNumber: 'SN-1', address: 'Addr', type: 'automatic' });
 
     const res = await metersPost(req as any);
     expect(res.status).toBe(201);
@@ -126,4 +126,3 @@ describe('API /meters routes', () => {
     expect(res.status).toBe(200);
   });
 });
-

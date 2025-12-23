@@ -11,6 +11,7 @@ export const MeterRepository = {
         groupCode: input.groupCode ?? null,
         address: input.address,
         status: input.status ?? 'active',
+        type: input.type ?? 'mechanical',
         installedAt: toDateOrNull(input.installedAt),
         notes: input.notes ?? null,
       },
@@ -32,6 +33,7 @@ export const MeterRepository = {
         ...(input.groupCode !== undefined ? { groupCode: input.groupCode } : {}),
         ...(input.address !== undefined ? { address: input.address } : {}),
         ...(input.status !== undefined ? { status: input.status } : {}),
+        ...(input.type !== undefined ? { type: input.type } : {}),
         ...(input.installedAt !== undefined ? { installedAt: toDateOrNull(input.installedAt) } : {}),
         ...(input.notes !== undefined ? { notes: input.notes } : {}),
       },
@@ -46,11 +48,22 @@ export const MeterRepository = {
   },
 
   async list(params: MeterListParams) {
-    const { search, status, groupCode, consumerAccountId, page = 0, pageSize = 25 } = params;
+    const {
+      search,
+      status,
+      groupCode,
+      type,
+      consumerAccountId,
+      orderBy = 'createdAt',
+      order = 'desc',
+      page = 0,
+      pageSize = 25,
+    } = params;
 
     const where: any = {
       ...(status ? { status } : {}),
       ...(groupCode ? { groupCode } : {}),
+      ...(type ? { type } : {}),
       ...(search
         ? {
             OR: [
@@ -63,11 +76,24 @@ export const MeterRepository = {
       ...(consumerAccountId ? { consumers: { some: { accountId: consumerAccountId } } } : {}),
     };
 
+    const orderByClause =
+      orderBy === 'serialNumber'
+        ? [{ serialNumber: order }]
+        : orderBy === 'groupCode'
+        ? [{ groupCode: order }]
+        : orderBy === 'address'
+        ? [{ address: order }]
+        : orderBy === 'type'
+        ? [{ type: order }]
+        : orderBy === 'status'
+        ? [{ status: order }]
+        : [{ createdAt: order }];
+
     const [total, meters] = await Promise.all([
       prisma.meter.count({ where }),
       prisma.meter.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: orderByClause,
         skip: page * pageSize,
         take: pageSize,
         include: { consumers: true },

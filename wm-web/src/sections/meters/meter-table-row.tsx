@@ -12,6 +12,7 @@ export function MeterTableRow({ row }: Props) {
       <TableCell sx={{ width: 220 }}>{row.serialNumber}</TableCell>
       <TableCell sx={{ width: 120 }}>{row.groupCode || '-'}</TableCell>
       <TableCell sx={{ minWidth: 420 }}>{row.address}</TableCell>
+      <TableCell sx={{ width: 140 }}>{row.type}</TableCell>
       <TableCell sx={{ width: 120 }}>
         <Chip size="small" label={row.status} />
       </TableCell>
