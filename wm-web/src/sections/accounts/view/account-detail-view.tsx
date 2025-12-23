@@ -24,7 +24,7 @@ type Props = {
   id: string;
 };
 
-export default function DomainEditView({id}: Props) {
+export default function AccountEditView({id}: Props) {
 
   const {t} = useLocales();
 

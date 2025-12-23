@@ -69,7 +69,17 @@ export function MetersListView() {
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
       <Stack spacing={2} mb={3}>
-        <Typography variant="h4">Meters</Typography>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+          <Typography variant="h4">Meters</Typography>
+          <Button
+            component={RouterLink}
+            href={paths.dashboard.meters.root + '/new'}
+            variant="contained"
+            startIcon={<Iconify icon="eva:plus-fill" width={16} />}
+          >
+            New meter
+          </Button>
+        </Stack>
         <Typography variant="body2" color="text.secondary">
           Manage water meters and their consumer assignments.
         </Typography>

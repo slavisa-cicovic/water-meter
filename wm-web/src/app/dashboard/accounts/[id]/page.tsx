@@ -1,4 +1,4 @@
-import { AccountDetailView } from 'src/sections/accounts/view';
+import { AccountEditView } from 'src/sections/accounts/view';
 
 type Props = {
   params: { id: string };
@@ -9,5 +9,5 @@ export const metadata = {
 };
 
 export default function Page({ params }: Props) {
-  return <AccountDetailView id={params.id} />;
+  return <AccountEditView id={params.id} />;
 }
