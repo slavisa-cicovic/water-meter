@@ -406,6 +406,118 @@ async function seedMeters() {
   console.log('Seeded 1 extra meter linked to a consumer with existing meter');
 }
 
+async function seedReadings() {
+  const meters = await prisma.meter.findMany({
+    orderBy: { createdAt: 'asc' },
+  });
+
+  const readers = await prisma.account.findMany({
+    where: { role: { in: [AccountRole.consumer, AccountRole.staff_field] } },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  const staffBackoffice = await prisma.account.findFirst({
+    where: { role: AccountRole.staff_backoffice },
+  });
+
+  if (!meters.length || !readers.length) {
+    console.log('Skipping readings seed: missing meters or readers');
+    return;
+  }
+
+  const year = new Date().getFullYear();
+  const months = Array.from({ length: 11 }, (_, i) => i + 1); // Jan-Nov
+
+  const pickCountForMonth = (month: number) => 3 + (month % 3); // 3-5
+  const extraReadsForMonth = (month: number) => (month % 2 === 0 ? 2 : 3); // 2-3
+
+  const selectMeterIndexes = (month: number, count: number) => {
+    const selected: number[] = [];
+    let idx = month % meters.length;
+    while (selected.length < count) {
+      if (!selected.includes(idx)) selected.push(idx);
+      idx = (idx + 7) % meters.length;
+    }
+    return selected;
+  };
+
+  let editApplied = false;
+
+  for (const meter of meters) {
+    const meterBase = 800 + meters.indexOf(meter) * 7;
+    const reader = readers[meters.indexOf(meter) % readers.length];
+
+    for (const month of months) {
+      const baseValue = meterBase + month * 5;
+      const readAt = new Date(Date.UTC(year, month - 1, 15, 9, 0, 0));
+      const method = month % 4 === 0 ? 'remote' : month % 3 === 0 ? 'photo_ocr' : 'manual';
+      const imageFilename = method === 'photo_ocr' ? `meter_${meter.id}_${year}-${pad2(month)}.jpg` : null;
+
+      await prisma.reading.create({
+        data: {
+          meterId: meter.id,
+          readerAccountId: reader.id,
+          readAt,
+          method,
+          value: baseValue,
+          originalValue: baseValue,
+          imageFilename,
+        },
+      });
+    }
+  }
+
+  for (const month of months) {
+    const count = pickCountForMonth(month);
+    const extraReads = extraReadsForMonth(month);
+    const selectedIdx = selectMeterIndexes(month, count);
+
+    for (const idx of selectedIdx) {
+      const meter = meters[idx];
+      const reader = readers[idx % readers.length];
+      const baseValue = 900 + idx * 6 + month * 4;
+
+      for (let extra = 1; extra <= extraReads; extra += 1) {
+        const readAt = new Date(Date.UTC(year, month - 1, 15 + extra, 14, 0, 0));
+        const method = extra === 1 ? 'manual' : extra === 2 ? 'photo_ocr' : 'remote';
+        const imageFilename = method === 'photo_ocr' ? `meter_${meter.id}_${year}-${pad2(month)}-extra${extra}.jpg` : null;
+
+        const reading = await prisma.reading.create({
+          data: {
+            meterId: meter.id,
+            readerAccountId: reader.id,
+            readAt,
+            method,
+            value: baseValue + extra,
+            originalValue: baseValue,
+            imageFilename,
+          },
+        });
+
+        if (!editApplied && staffBackoffice && method === 'photo_ocr') {
+          await prisma.reading.update({
+            where: { id: reading.id },
+            data: { value: baseValue + extra + 10 },
+          });
+
+          await prisma.readingEdit.create({
+            data: {
+              readingId: reading.id,
+              accountId: staffBackoffice.id,
+              editorRole: staffBackoffice.role,
+              value: baseValue + extra + 10,
+              reason: 'Corrected OCR value',
+            },
+          });
+          editApplied = true;
+        }
+      }
+    }
+  }
+
+  console.log('Seeded monthly readings (Jan-Nov) with extra readings and one edit entry');
+}
+
 async function main() {
   await clearData();
   await seedAdmins();
@@ -414,6 +526,7 @@ async function main() {
   await seedStaff();
   await seedExtraStaffField();
   await seedMeters();
+  await seedReadings();
 }
 
 main()

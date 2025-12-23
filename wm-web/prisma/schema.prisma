@@ -36,6 +36,12 @@ enum MeterType {
   mechanical
 }
 
+enum ReadingMethod {
+  remote
+  manual
+  photo_ocr
+}
+
 model Account {
   id                 String              @id @default(uuid())
   firstName          String
@@ -53,6 +59,8 @@ model Account {
   staffProfile     StaffProfile?
   verificationLogs VerificationLog[]
   meterConsumers   MeterConsumer[]
+  readingsAsReader Reading[] @relation("ReadingReader")
+  readingEdits     ReadingEdit[]
 }
 
 model ConsumerProfile {
@@ -95,6 +103,7 @@ model Meter {
   updatedAt    DateTime    @updatedAt
 
   consumers MeterConsumer[]
+  readings  Reading[]
 
   @@index([groupCode])
 }
@@ -108,4 +117,42 @@ model MeterConsumer {
 
   @@id([meterId, accountId])
   @@index([accountId])
+}
+
+model Reading {
+  id                String        @id @default(uuid())
+  meterId           String
+  readerAccountId   String
+  readAt            DateTime
+  method            ReadingMethod
+  value             Int
+  originalValue     Int
+  imageFilename     String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  meter           Meter    @relation(fields: [meterId], references: [id], onDelete: Cascade)
+  readerAccount   Account  @relation("ReadingReader", fields: [readerAccountId], references: [id], onDelete: Cascade)
+  edits           ReadingEdit[]
+
+  @@index([meterId])
+  @@index([readerAccountId])
+  @@index([readAt])
+}
+
+model ReadingEdit {
+  id          String      @id @default(uuid())
+  readingId   String
+  accountId   String
+  editorRole  AccountRole
+  value       Int
+  reason      String?     @db.Text
+  editedAt    DateTime    @default(now())
+
+  reading Reading @relation(fields: [readingId], references: [id], onDelete: Cascade)
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([readingId])
+  @@index([accountId])
+  @@index([editedAt])
 }
