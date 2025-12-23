@@ -1,0 +1,10 @@
+{
+  "name": "Water Meter",
+  "short_name": "WaterMeter",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#ffffff",
+  "theme_color": "#0B3D2E",
+  "icons": []
+}
+
