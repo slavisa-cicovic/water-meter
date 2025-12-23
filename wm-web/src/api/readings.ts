@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import useSWR from 'swr';
-import { endpoints, fetcher } from 'src/utils/axios';
-import { Reading } from 'src/types/readings';
+import axiosInstance, { endpoints, fetcher } from 'src/utils/axios';
+import { Reading, ReadingCreateInput } from 'src/types/readings';
 
 type ReadingsQuery = {
   meterId?: string;
@@ -38,3 +38,9 @@ export function useGetReadings(params?: ReadingsQuery) {
   );
 }
 
+export const ReadingsApi = {
+  async createReading(payload: ReadingCreateInput) {
+    const res = await axiosInstance.post(endpoints.readings.list, payload);
+    return res.data;
+  },
+};
