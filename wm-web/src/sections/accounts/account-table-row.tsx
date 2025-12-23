@@ -22,11 +22,9 @@ export default function AccountTableRow({
 }: Props) {
     const { user } = useAuthContext();
     const viewerRole = (user as any)?.role as string | undefined;
-    const viewerId = (user as any)?.accountId || (user as any)?.id;
     const canViewDetails =
         (viewerRole === 'staff_backoffice' &&
-            (row.type === 'consumer' || row.type === 'staff_field' || row.id === viewerId)) ||
-        (viewerRole === 'admin' && row.id === viewerId);
+            (row.type === 'consumer' || row.type === 'staff_field'));
 
     const {
         id,
