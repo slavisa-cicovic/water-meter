@@ -1,4 +1,8 @@
-import { Avatar, Button, Chip, Stack, TableCell, TableRow, Typography } from "@mui/material";
+import { Avatar, Button, Chip, Stack, TableCell, TableRow, Typography, IconButton, Tooltip } from "@mui/material";
+import { RouterLink } from "src/routes/components";
+import { paths } from "src/routes/paths";
+import { useAuthContext } from "src/auth/hooks";
+import Iconify from "src/components/iconify";
 import { AccountRow, VerificationStatus } from "src/types/accounts";
 
 type Props = {
@@ -16,6 +20,13 @@ export default function AccountTableRow({
     row,
     onVerify
 }: Props) {
+    const { user } = useAuthContext();
+    const viewerRole = (user as any)?.role as string | undefined;
+    const viewerId = (user as any)?.accountId || (user as any)?.id;
+    const canViewDetails =
+        (viewerRole === 'staff_backoffice' &&
+            (row.type === 'consumer' || row.type === 'staff_field' || row.id === viewerId)) ||
+        (viewerRole === 'admin' && row.id === viewerId);
 
     const {
         id,
@@ -71,6 +82,21 @@ export default function AccountTableRow({
                     >
                         Reject
                     </Button>
+                    {canViewDetails ? (
+                        <Tooltip title="Details">
+                            <IconButton
+                                size="small"
+                                component={RouterLink}
+                                href={paths.dashboard.accounts.details(id)}
+                            >
+                                <Iconify icon="eva:eye-fill" width={16} />
+                            </IconButton>
+                        </Tooltip>
+                    ) : (
+                        <IconButton size="small" disabled sx={{ opacity: 0, pointerEvents: 'none' }}>
+                            <Iconify icon="eva:eye-fill" width={16} />
+                        </IconButton>
+                    )}
                 </Stack>
             </TableCell>
         </TableRow>
