@@ -41,7 +41,7 @@ import { useAuthContext } from 'src/auth/hooks';
 import FormProvider, { RHFTextField } from 'src/components/hook-form';
 import { ChartWrapper, useChart } from 'src/components/chart';
 // types
-import { AccountRow } from 'src/api/accounts';
+import { AccountRow } from 'src/types/accounts';
 
 // ----------------------------------------------------------------------
 
