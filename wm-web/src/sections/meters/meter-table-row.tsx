@@ -1,6 +1,8 @@
 import { TableRow, TableCell, Stack, IconButton, Tooltip, Chip } from '@mui/material';
 import Iconify from 'src/components/iconify';
 import { Meter } from 'src/types/meters';
+import { RouterLink } from 'src/routes/components';
+import { paths } from 'src/routes/paths';
 
 type Props = {
   row: Meter & { consumersCount?: number };
@@ -20,13 +22,8 @@ export function MeterTableRow({ row }: Props) {
       <TableCell sx={{ width: 160 }}>{row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '-'}</TableCell>
       <TableCell align="right" sx={{ width: 140 }}>
         <Stack direction="row" justifyContent="flex-end" spacing={1}>
-          <Tooltip title="Edit (TBD)">
-            <IconButton size="small" disabled>
-              <Iconify icon="eva:edit-fill" width={16} />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Details (TBD)">
-            <IconButton size="small" disabled>
+          <Tooltip title="Details">
+            <IconButton size="small" component={RouterLink} href={paths.dashboard.meters.details(row.id)}>
               <Iconify icon="eva:eye-fill" width={16} />
             </IconButton>
           </Tooltip>

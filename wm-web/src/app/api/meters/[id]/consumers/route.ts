@@ -3,7 +3,7 @@ import { requireAccountsAccess } from 'src/services/authGuardAccounts';
 import { MetersService } from 'src/services/metersService';
 
 type Params = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export const POST = async (req: NextRequest, { params }: Params) => {
@@ -13,7 +13,8 @@ export const POST = async (req: NextRequest, { params }: Params) => {
   const body = await req.json();
   const accountId = body?.accountId as string | undefined;
 
-  const result = await MetersService.addConsumerLink({ meterId: params.id, accountId: accountId || '' });
+  const { id } = await params;
+  const result = await MetersService.addConsumerLink({ meterId: id, accountId: accountId || '' });
   if (!result.success) {
     const status =
       result.error === 'VALIDATION_FAILED'
@@ -37,7 +38,8 @@ export const DELETE = async (req: NextRequest, { params }: Params) => {
   const { searchParams } = new URL(req.url);
   const accountId = searchParams.get('accountId') || '';
 
-  const result = await MetersService.removeConsumerLink({ meterId: params.id, accountId });
+  const { id } = await params;
+  const result = await MetersService.removeConsumerLink({ meterId: id, accountId });
   if (!result.success) {
     const status = result.error === 'VALIDATION_FAILED' ? 400 : result.error === 'NOT_FOUND' ? 404 : 500;
     return NextResponse.json({ success: false, error: result.error, details: (result as any).details }, { status });
@@ -45,4 +47,3 @@ export const DELETE = async (req: NextRequest, { params }: Params) => {
 
   return NextResponse.json({ success: true });
 };
-
