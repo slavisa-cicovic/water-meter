@@ -34,3 +34,20 @@
 ### Data captured
 - Consumer: first name, last name, address, household size, email/phone, password, verification status.
 - Staff: name, email/phone, password, role (field/back-office), verification status.
+
+## Meter lifecycle workflow
+
+### Goal
+Ensure meters follow a controlled lifecycle from purchase to installation and removal, with clear responsibility by role.
+
+### Main Flow — Purchase → Install → Remove
+1. Back-office staff purchases and registers a new meter (serial number, address, group, etc.).
+2. System stores the meter as **Inactive**.
+3. Field staff installs the meter onsite and confirms the address using the mobile app.
+4. System updates the meter status to **Active**.
+5. Field staff later removes or replaces the meter (e.g., upgrade, malfunction).
+6. System updates the meter status to **Removed**.
+
+### Notes
+- A property should not be left without a meter; removal is typically paired with replacement.
+- Address confirmation happens at installation time by field staff.
