@@ -26,6 +26,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import EditIcon from '@mui/icons-material/Edit';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import Checkbox from '@mui/material/Checkbox';
 // api
 import { JobsApi, useGetJobs } from 'src/api/jobs';
 // types
@@ -82,6 +83,12 @@ export function JobsListView() {
   const [editingJob, setEditingJob] = useState<JobDefinition | null>(null);
   const [formState, setFormState] = useState(defaultFormState);
   const [formError, setFormError] = useState('');
+  const [runDialogOpen, setRunDialogOpen] = useState(false);
+  const [runJob, setRunJob] = useState<JobDefinition | null>(null);
+  const [overrideIssued, setOverrideIssued] = useState(false);
+  const [overridePaid, setOverridePaid] = useState(false);
+  const [overrideCounts, setOverrideCounts] = useState<{ issued: number; paid: number } | null>(null);
+  const [overrideLoading, setOverrideLoading] = useState(false);
 
   const resetForm = () => {
     setFormState(defaultFormState);
@@ -119,6 +126,35 @@ export function JobsListView() {
     try {
       await JobsApi.runJobNow(jobId);
       await mutate();
+    } catch (error) {
+      setFormError('Failed to run job.');
+    }
+  };
+
+  const handleOpenRunDialog = async (job: JobDefinition) => {
+    setRunJob(job);
+    setOverrideIssued(false);
+    setOverridePaid(false);
+    setOverrideCounts(null);
+    setRunDialogOpen(true);
+    setOverrideLoading(true);
+    try {
+      const preview = await JobsApi.runJobNow(job.id, { dryRun: true });
+      setOverrideCounts({ issued: preview.issued || 0, paid: preview.paid || 0 });
+    } catch (error) {
+      setOverrideCounts({ issued: 0, paid: 0 });
+    } finally {
+      setOverrideLoading(false);
+    }
+  };
+
+  const handleConfirmRun = async () => {
+    if (!runJob) return;
+    try {
+      await JobsApi.runJobNow(runJob.id, { overrideIssued, overridePaid });
+      await mutate();
+      setRunDialogOpen(false);
+      setRunJob(null);
     } catch (error) {
       setFormError('Failed to run job.');
     }
@@ -206,7 +242,12 @@ export function JobsListView() {
                     <Box sx={{ display: 'inline-flex', gap: 1 }}>
                       <Tooltip title="Run now">
                         <span>
-                          <IconButton size="small" onClick={() => handleRunNow(job.id)}>
+                          <IconButton
+                            size="small"
+                            onClick={() =>
+                              job.handlerKey === 'billing_generate' ? handleOpenRunDialog(job) : handleRunNow(job.id)
+                            }
+                          >
                             <PlayArrowIcon fontSize="small" />
                           </IconButton>
                         </span>
@@ -318,6 +359,41 @@ export function JobsListView() {
           <Button onClick={handleCloseDialog}>Cancel</Button>
           <Button variant="contained" onClick={handleSave}>
             Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={runDialogOpen} onClose={() => setRunDialogOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Run billing generation</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} mt={1}>
+            <Typography variant="body2">
+              This will generate draft invoices for the current month. Existing issued/paid invoices can be voided if
+              you choose to overwrite them.
+            </Typography>
+            {overrideLoading ? (
+              <Typography variant="body2">Checking existing invoices...</Typography>
+            ) : (
+              <Typography variant="body2">
+                Issued invoices: {overrideCounts?.issued ?? 0} · Paid invoices: {overrideCounts?.paid ?? 0}
+              </Typography>
+            )}
+            <FormControlLabel
+              control={
+                <Checkbox checked={overrideIssued} onChange={(event) => setOverrideIssued(event.target.checked)} />
+              }
+              label="Overwrite issued invoices (set to void)"
+            />
+            <FormControlLabel
+              control={<Checkbox checked={overridePaid} onChange={(event) => setOverridePaid(event.target.checked)} />}
+              label="Overwrite paid invoices (set to void)"
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRunDialogOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleConfirmRun} disabled={overrideLoading}>
+            Run now
           </Button>
         </DialogActions>
       </Dialog>

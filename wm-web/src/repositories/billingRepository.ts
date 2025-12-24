@@ -64,7 +64,7 @@ export const BillingRepository = {
   },
 
   async listInvoices(params: InvoiceListParams) {
-    const { accountId, meterId, periodStart, periodEnd, status, review, page = 0, pageSize = 25 } = params;
+    const { accountId, meterId, createdStart, createdEnd, status, review, page = 0, pageSize = 25 } = params;
 
     const where: any = {
       ...(accountId ? { accountId } : {}),
@@ -75,10 +75,12 @@ export const BillingRepository = {
         : review
         ? { reviewFlags: { array_contains: [review] } }
         : {}),
-      ...(periodStart || periodEnd
+      ...(createdStart || createdEnd
         ? {
-            periodStart: periodStart ? { gte: new Date(periodStart) } : undefined,
-            periodEnd: periodEnd ? { lte: new Date(periodEnd) } : undefined,
+            createdAt: {
+              ...(createdStart ? { gte: new Date(createdStart) } : {}),
+              ...(createdEnd ? { lte: new Date(createdEnd) } : {}),
+            },
           }
         : {}),
     };
@@ -90,7 +92,7 @@ export const BillingRepository = {
         orderBy: { periodStart: 'desc' },
         skip: page * pageSize,
         take: pageSize,
-        include: { lines: true, meter: true },
+        include: { lines: true, meter: true, account: true },
       }),
     ]);
 
@@ -111,8 +113,8 @@ export const BillingRepository = {
   async createInvoice(data: {
     accountId: string;
     meterId?: string | null;
-    periodStart: Date;
-    periodEnd: Date;
+    periodStart: Date | null;
+    periodEnd: Date | null;
     status: 'draft' | 'issued' | 'paid' | 'void';
     consumption: number;
     unitPrice: number;
@@ -128,8 +130,8 @@ export const BillingRepository = {
       data: {
         accountId: data.accountId,
         meterId: data.meterId ?? null,
-        periodStart: data.periodStart,
-        periodEnd: data.periodEnd,
+        periodStart: data.periodStart ?? null,
+        periodEnd: data.periodEnd ?? null,
         status: data.status,
         consumption: data.consumption,
         unitPrice: data.unitPrice,
@@ -142,6 +144,63 @@ export const BillingRepository = {
         reviewFlags: data.reviewFlags ?? undefined,
       },
       include: { lines: true },
+    });
+  },
+
+  async listInvoicesForMeterMonth(params: { meterId: string; monthStart: Date; monthEnd: Date }) {
+    const { meterId, monthStart, monthEnd } = params;
+    return prisma.invoice.findMany({
+      where: {
+        meterId,
+        OR: [
+          { periodEnd: { gte: monthStart, lte: monthEnd } },
+          { periodEnd: null, createdAt: { gte: monthStart, lte: monthEnd } },
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  },
+
+  async countInvoicesForMonthByStatus(params: {
+    meterIds: string[];
+    monthStart: Date;
+    monthEnd: Date;
+    status: 'draft' | 'issued' | 'paid' | 'void';
+  }) {
+    const { meterIds, monthStart, monthEnd, status } = params;
+    return prisma.invoice.count({
+      where: {
+        status,
+        meterId: { in: meterIds },
+        OR: [
+          { periodEnd: { gte: monthStart, lte: monthEnd } },
+          { periodEnd: null, createdAt: { gte: monthStart, lte: monthEnd } },
+        ],
+      },
+    });
+  },
+
+  async voidInvoice(params: {
+    invoiceId: string;
+    adminId: string;
+    prevStatus: 'draft' | 'issued' | 'paid' | 'void';
+    reason?: string;
+    jobRunId?: string | null;
+  }) {
+    await prisma.invoice.update({
+      where: { id: params.invoiceId },
+      data: { status: 'void' },
+    });
+
+    await prisma.invoiceOverrideLog.create({
+      data: {
+        invoiceId: params.invoiceId,
+        adminId: params.adminId,
+        prevStatus: params.prevStatus,
+        newStatus: 'void',
+        reason: params.reason ?? null,
+        jobRunId: params.jobRunId ?? null,
+      },
     });
   },
 

@@ -38,11 +38,19 @@ export function BillingTableFiltersResult({ filters, onFilters, onResetFilters, 
       onDelete: () => onFilters('review', ''),
     });
   }
-  if (filters.periodStart) {
-    chips.push({ key: 'periodStart', label: `From: ${filters.periodStart}`, onDelete: () => onFilters('periodStart', '') });
+  if (filters.createdStart) {
+    chips.push({
+      key: 'createdStart',
+      label: `Created from: ${filters.createdStart}`,
+      onDelete: () => onFilters('createdStart', ''),
+    });
   }
-  if (filters.periodEnd) {
-    chips.push({ key: 'periodEnd', label: `To: ${filters.periodEnd}`, onDelete: () => onFilters('periodEnd', '') });
+  if (filters.createdEnd) {
+    chips.push({
+      key: 'createdEnd',
+      label: `Created to: ${filters.createdEnd}`,
+      onDelete: () => onFilters('createdEnd', ''),
+    });
   }
 
   return (

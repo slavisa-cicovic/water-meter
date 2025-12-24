@@ -16,13 +16,28 @@ import { BillingTableRow } from '../billing-table-row';
 import { BillingTableSkeleton } from '../billing-skeleton';
 import { BillingTableToolbar, IBillingTableFilters, IBillingTableFilterValue } from '../billing-table-toolbar';
 
+const getMonthBounds = () => {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const toDate = (value: Date) => {
+    const yyyy = value.getFullYear();
+    const mm = String(value.getMonth() + 1).padStart(2, '0');
+    const dd = String(value.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+  return { start: toDate(start), end: toDate(end) };
+};
+
+const { start: defaultCreatedStart, end: defaultCreatedEnd } = getMonthBounds();
+
 const defaultFilters: IBillingTableFilters = {
   accountId: '',
   meterId: '',
   status: '',
   review: '',
-  periodStart: '',
-  periodEnd: '',
+  createdStart: defaultCreatedStart,
+  createdEnd: defaultCreatedEnd,
 };
 
 const TABLE_HEAD = [
@@ -46,8 +61,8 @@ export function BillingOverviewView() {
     meterId: filters.meterId || undefined,
     status: filters.status || undefined,
     review: filters.review || undefined,
-    periodStart: filters.periodStart || undefined,
-    periodEnd: filters.periodEnd || undefined,
+    createdStart: filters.createdStart || undefined,
+    createdEnd: filters.createdEnd || undefined,
     page: table.page,
     pageSize: table.rowsPerPage,
   });

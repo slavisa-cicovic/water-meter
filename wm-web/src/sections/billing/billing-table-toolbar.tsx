@@ -10,8 +10,8 @@ export type IBillingTableFilters = {
   meterId: string;
   status: string;
   review: string;
-  periodStart: string;
-  periodEnd: string;
+  createdStart: string;
+  createdEnd: string;
 };
 
 type Props = {
@@ -57,18 +57,18 @@ export function BillingTableToolbar({ filters, onFilters }: Props) {
           <MenuItem value="invalid_household_size">no_household_size</MenuItem>
         </TextField>
         <TextField
-          label="Period start"
+          label="Created from"
           type="date"
-          value={filters.periodStart}
-          onChange={handleChange('periodStart')}
+          value={filters.createdStart}
+          onChange={handleChange('createdStart')}
           InputLabelProps={{ shrink: true }}
           sx={{ minWidth: 160 }}
         />
         <TextField
-          label="Period end"
+          label="Created to"
           type="date"
-          value={filters.periodEnd}
-          onChange={handleChange('periodEnd')}
+          value={filters.createdEnd}
+          onChange={handleChange('createdEnd')}
           InputLabelProps={{ shrink: true }}
           sx={{ minWidth: 160 }}
         />

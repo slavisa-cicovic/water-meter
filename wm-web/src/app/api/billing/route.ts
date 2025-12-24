@@ -9,8 +9,8 @@ export const GET = async (req: NextRequest) => {
   const { searchParams } = new URL(req.url);
   const accountId = searchParams.get('accountId') || undefined;
   const meterId = searchParams.get('meterId') || undefined;
-  const periodStart = searchParams.get('periodStart') || undefined;
-  const periodEnd = searchParams.get('periodEnd') || undefined;
+  const createdStart = searchParams.get('createdStart') || undefined;
+  const createdEnd = searchParams.get('createdEnd') || undefined;
   const status = (searchParams.get('status') || undefined) as any;
   const review = searchParams.get('review') || undefined;
   const page = searchParams.get('page');
@@ -19,8 +19,8 @@ export const GET = async (req: NextRequest) => {
   const result = await BillingService.listInvoices({
     accountId,
     meterId,
-    periodStart,
-    periodEnd,
+    createdStart,
+    createdEnd,
     status,
     review,
     page: page ? Number(page) : 0,

@@ -10,6 +10,10 @@ const toQuantity = (value: number) => Number(value.toFixed(3));
 const getMonthKey = (date: Date) => `${date.getFullYear()}-${date.getMonth()}`;
 
 const isCurrentMonth = (date: Date, reference: Date) => getMonthKey(date) === getMonthKey(reference);
+const getMonthBounds = (reference: Date) => ({
+  start: new Date(reference.getFullYear(), reference.getMonth(), 1),
+  end: new Date(reference.getFullYear(), reference.getMonth() + 1, 0, 23, 59, 59, 999),
+});
 
 const buildTariffSnapshot = (tariff: any) => ({
   id: tariff.id,
@@ -105,8 +109,8 @@ export const BillingService = {
 
       const tariff = await BillingRepository.findApplicableTariff({
         groupCode: meter.groupCode ?? null,
-        periodStart,
-        periodEnd,
+        periodStart: periodStart ?? periodEnd ?? new Date(),
+        periodEnd: periodEnd ?? periodStart ?? new Date(),
       });
       if (!tariff) {
         skipped.push({ meterId: meter.id, reason: 'NO_TARIFF' });
@@ -209,30 +213,106 @@ export const BillingService = {
     return { success: true, data: { invoices: created, skipped } };
   },
 
-  async generateDraftsFromReadings(referenceDate = new Date()) {
-    const meters = await MeterRepository.listAll();
+  async generateDraftsFromReadings(
+    referenceDate = new Date(),
+    options?: {
+      mode?: 'auto' | 'manual';
+      overrideIssued?: boolean;
+      overridePaid?: boolean;
+      adminId?: string;
+      jobRunId?: string;
+    }
+  ) {
+    const meters = (await MeterRepository.listAll()).filter((meter) => meter.status === 'active');
     const created: any[] = [];
     const skipped: Array<{ meterId: string; reason: string }> = [];
+    const { start: monthStart, end: monthEnd } = getMonthBounds(referenceDate);
 
     for (const meter of meters) {
-      const endReading = await ReadingRepository.findLatestUnpaidReading(meter.id);
-      if (!endReading) {
-        skipped.push({ meterId: meter.id, reason: 'NO_END_READING' });
+      const existingInvoices = await BillingRepository.listInvoicesForMeterMonth({
+        meterId: meter.id,
+        monthStart,
+        monthEnd,
+      });
+      const hasDraft = existingInvoices.some((invoice) => invoice.status === 'draft');
+      const issuedInvoices = existingInvoices.filter((invoice) => invoice.status === 'issued');
+      const paidInvoices = existingInvoices.filter((invoice) => invoice.status === 'paid');
+
+      if (hasDraft) {
+        skipped.push({ meterId: meter.id, reason: 'DRAFT_EXISTS' });
         continue;
       }
 
-      const endReadAt = new Date(endReading.readAt);
+      const isManual = options?.mode === 'manual';
+      if (!isManual && (issuedInvoices.length > 0 || paidInvoices.length > 0)) {
+        skipped.push({ meterId: meter.id, reason: 'EXISTING_FINALIZED' });
+        continue;
+      }
+
+      if (isManual) {
+        if (issuedInvoices.length > 0 && !options?.overrideIssued) {
+          skipped.push({ meterId: meter.id, reason: 'ISSUED_EXISTS' });
+          continue;
+        }
+        if (paidInvoices.length > 0 && !options?.overridePaid) {
+          skipped.push({ meterId: meter.id, reason: 'PAID_EXISTS' });
+          continue;
+        }
+
+        if ((issuedInvoices.length > 0 || paidInvoices.length > 0) && !options?.adminId) {
+          skipped.push({ meterId: meter.id, reason: 'MISSING_ADMIN' });
+          continue;
+        }
+
+        for (const invoice of issuedInvoices) {
+          if (options?.overrideIssued) {
+            await BillingRepository.voidInvoice({
+              invoiceId: invoice.id,
+              adminId: options.adminId as string,
+              prevStatus: 'issued',
+              reason: 'manual_override',
+              jobRunId: options.jobRunId ?? null,
+            });
+          }
+        }
+
+        for (const invoice of paidInvoices) {
+          if (options?.overridePaid) {
+            await BillingRepository.voidInvoice({
+              invoiceId: invoice.id,
+              adminId: options.adminId as string,
+              prevStatus: 'paid',
+              reason: 'manual_override',
+              jobRunId: options.jobRunId ?? null,
+            });
+          }
+        }
+      }
+
       const flags: string[] = [];
-      if (!isCurrentMonth(endReadAt, referenceDate)) {
+      const endReading = await ReadingRepository.findLatestUnpaidReading(meter.id);
+      let periodEnd: Date | null = null;
+      let endValue = 0;
+      if (endReading) {
+        const endReadAt = new Date(endReading.readAt);
+        if (isCurrentMonth(endReadAt, referenceDate)) {
+          periodEnd = endReadAt;
+          endValue = endReading.value;
+        } else {
+          flags.push('no_reading_current_month');
+        }
+      } else {
         flags.push('no_reading_current_month');
       }
 
       const startReading = await ReadingRepository.findLatestPaidReading(meter.id);
       const startValue = startReading ? startReading.value : 0;
-      const periodStart = startReading ? new Date(startReading.readAt) : endReadAt;
-      const periodEnd = endReadAt;
+      if (!startReading) {
+        flags.push('no_previous_reading');
+      }
+      const periodStart = startReading ? new Date(startReading.readAt) : null;
 
-      const consumptionTotal = endReading.value - startValue;
+      const consumptionTotal = periodEnd ? endValue - startValue : 0;
       if (consumptionTotal <= 0) {
         flags.push('non_positive_consumption');
       }
@@ -245,8 +325,8 @@ export const BillingService = {
 
       const tariff = await BillingRepository.findApplicableTariff({
         groupCode: meter.groupCode ?? null,
-        periodStart,
-        periodEnd,
+        periodStart: periodStart ?? periodEnd ?? referenceDate,
+        periodEnd: periodEnd ?? periodStart ?? referenceDate,
       });
       if (!tariff) {
         skipped.push({ meterId: meter.id, reason: 'NO_TARIFF' });
@@ -295,7 +375,9 @@ export const BillingService = {
           amount: vatAmount,
         });
 
-        await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: endReading.id, role: 'end' });
+        if (endReading && periodEnd) {
+          await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: endReading.id, role: 'end' });
+        }
         if (startReading) {
           await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: startReading.id, role: 'start' });
         }
@@ -359,7 +441,9 @@ export const BillingService = {
           amount: vatAmount,
         });
 
-        await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: endReading.id, role: 'end' });
+        if (endReading && periodEnd) {
+          await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: endReading.id, role: 'end' });
+        }
         if (startReading) {
           await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: startReading.id, role: 'start' });
         }
@@ -369,5 +453,27 @@ export const BillingService = {
     }
 
     return { success: true, data: { invoices: created, skipped } };
+  },
+
+  async previewMonthlyOverrides(referenceDate = new Date()) {
+    const meters = (await MeterRepository.listAll()).filter((meter) => meter.status === 'active');
+    const meterIds = meters.map((meter) => meter.id);
+    if (!meterIds.length) {
+      return { success: true, data: { issued: 0, paid: 0 } };
+    }
+    const { start: monthStart, end: monthEnd } = getMonthBounds(referenceDate);
+    const issued = await BillingRepository.countInvoicesForMonthByStatus({
+      meterIds,
+      monthStart,
+      monthEnd,
+      status: 'issued',
+    });
+    const paid = await BillingRepository.countInvoicesForMonthByStatus({
+      meterIds,
+      monthStart,
+      monthEnd,
+      status: 'paid',
+    });
+    return { success: true, data: { issued, paid } };
   },
 };

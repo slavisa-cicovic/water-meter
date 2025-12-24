@@ -62,7 +62,10 @@ const finishJobRun = async (runId: string, status: 'success' | 'failed', error?:
     },
   });
 
-const executeJob = async (job: JobDefinition) => {
+const executeJob = async (
+  job: JobDefinition,
+  options?: { initiatorId?: string; payload?: Record<string, any> }
+) => {
   const handler = jobHandlers[job.handlerKey];
   
   if (!handler) {
@@ -74,7 +77,13 @@ const executeJob = async (job: JobDefinition) => {
   for (let attempt = 1; attempt <= job.maxAttempts; attempt += 1) {
     const run = await createJobRun(job.id, attempt);
     try {
-      await handler({ job, runId: run.id, attempt });
+      await handler({
+        job,
+        runId: run.id,
+        attempt,
+        initiatorId: options?.initiatorId,
+        payload: options?.payload,
+      });
       await finishJobRun(run.id, 'success');
       return;
     } catch (error: any) {
@@ -86,7 +95,10 @@ const executeJob = async (job: JobDefinition) => {
   }
 };
 
-export const runJobNow = async (jobId: string) => {
+export const runJobNow = async (
+  jobId: string,
+  options?: { initiatorId?: string; payload?: Record<string, any> }
+) => {
   const jobRow = await prisma.jobDefinition.findUnique({ where: { id: jobId } });
   if (!jobRow) return { success: false, error: 'NOT_FOUND' };
 
@@ -108,7 +120,7 @@ export const runJobNow = async (jobId: string) => {
       lastRunAt: jobRow.lastRunAt?.toISOString?.() ?? undefined,
     } as JobDefinition;
 
-    await executeJob(job);
+    await executeJob(job, options);
     const nextRunAt = computeNextRunAt(job.scheduleType, job.scheduleConfig);
     await prisma.jobDefinition.update({
       where: { id: jobId },

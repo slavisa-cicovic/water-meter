@@ -20,10 +20,11 @@ export type Tariff = {
 export type Invoice = {
   id: string;
   accountId: string;
+  account?: { firstName: string; lastName: string; address: string };
   meterId?: string;
   meter?: { serialNumber?: string };
-  periodStart: string;
-  periodEnd: string;
+  periodStart: string | null;
+  periodEnd: string | null;
   status: InvoiceStatus;
   consumption: number;
   unitPrice: string;
@@ -93,8 +94,8 @@ export type InvoiceCreateInput = {
 export type InvoiceListParams = {
   accountId?: string;
   meterId?: string;
-  periodStart?: string;
-  periodEnd?: string;
+  createdStart?: string;
+  createdEnd?: string;
   status?: InvoiceStatus;
   review?: string;
   page?: number;

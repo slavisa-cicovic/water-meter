@@ -6,8 +6,8 @@ import { Invoice } from 'src/types/billings';
 type BillingQuery = {
   accountId?: string;
   meterId?: string;
-  periodStart?: string;
-  periodEnd?: string;
+  createdStart?: string;
+  createdEnd?: string;
   status?: string;
   review?: string;
   page?: number;
@@ -18,8 +18,8 @@ export function useGetInvoices(params?: BillingQuery) {
   const query = new URLSearchParams();
   if (params?.accountId) query.set('accountId', params.accountId);
   if (params?.meterId) query.set('meterId', params.meterId);
-  if (params?.periodStart) query.set('periodStart', params.periodStart);
-  if (params?.periodEnd) query.set('periodEnd', params.periodEnd);
+  if (params?.createdStart) query.set('createdStart', params.createdStart);
+  if (params?.createdEnd) query.set('createdEnd', params.createdEnd);
   if (params?.status) query.set('status', params.status);
   if (params?.review) query.set('review', params.review);
   if (params?.page !== undefined) query.set('page', String(params.page));

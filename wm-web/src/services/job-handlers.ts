@@ -5,6 +5,8 @@ export type JobHandlerContext = {
   job: JobDefinition;
   runId: string;
   attempt: number;
+  initiatorId?: string;
+  payload?: Record<string, any>;
 };
 
 export type JobHandler = (context: JobHandlerContext) => Promise<void>;
@@ -15,9 +17,16 @@ export const jobHandlerOptions = [
 ];
 
 export const jobHandlers: Record<string, JobHandler> = {
-  async billing_generate({ job, runId, attempt }) {
+  async billing_generate({ job, runId, attempt, initiatorId, payload }) {
     console.info('[JobHandler] billing_generate', { jobId: job.id, runId, attempt });
-    await BillingService.generateDraftsFromReadings();
+    const mode = payload?.mode === 'manual' ? 'manual' : 'auto';
+    await BillingService.generateDraftsFromReadings(new Date(), {
+      mode,
+      overrideIssued: Boolean(payload?.overrideIssued),
+      overridePaid: Boolean(payload?.overridePaid),
+      adminId: initiatorId,
+      jobRunId: runId,
+    });
   },
   async photo_ocr_process({ job, runId, attempt }) {
     console.info('[JobHandler] photo_ocr_process', { jobId: job.id, runId, attempt });

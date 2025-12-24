@@ -27,8 +27,11 @@ export const JobsApi = {
     const res = await axiosInstance.put(endpoints.jobs.details(id), payload);
     return res.data;
   },
-  async runJobNow(id: string) {
-    const res = await axiosInstance.post(endpoints.jobs.run(id));
+  async runJobNow(
+    id: string,
+    payload?: { dryRun?: boolean; overrideIssued?: boolean; overridePaid?: boolean }
+  ) {
+    const res = await axiosInstance.post(endpoints.jobs.run(id), payload ?? {});
     return res.data;
   },
 };
