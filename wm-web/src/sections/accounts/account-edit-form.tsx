@@ -271,7 +271,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
               type="date"
               value={readingFrom}
               onChange={(event) => setReadingFrom(event.target.value)}
-              InputLabelProps={{ shrink: true }}
+              slotProps={{ inputLabel: { shrink: true } }}
               sx={{ minWidth: 160 }}
             />
             <TextField
@@ -279,7 +279,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
               type="date"
               value={readingTo}
               onChange={(event) => setReadingTo(event.target.value)}
-              InputLabelProps={{ shrink: true }}
+              slotProps={{ inputLabel: { shrink: true } }}
               sx={{ minWidth: 160 }}
             />
           </Stack>
