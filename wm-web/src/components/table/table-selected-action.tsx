@@ -8,11 +8,14 @@ import { useLocales } from 'src/locales';
 
 // ----------------------------------------------------------------------
 
+export type TableSelectedActionItem = {
+  key: string;
+  node: React.ReactNode;
+};
+
 interface Props extends StackProps {
   dense?: boolean;
-  actionDelete?: React.ReactNode;
-  actionActivate?: React.ReactNode;
-  actionDeactivate?: React.ReactNode;
+  actions?: TableSelectedActionItem[];
   rowCount: number;
   numSelected: number;
   onSelectAllRows: (checked: boolean) => void;
@@ -20,17 +23,15 @@ interface Props extends StackProps {
 }
 
 export default function TableSelectedAction({
-                                              dense,
-                                              actionDelete,
-                                              actionActivate,
-                                              actionDeactivate,
-                                              rowCount,
-                                              numSelected,
-                                              onSelectAllRows,
-                                              sx,
-                                              headerHeight,
-                                              ...other
-                                            }: Props) {
+  dense,
+  actions,
+  rowCount,
+  numSelected,
+  onSelectAllRows,
+  sx,
+  headerHeight,
+  ...other
+}: Props) {
 
   const { t } = useLocales();
 
@@ -82,9 +83,9 @@ export default function TableSelectedAction({
         {numSelected} {t('selected')}
       </Typography>
 
-      {actionDelete && actionDelete}
-      {actionActivate && actionActivate}
-      {actionDeactivate && actionDeactivate}
+      {actions?.map((action) => (
+        <React.Fragment key={action.key}>{action.node}</React.Fragment>
+      ))}
     </Stack>
   );
 }
