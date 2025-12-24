@@ -3,14 +3,15 @@ import { requireAccountsAccess } from 'src/services/authGuardAccounts';
 import { ReadingsService } from 'src/services/readingsService';
 
 type Params = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export const GET = async (req: NextRequest, { params }: Params) => {
   const guard = requireAccountsAccess(req);
   if (!guard.ok) return guard.response;
 
-  const result = await ReadingsService.findById(params.id);
+  const { id } = await params;
+  const result = await ReadingsService.findById(id);
   if (!result.success) {
     const status = result.error === 'NOT_FOUND' ? 404 : 400;
     return NextResponse.json({ success: false, error: result.error, details: (result as any).details }, { status });
@@ -24,7 +25,8 @@ export const PUT = async (req: NextRequest, { params }: Params) => {
   if (!guard.ok) return guard.response;
 
   const body = await req.json();
-  const result = await ReadingsService.update({ ...body, id: params.id });
+  const { id } = await params;
+  const result = await ReadingsService.update({ ...body, id });
 
   if (!result.success) {
     const status =
@@ -42,4 +44,3 @@ export const PUT = async (req: NextRequest, { params }: Params) => {
 
   return NextResponse.json(result.data);
 };
-
