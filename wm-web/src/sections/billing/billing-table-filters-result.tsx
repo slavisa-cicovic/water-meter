@@ -21,6 +21,23 @@ export function BillingTableFiltersResult({ filters, onFilters, onResetFilters, 
   if (filters.status) {
     chips.push({ key: 'status', label: `Status: ${filters.status}`, onDelete: () => onFilters('status', '') });
   }
+  if (filters.review) {
+    const label =
+      filters.review === 'none'
+        ? 'Review: no flags'
+        : filters.review === 'non_positive_consumption'
+        ? 'Review: invalid_reading'
+        : filters.review === 'no_reading_current_month'
+        ? 'Review: no_reading'
+        : filters.review === 'invalid_household_size'
+        ? 'Review: no_household_size'
+        : `Review: ${filters.review}`;
+    chips.push({
+      key: 'review',
+      label,
+      onDelete: () => onFilters('review', ''),
+    });
+  }
   if (filters.periodStart) {
     chips.push({ key: 'periodStart', label: `From: ${filters.periodStart}`, onDelete: () => onFilters('periodStart', '') });
   }
@@ -38,4 +55,3 @@ export function BillingTableFiltersResult({ filters, onFilters, onResetFilters, 
     </Stack>
   );
 }
-

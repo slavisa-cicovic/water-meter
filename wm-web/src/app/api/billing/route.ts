@@ -12,6 +12,7 @@ export const GET = async (req: NextRequest) => {
   const periodStart = searchParams.get('periodStart') || undefined;
   const periodEnd = searchParams.get('periodEnd') || undefined;
   const status = (searchParams.get('status') || undefined) as any;
+  const review = searchParams.get('review') || undefined;
   const page = searchParams.get('page');
   const pageSize = searchParams.get('pageSize');
 
@@ -21,6 +22,7 @@ export const GET = async (req: NextRequest) => {
     periodStart,
     periodEnd,
     status,
+    review,
     page: page ? Number(page) : 0,
     pageSize: pageSize ? Number(pageSize) : 25,
   });
@@ -42,4 +44,3 @@ export const POST = async (req: NextRequest) => {
 
   return NextResponse.json(result.data, { status: 201 });
 };
-

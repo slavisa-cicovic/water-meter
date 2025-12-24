@@ -21,6 +21,15 @@ export function BillingTableRow({ row }: Props) {
       <TableCell sx={{ width: 120 }}>
         <Chip size="small" label={row.status} />
       </TableCell>
+      <TableCell sx={{ width: 140 }}>
+        {row.reviewFlags && row.reviewFlags.length > 0 ? (
+          <Tooltip title={row.reviewFlags.join(', ')}>
+            <Chip size="small" color="error" label="Review" />
+          </Tooltip>
+        ) : (
+          '-'
+        )}
+      </TableCell>
       <TableCell align="right" sx={{ width: 140 }}>
         <Stack direction="row" justifyContent="flex-end" spacing={1}>
           <Tooltip title="Invoice detail">

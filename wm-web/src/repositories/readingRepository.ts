@@ -76,6 +76,44 @@ export const ReadingRepository = {
     });
   },
 
+  async findLatestForMeter(meterId: string) {
+    return prisma.reading.findFirst({
+      where: { meterId },
+      orderBy: { readAt: 'desc' },
+      include: { edits: true },
+    });
+  },
+
+  async findLatestUnpaidReading(meterId: string) {
+    return prisma.reading.findFirst({
+      where: {
+        meterId,
+        invoiceLinks: {
+          none: {
+            invoice: { status: 'paid' },
+          },
+        },
+      },
+      orderBy: { readAt: 'desc' },
+      include: { edits: true },
+    });
+  },
+
+  async findLatestPaidReading(meterId: string) {
+    return prisma.reading.findFirst({
+      where: {
+        meterId,
+        invoiceLinks: {
+          some: {
+            invoice: { status: 'paid' },
+          },
+        },
+      },
+      orderBy: { readAt: 'desc' },
+      include: { edits: true },
+    });
+  },
+
   async addEdit(params: {
     readingId: string;
     accountId: string;

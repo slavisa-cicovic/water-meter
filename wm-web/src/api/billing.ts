@@ -9,6 +9,7 @@ type BillingQuery = {
   periodStart?: string;
   periodEnd?: string;
   status?: string;
+  review?: string;
   page?: number;
   pageSize?: number;
 };
@@ -20,6 +21,7 @@ export function useGetInvoices(params?: BillingQuery) {
   if (params?.periodStart) query.set('periodStart', params.periodStart);
   if (params?.periodEnd) query.set('periodEnd', params.periodEnd);
   if (params?.status) query.set('status', params.status);
+  if (params?.review) query.set('review', params.review);
   if (params?.page !== undefined) query.set('page', String(params.page));
   if (params?.pageSize !== undefined) query.set('pageSize', String(params.pageSize));
 
@@ -55,4 +57,3 @@ export function useGetInvoice(id?: string) {
     [data?.invoice, error, isLoading, isValidating, mutate]
   );
 }
-

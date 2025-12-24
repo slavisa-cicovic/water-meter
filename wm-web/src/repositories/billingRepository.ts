@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import prisma from 'src/utils/prisma';
 import { InvoiceListParams, TariffCreateInput, TariffUpdateInput } from 'src/types/billings';
 
@@ -10,9 +11,18 @@ export const BillingRepository = {
 
   async findApplicableTariff(params: { groupCode?: string | null; periodStart: Date; periodEnd: Date }) {
     const { groupCode, periodStart, periodEnd } = params;
-    return prisma.tariff.findFirst({
+    const tariff = await prisma.tariff.findFirst({
       where: {
         ...(groupCode ? { groupCode } : {}),
+        validFrom: { lte: periodEnd },
+        OR: [{ validTo: null }, { validTo: { gte: periodStart } }],
+      },
+      orderBy: { validFrom: 'desc' },
+    });
+    if (tariff) return tariff;
+    return prisma.tariff.findFirst({
+      where: {
+        groupCode: null,
         validFrom: { lte: periodEnd },
         OR: [{ validTo: null }, { validTo: { gte: periodStart } }],
       },
@@ -54,12 +64,17 @@ export const BillingRepository = {
   },
 
   async listInvoices(params: InvoiceListParams) {
-    const { accountId, meterId, periodStart, periodEnd, status, page = 0, pageSize = 25 } = params;
+    const { accountId, meterId, periodStart, periodEnd, status, review, page = 0, pageSize = 25 } = params;
 
     const where: any = {
       ...(accountId ? { accountId } : {}),
       ...(meterId ? { meterId } : {}),
       ...(status ? { status } : {}),
+      ...(review === 'none'
+        ? { reviewFlags: { equals: Prisma.DbNull } }
+        : review
+        ? { reviewFlags: { array_contains: [review] } }
+        : {}),
       ...(periodStart || periodEnd
         ? {
             periodStart: periodStart ? { gte: new Date(periodStart) } : undefined,
@@ -107,6 +122,7 @@ export const BillingRepository = {
     totalAmount: number;
     tariffId?: string | null;
     tariffSnapshot?: Record<string, any> | null;
+    reviewFlags?: string[] | null;
   }) {
     return prisma.invoice.create({
       data: {
@@ -122,7 +138,8 @@ export const BillingRepository = {
         vatAmount: data.vatAmount,
         totalAmount: data.totalAmount,
         tariffId: data.tariffId ?? null,
-        tariffSnapshot: data.tariffSnapshot ?? null,
+        tariffSnapshot: data.tariffSnapshot ?? undefined,
+        reviewFlags: data.reviewFlags ?? undefined,
       },
       include: { lines: true },
     });

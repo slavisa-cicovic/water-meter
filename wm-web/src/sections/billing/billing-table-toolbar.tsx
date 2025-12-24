@@ -9,6 +9,7 @@ export type IBillingTableFilters = {
   accountId: string;
   meterId: string;
   status: string;
+  review: string;
   periodStart: string;
   periodEnd: string;
 };
@@ -48,6 +49,13 @@ export function BillingTableToolbar({ filters, onFilters }: Props) {
           <MenuItem value="paid">paid</MenuItem>
           <MenuItem value="void">void</MenuItem>
         </TextField>
+        <TextField select label="Review" value={filters.review} onChange={handleChange('review')} sx={{ minWidth: 200 }}>
+          <MenuItem value="">All</MenuItem>
+          <MenuItem value="none">No flags</MenuItem>
+          <MenuItem value="non_positive_consumption">invalid_reading</MenuItem>
+          <MenuItem value="no_reading_current_month">no_reading</MenuItem>
+          <MenuItem value="invalid_household_size">no_household_size</MenuItem>
+        </TextField>
         <TextField
           label="Period start"
           type="date"
@@ -68,4 +76,3 @@ export function BillingTableToolbar({ filters, onFilters }: Props) {
     </Stack>
   );
 }
-

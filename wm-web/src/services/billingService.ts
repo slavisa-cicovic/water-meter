@@ -7,6 +7,9 @@ import { validateInvoiceCreate, validateTariffCreate, validateTariffUpdate } fro
 const toNumber = (value: any) => Number(value);
 const toMoney = (value: number) => Number(value.toFixed(2));
 const toQuantity = (value: number) => Number(value.toFixed(3));
+const getMonthKey = (date: Date) => `${date.getFullYear()}-${date.getMonth()}`;
+
+const isCurrentMonth = (date: Date, reference: Date) => getMonthKey(date) === getMonthKey(reference);
 
 const buildTariffSnapshot = (tariff: any) => ({
   id: tariff.id,
@@ -198,6 +201,168 @@ export const BillingService = {
         });
         await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: startReading.id, role: 'start' });
         await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: endReading.id, role: 'end' });
+
+        created.push(invoice);
+      }
+    }
+
+    return { success: true, data: { invoices: created, skipped } };
+  },
+
+  async generateDraftsFromReadings(referenceDate = new Date()) {
+    const meters = await MeterRepository.listAll();
+    const created: any[] = [];
+    const skipped: Array<{ meterId: string; reason: string }> = [];
+
+    for (const meter of meters) {
+      const endReading = await ReadingRepository.findLatestUnpaidReading(meter.id);
+      if (!endReading) {
+        skipped.push({ meterId: meter.id, reason: 'NO_END_READING' });
+        continue;
+      }
+
+      const endReadAt = new Date(endReading.readAt);
+      const flags: string[] = [];
+      if (!isCurrentMonth(endReadAt, referenceDate)) {
+        flags.push('no_reading_current_month');
+      }
+
+      const startReading = await ReadingRepository.findLatestPaidReading(meter.id);
+      const startValue = startReading ? startReading.value : 0;
+      const periodStart = startReading ? new Date(startReading.readAt) : endReadAt;
+      const periodEnd = endReadAt;
+
+      const consumptionTotal = endReading.value - startValue;
+      if (consumptionTotal <= 0) {
+        flags.push('non_positive_consumption');
+      }
+
+      const consumers = await MeterRepository.listConsumersForMeter(meter.id);
+      if (!consumers.length) {
+        skipped.push({ meterId: meter.id, reason: 'NO_CONSUMERS' });
+        continue;
+      }
+
+      const tariff = await BillingRepository.findApplicableTariff({
+        groupCode: meter.groupCode ?? null,
+        periodStart,
+        periodEnd,
+      });
+      if (!tariff) {
+        skipped.push({ meterId: meter.id, reason: 'NO_TARIFF' });
+        continue;
+      }
+
+      const unitPrice = toNumber(tariff.basePrice);
+      const vatRate = 0.19;
+      const tariffSnapshot = buildTariffSnapshot(tariff);
+
+      if (consumers.length === 1) {
+        const accountId = consumers[0].accountId;
+        const subtotal = toMoney(consumptionTotal * unitPrice);
+        const vatAmount = toMoney(subtotal * vatRate);
+        const totalAmount = toMoney(subtotal + vatAmount);
+
+        const invoice = await BillingRepository.createInvoice({
+          accountId,
+          meterId: meter.id,
+          periodStart,
+          periodEnd,
+          status: 'draft',
+          consumption: consumptionTotal,
+          unitPrice,
+          subtotal,
+          vatRate,
+          vatAmount,
+          totalAmount,
+          tariffId: tariff.id,
+          tariffSnapshot,
+          reviewFlags: flags.length ? flags : undefined,
+        });
+
+        await BillingRepository.addInvoiceLine({
+          invoiceId: invoice.id,
+          type: 'consumption',
+          description: 'Water consumption',
+          quantity: toQuantity(consumptionTotal),
+          unitPrice,
+          amount: subtotal,
+        });
+        await BillingRepository.addInvoiceLine({
+          invoiceId: invoice.id,
+          type: 'vat',
+          description: `VAT ${toMoney(vatRate * 100)}%`,
+          amount: vatAmount,
+        });
+
+        await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: endReading.id, role: 'end' });
+        if (startReading) {
+          await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: startReading.id, role: 'start' });
+        }
+
+        created.push(invoice);
+        continue;
+      }
+
+      let householdTotal = 0;
+      const householdSizes = consumers.map((consumer) => {
+        const size = consumer.account.consumerProfile?.householdSize || 0;
+        if (size <= 0) {
+          return { accountId: consumer.accountId, size: 1, invalid: true };
+        }
+        return { accountId: consumer.accountId, size, invalid: false };
+      });
+
+      householdTotal = householdSizes.reduce((sum, entry) => sum + entry.size, 0);
+      if (householdTotal <= 0) householdTotal = consumers.length;
+
+      for (const consumer of consumers) {
+        const sizeEntry = householdSizes.find((entry) => entry.accountId === consumer.accountId);
+        const share = (sizeEntry?.size || 1) / householdTotal;
+        const consumptionShare = toQuantity(consumptionTotal * share);
+        const subtotal = toMoney(consumptionShare * unitPrice);
+        const vatAmount = toMoney(subtotal * vatRate);
+        const totalAmount = toMoney(subtotal + vatAmount);
+
+        const invoiceFlags = [...flags];
+        if (sizeEntry?.invalid) invoiceFlags.push('invalid_household_size');
+
+        const invoice = await BillingRepository.createInvoice({
+          accountId: consumer.accountId,
+          meterId: meter.id,
+          periodStart,
+          periodEnd,
+          status: 'draft',
+          consumption: Math.round(consumptionShare),
+          unitPrice,
+          subtotal,
+          vatRate,
+          vatAmount,
+          totalAmount,
+          tariffId: tariff.id,
+          tariffSnapshot,
+          reviewFlags: invoiceFlags.length ? invoiceFlags : undefined,
+        });
+
+        await BillingRepository.addInvoiceLine({
+          invoiceId: invoice.id,
+          type: 'consumption',
+          description: 'Water consumption (shared)',
+          quantity: consumptionShare,
+          unitPrice,
+          amount: subtotal,
+        });
+        await BillingRepository.addInvoiceLine({
+          invoiceId: invoice.id,
+          type: 'vat',
+          description: `VAT ${toMoney(vatRate * 100)}%`,
+          amount: vatAmount,
+        });
+
+        await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: endReading.id, role: 'end' });
+        if (startReading) {
+          await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: startReading.id, role: 'start' });
+        }
 
         created.push(invoice);
       }

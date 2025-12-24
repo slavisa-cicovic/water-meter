@@ -20,6 +20,7 @@ const defaultFilters: IBillingTableFilters = {
   accountId: '',
   meterId: '',
   status: '',
+  review: '',
   periodStart: '',
   periodEnd: '',
 };
@@ -31,6 +32,7 @@ const TABLE_HEAD = [
   { id: 'consumption', label: 'Consumption', width: 120, disableSort: true },
   { id: 'totalAmount', label: 'Total', width: 140, disableSort: true },
   { id: 'status', label: 'Status', width: 120, disableSort: true },
+  { id: 'review', label: 'Review', width: 140, disableSort: true },
   { id: '', label: 'Actions', align: 'right', width: 120, disableSort: true },
 ];
 
@@ -43,6 +45,7 @@ export function BillingOverviewView() {
     accountId: filters.accountId || undefined,
     meterId: filters.meterId || undefined,
     status: filters.status || undefined,
+    review: filters.review || undefined,
     periodStart: filters.periodStart || undefined,
     periodEnd: filters.periodEnd || undefined,
     page: table.page,

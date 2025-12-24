@@ -33,6 +33,7 @@ export type Invoice = {
   totalAmount: string;
   tariffId?: string;
   tariffSnapshot?: Record<string, any>;
+  reviewFlags?: string[];
   createdAt?: string;
   updatedAt?: string;
   lines?: InvoiceLine[];
@@ -95,6 +96,7 @@ export type InvoiceListParams = {
   periodStart?: string;
   periodEnd?: string;
   status?: InvoiceStatus;
+  review?: string;
   page?: number;
   pageSize?: number;
 };

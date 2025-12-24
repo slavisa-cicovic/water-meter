@@ -260,6 +260,7 @@ model Invoice {
   totalAmount  Decimal       @db.Decimal(12, 2)
   tariffId     String?
   tariffSnapshot Json?
+  reviewFlags  Json?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
