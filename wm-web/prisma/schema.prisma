@@ -49,6 +49,56 @@ enum InvoiceStatus {
   void
 }
 
+enum JobScheduleType {
+  weekly
+  monthly
+  yearly
+}
+
+enum JobRunStatus {
+  running
+  success
+  failed
+}
+
+model JobDefinition {
+  id             String          @id @default(uuid())
+  name           String
+  handlerKey     String
+  scheduleType   JobScheduleType
+  scheduleConfig Json
+  enabled        Boolean         @default(true)
+  maxAttempts    Int             @default(3)
+  backoffSeconds Int             @default(60)
+  nextRunAt      DateTime?
+  lastRunAt      DateTime?
+  lockedUntil    DateTime?
+  lockedBy       String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  runs JobRun[]
+
+  @@index([enabled, nextRunAt])
+  @@index([handlerKey])
+}
+
+model JobRun {
+  id         String       @id @default(uuid())
+  jobId      String
+  status     JobRunStatus
+  attempt    Int          @default(1)
+  runAt      DateTime     @default(now())
+  finishedAt DateTime?
+  error      String?      @db.Text
+
+  job JobDefinition @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([status])
+  @@index([runAt])
+}
+
 enum InvoiceLineType {
   consumption
   fee

@@ -53,4 +53,9 @@ export const endpoints = {
     details: (id: string) => `/api/billing/${id}`,
     tariffs: '/api/billing/tariffs',
   },
+  jobs: {
+    list: '/api/jobs',
+    details: (id: string) => `/api/jobs/${id}`,
+    run: (id: string) => `/api/jobs/${id}/run`,
+  },
 };

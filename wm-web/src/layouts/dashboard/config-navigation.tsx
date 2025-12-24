@@ -19,6 +19,7 @@ const ICONS = {
   dashboard: icon('ic_dashboard'),
   meters: icon('ic_dashboard'),
   billing: icon('ic_dashboard'),
+  jobs: icon('ic_dashboard'),
 };
 
 // ----------------------------------------------------------------------
@@ -49,6 +50,11 @@ export function useNavData() {
             title: 'Billing',
             path: paths.dashboard.billing.root,
             icon: ICONS.billing,
+          },
+          {
+            title: 'Jobs',
+            path: paths.dashboard.jobs.root,
+            icon: ICONS.jobs,
           },
         ],
       },
