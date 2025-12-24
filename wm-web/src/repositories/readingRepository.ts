@@ -15,7 +15,7 @@ export const ReadingRepository = {
         originalValue: input.originalValue ?? input.value,
         imageFilename: input.imageFilename ?? null,
       },
-      include: { edits: true },
+      include: { edits: true, meter: true },
     });
   },
 
@@ -27,14 +27,14 @@ export const ReadingRepository = {
         ...(input.value !== undefined ? { value: input.value } : {}),
         ...(input.imageFilename !== undefined ? { imageFilename: input.imageFilename } : {}),
       },
-      include: { edits: true },
+      include: { edits: true, meter: true },
     });
   },
 
   async findById(id: string) {
     return prisma.reading.findUnique({
       where: { id },
-      include: { edits: true },
+      include: { edits: true, meter: true },
     });
   },
 

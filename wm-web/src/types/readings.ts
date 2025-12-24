@@ -3,7 +3,11 @@ export type ReadingMethod = 'remote' | 'manual' | 'photo_ocr';
 export type Reading = {
   id: string;
   meterId: string;
-  meter?: { serialNumber?: string };
+  meter?: {
+    serialNumber?: string;
+    groupCode?: string;
+    address?: string;
+  };
   readerAccountId: string;
   readAt: string;
   method: ReadingMethod;

@@ -14,7 +14,13 @@ const toReading = (row: any): Reading => ({
   imageFilename: row.imageFilename ?? undefined,
   createdAt: row.createdAt?.toISOString?.() ?? row.createdAt ?? undefined,
   updatedAt: row.updatedAt?.toISOString?.() ?? row.updatedAt ?? undefined,
-  meter: row.meter ? { serialNumber: row.meter.serialNumber } : undefined,
+  meter: row.meter
+    ? {
+        serialNumber: row.meter.serialNumber,
+        groupCode: row.meter.groupCode ?? undefined,
+        address: row.meter.address ?? undefined,
+      }
+    : undefined,
   edits: row.edits?.map((edit: any) => ({
     id: edit.id,
     readingId: edit.readingId,

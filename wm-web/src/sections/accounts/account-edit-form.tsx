@@ -25,6 +25,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import Button from '@mui/material/Button';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
+import MenuItem from '@mui/material/MenuItem';
 // routes
 import { useRouter } from 'src/routes/hooks';
 import { paths } from 'src/routes/paths';
@@ -144,19 +145,64 @@ export default function AccountEditForm({ currentAccount }: Props) {
   const [readingFrom, setReadingFrom] = useState(`${currentYear}-01-01`);
   const [readingTo, setReadingTo] = useState(`${currentYear}-12-31`);
   const [readingsTab, setReadingsTab] = useState<'chart' | 'table'>('chart');
+  const [selectedMeterId, setSelectedMeterId] = useState('');
   const { readings, readingsLoading, readingsEmpty } = useGetReadings(
     isStaffField && accountId
       ? { accountId, from: readingFrom || undefined, to: readingTo || undefined }
       : undefined
   );
 
+  const meterOptions = useMemo(() => {
+    const options = new Map<
+      string,
+      { id: string; groupCode?: string; address?: string; serialNumber?: string }
+    >();
+
+    readings.forEach((reading) => {
+      if (!options.has(reading.meterId)) {
+        options.set(reading.meterId, {
+          id: reading.meterId,
+          groupCode: reading.meter?.groupCode,
+          address: reading.meter?.address,
+          serialNumber: reading.meter?.serialNumber,
+        });
+      }
+    });
+
+    return Array.from(options.values());
+  }, [readings]);
+
+  useEffect(() => {
+    if (!meterOptions.length) {
+      if (selectedMeterId) setSelectedMeterId('');
+      return;
+    }
+
+    const hasSelected = meterOptions.some((meter) => meter.id === selectedMeterId);
+    if (!selectedMeterId || !hasSelected) {
+      setSelectedMeterId(meterOptions[0].id);
+    }
+  }, [meterOptions, selectedMeterId]);
+
+  const filteredReadings = useMemo(() => {
+    if (!selectedMeterId) return readings;
+    return readings.filter((reading) => reading.meterId === selectedMeterId);
+  }, [readings, selectedMeterId]);
+
+  const formatMeterLabel = (meter: { groupCode?: string; address?: string; serialNumber?: string }) => {
+    const groupCode = meter.groupCode || '-';
+    const address = meter.address || '-';
+    const serialNumber = meter.serialNumber || '-';
+    return `Group: ${groupCode}, ${address}, ${serialNumber}`;
+  };
+
   const readingsChartData = useMemo(() => {
-    if (!readings?.length) return { categories: [] as string[], data: [] as number[] };
+    if (!filteredReadings?.length) return { categories: [] as string[], data: [] as number[] };
 
     const totals = new Map<number, { label: string; total: number }>();
 
-    readings.forEach((reading, index) => {
-      const prev = readings[index + 1];
+    filteredReadings.forEach((reading, index) => {
+      const prev = filteredReadings[index + 1];
       if (!prev) return;
 
       const consumption = reading.value - prev.value;
@@ -179,7 +225,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
       categories: sorted.map(([, value]) => value.label),
       data: sorted.map(([, value]) => value.total),
     };
-  }, [readings]);
+  }, [filteredReadings]);
 
   const chartOptions = useChart(
     useMemo(
@@ -202,10 +248,11 @@ export default function AccountEditForm({ currentAccount }: Props) {
   );
 
   const hasChartData = readingsChartData.data.length > 0;
+  const readingsFilteredEmpty = !readingsLoading && filteredReadings.length === 0;
 
   const renderReadingsContent = (content: ReactNode) => {
     if (readingsLoading) return <Typography variant="body2">Loading readings...</Typography>;
-    if (readingsEmpty) return <Typography variant="body2">No readings found.</Typography>;
+    if (readingsEmpty || readingsFilteredEmpty) return <Typography variant="body2">No readings found.</Typography>;
     return content;
   };
 
@@ -282,6 +329,20 @@ export default function AccountEditForm({ currentAccount }: Props) {
               slotProps={{ inputLabel: { shrink: true } }}
               sx={{ minWidth: 160 }}
             />
+            <TextField
+              select
+              label="Meter"
+              value={selectedMeterId}
+              onChange={(event) => setSelectedMeterId(event.target.value)}
+              sx={{ minWidth: 220 }}
+              disabled={!meterOptions.length}
+            >
+              {meterOptions.map((meter) => (
+                <MenuItem key={meter.id} value={meter.id}>
+                  {formatMeterLabel(meter)}
+                </MenuItem>
+              ))}
+            </TextField>
           </Stack>
 
           <Tabs value={readingsTab} onChange={(_, value) => setReadingsTab(value)} sx={{ mb: 2 }}>
@@ -313,8 +374,8 @@ export default function AccountEditForm({ currentAccount }: Props) {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {readings.map((reading, index) => {
-                      const prev = readings[index + 1];
+                    {filteredReadings.map((reading, index) => {
+                      const prev = filteredReadings[index + 1];
                       const consumption = prev ? reading.value - prev.value : undefined;
                       const latestEdit = reading.edits && reading.edits.length ? reading.edits[0] : undefined;
                       const editInfo = latestEdit ? `Edited by ${latestEdit.editorRole}` : '';
