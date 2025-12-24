@@ -24,6 +24,8 @@ export type ReadingEdit = {
   readingId: string;
   accountId: string;
   editorRole: 'admin' | 'consumer' | 'staff_field' | 'staff_backoffice';
+  editorFirstName?: string;
+  editorLastName?: string;
   value: number;
   reason?: string;
   editedAt: string;

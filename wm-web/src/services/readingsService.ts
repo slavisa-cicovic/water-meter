@@ -26,6 +26,8 @@ const toReading = (row: any): Reading => ({
     readingId: edit.readingId,
     accountId: edit.accountId,
     editorRole: edit.editorRole,
+    editorFirstName: edit.account?.firstName ?? undefined,
+    editorLastName: edit.account?.lastName ?? undefined,
     value: edit.value,
     reason: edit.reason ?? undefined,
     editedAt: edit.editedAt?.toISOString?.() ?? edit.editedAt,
@@ -68,8 +70,9 @@ export const ReadingsService = {
     }
 
     const valueChanged = input.value !== undefined && input.value !== existing.value;
+    const reasonProvided = typeof input.editReason === 'string' && input.editReason.trim().length > 0;
 
-    if (valueChanged) {
+    if (input.value !== undefined && (valueChanged || reasonProvided)) {
       const editor = await AccountRepository.findById(input.editorAccountId || '');
       if (!editor) return { success: false, error: 'ACCOUNT_NOT_FOUND' };
       if (!allowedEditorRoles.has(editor.role)) return { success: false, error: 'EDITOR_FORBIDDEN' };

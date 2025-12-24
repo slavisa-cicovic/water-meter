@@ -26,6 +26,9 @@ import Button from '@mui/material/Button';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import MenuItem from '@mui/material/MenuItem';
+import IconButton from '@mui/material/IconButton';
+import EditIcon from '@mui/icons-material/Edit';
+import Tooltip from '@mui/material/Tooltip';
 // routes
 import { useRouter } from 'src/routes/hooks';
 import { paths } from 'src/routes/paths';
@@ -35,7 +38,7 @@ import { useLocales } from 'src/locales';
 import { useResponsive } from 'src/hooks/use-responsive';
 // api
 import { useGetInvoices } from 'src/api/billing';
-import { useGetReadings } from 'src/api/readings';
+import { ReadingsApi, useGetReadings } from 'src/api/readings';
 // auth
 import { useAuthContext } from 'src/auth/hooks';
 // components
@@ -43,6 +46,7 @@ import FormProvider, { RHFTextField } from 'src/components/hook-form';
 import { ChartWrapper, useChart } from 'src/components/chart';
 // types
 import { AccountRow } from 'src/types/accounts';
+import { Reading } from 'src/types/readings';
 
 // ----------------------------------------------------------------------
 
@@ -93,6 +97,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
 
   const viewerRole = (user as any)?.role as string | undefined;
   const viewerId = (user as any)?.accountId || (user as any)?.id;
+  const canEditReadings = viewerRole === 'staff_backoffice';
   const canEdit =
     (viewerRole === 'staff_backoffice' &&
       (currentAccount?.type === 'consumer' || currentAccount?.type === 'staff_field' || currentAccount?.id === viewerId)) ||
@@ -146,7 +151,15 @@ export default function AccountEditForm({ currentAccount }: Props) {
   const [readingTo, setReadingTo] = useState(`${currentYear}-12-31`);
   const [readingsTab, setReadingsTab] = useState<'chart' | 'table'>('chart');
   const [selectedMeterId, setSelectedMeterId] = useState('');
-  const { readings, readingsLoading, readingsEmpty } = useGetReadings(
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editValue, setEditValue] = useState('');
+  const [editReason, setEditReason] = useState('');
+  const [editError, setEditError] = useState('');
+  const [editReasonError, setEditReasonError] = useState('');
+  const [editSaving, setEditSaving] = useState(false);
+  const [editBounds, setEditBounds] = useState<{ min?: number; max?: number } | null>(null);
+  const [editingReading, setEditingReading] = useState<Reading | null>(null);
+  const { readings, readingsLoading, readingsEmpty, mutate: mutateReadings } = useGetReadings(
     isStaffField && accountId
       ? { accountId, from: readingFrom || undefined, to: readingTo || undefined }
       : undefined
@@ -254,6 +267,86 @@ export default function AccountEditForm({ currentAccount }: Props) {
     if (readingsLoading) return <Typography variant="body2">Loading readings...</Typography>;
     if (readingsEmpty || readingsFilteredEmpty) return <Typography variant="body2">No readings found.</Typography>;
     return content;
+  };
+
+  const handleOpenEditDialog = (reading: Reading, index: number) => {
+    const prev = filteredReadings[index + 1];
+    const next = filteredReadings[index - 1];
+    const latestEdit = reading.edits && reading.edits.length ? reading.edits[0] : undefined;
+    setEditingReading(reading);
+    setEditValue(String(reading.value));
+    setEditError('');
+    setEditReason(latestEdit?.reason || '');
+    setEditReasonError('');
+    setEditBounds({
+      min: prev ? prev.value : undefined,
+      max: next ? next.value : undefined,
+    });
+    setEditDialogOpen(true);
+  };
+
+  const handleCloseEditDialog = () => {
+    if (editSaving) return;
+    setEditDialogOpen(false);
+    setEditingReading(null);
+    setEditValue('');
+    setEditError('');
+    setEditReason('');
+    setEditReasonError('');
+    setEditBounds(null);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingReading) return;
+    const numericValue = Number(editValue);
+    const latestEdit = editingReading.edits && editingReading.edits.length ? editingReading.edits[0] : undefined;
+
+    if (!Number.isFinite(numericValue)) {
+      setEditError('Enter a valid number.');
+      return;
+    }
+
+    if (!editReason.trim()) {
+      setEditReasonError('Reason is required.');
+      return;
+    }
+
+    if (numericValue === editingReading.value && editReason.trim() === (latestEdit?.reason || '').trim()) {
+      setEditError('Value or reason must change.');
+      return;
+    }
+
+    if (editBounds?.min !== undefined && numericValue < editBounds.min) {
+      setEditError(`Value must be >= ${editBounds.min}.`);
+      return;
+    }
+
+    if (editBounds?.max !== undefined && numericValue > editBounds.max) {
+      setEditError(`Value must be <= ${editBounds.max}.`);
+      return;
+    }
+
+    if (!viewerId || !viewerRole) {
+      setEditError('Missing editor information.');
+      return;
+    }
+
+    setEditSaving(true);
+    try {
+      await ReadingsApi.updateReading(editingReading.id, {
+        id: editingReading.id,
+        value: numericValue,
+        editReason,
+        editorAccountId: viewerId,
+        editorRole: viewerRole,
+      });
+      await mutateReadings();
+      handleCloseEditDialog();
+    } catch (error) {
+      setEditError('Failed to update reading.');
+    } finally {
+      setEditSaving(false);
+    }
   };
 
   const renderDetails = (
@@ -369,8 +462,9 @@ export default function AccountEditForm({ currentAccount }: Props) {
                       <TableCell sx={{ width: 140 }}>Method</TableCell>
                       <TableCell sx={{ width: 120 }}>Value</TableCell>
                       <TableCell sx={{ width: 140 }}>Consumption</TableCell>
-                      <TableCell sx={{ width: 200 }}>Edit</TableCell>
+                      <TableCell sx={{ width: 200 }}>Edited</TableCell>
                       <TableCell>Meter</TableCell>
+                      <TableCell sx={{ width: 80 }}>Actions</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -378,7 +472,9 @@ export default function AccountEditForm({ currentAccount }: Props) {
                       const prev = filteredReadings[index + 1];
                       const consumption = prev ? reading.value - prev.value : undefined;
                       const latestEdit = reading.edits && reading.edits.length ? reading.edits[0] : undefined;
-                      const editInfo = latestEdit ? `Edited by ${latestEdit.editorRole}` : '';
+                      const editorName = latestEdit
+                        ? [latestEdit.editorFirstName, latestEdit.editorLastName].filter(Boolean).join(' ')
+                        : '';
 
                       return (
                         <TableRow key={reading.id}>
@@ -386,8 +482,26 @@ export default function AccountEditForm({ currentAccount }: Props) {
                           <TableCell sx={{ width: 140 }}>{reading.method}</TableCell>
                           <TableCell sx={{ width: 120 }}>{reading.value}</TableCell>
                           <TableCell sx={{ width: 140 }}>{consumption !== undefined ? consumption : '-'}</TableCell>
-                          <TableCell sx={{ width: 200 }}>{editInfo}</TableCell>
+                          <TableCell sx={{ width: 200 }}>
+                            {latestEdit ? (
+                              <Tooltip title={latestEdit.reason || 'No reason provided'}>
+                                <span>{editorName || '-'}</span>
+                              </Tooltip>
+                            ) : (
+                              '-'
+                            )}
+                          </TableCell>
                           <TableCell>{reading.meter?.serialNumber || reading.meterId}</TableCell>
+                          <TableCell sx={{ width: 80 }}>
+                            <IconButton
+                              size="small"
+                              disabled={!canEditReadings}
+                              onClick={() => handleOpenEditDialog(reading, index)}
+                              aria-label="Edit reading"
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                          </TableCell>
                         </TableRow>
                       );
                     })}
@@ -407,6 +521,51 @@ export default function AccountEditForm({ currentAccount }: Props) {
         {renderBillingHistory}
         {renderReadingsHistory}
       </Grid>
+
+      <Dialog open={editDialogOpen} onClose={handleCloseEditDialog} fullWidth maxWidth="sm">
+        <DialogTitle>Edit reading</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} mt={1}>
+            <TextField
+              label="Value"
+              type="number"
+              value={editValue}
+              onChange={(event) => {
+                setEditValue(event.target.value);
+                if (editError) setEditError('');
+              }}
+              error={Boolean(editError)}
+              helperText={
+                editError ||
+                (editBounds
+                  ? `Allowed range: min ${editBounds.min ?? 'none'}, max ${editBounds.max ?? 'none'}`
+                  : undefined)
+              }
+              slotProps={{ inputLabel: { shrink: true } }}
+            />
+            <TextField
+              label="Reason"
+              value={editReason}
+              onChange={(event) => {
+                setEditReason(event.target.value);
+                if (editReasonError) setEditReasonError('');
+              }}
+              error={Boolean(editReasonError)}
+              helperText={editReasonError || 'Required'}
+              multiline
+              minRows={2}
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEditDialog} disabled={editSaving}>
+            Cancel
+          </Button>
+          <Button onClick={handleSaveEdit} variant="contained" disabled={editSaving}>
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog open={addressPromptOpen} onClose={() => setAddressPromptOpen(false)}>
         <DialogTitle>Update meter address?</DialogTitle>

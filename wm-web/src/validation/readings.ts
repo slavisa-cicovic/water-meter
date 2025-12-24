@@ -72,6 +72,7 @@ export const validateReadingUpdate = (input: ReadingUpdateInput): ValidationResu
   if (input.value !== undefined) {
     if (isBlank(input.editorAccountId)) pushError(errors, 'editorAccountId', 'Required when editing value');
     validateEditorRole(input.editorRole, errors);
+    if (isBlank(input.editReason)) pushError(errors, 'editReason', 'Required when editing value');
   }
 
   if (input.imageFilename !== undefined && input.imageFilename !== null && isBlank(input.imageFilename)) {
@@ -80,4 +81,3 @@ export const validateReadingUpdate = (input: ReadingUpdateInput): ValidationResu
 
   return { valid: Object.keys(errors).length === 0, errors };
 };
-
