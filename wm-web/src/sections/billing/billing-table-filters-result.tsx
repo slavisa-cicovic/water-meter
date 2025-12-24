@@ -22,19 +22,15 @@ export function BillingTableFiltersResult({ filters, onFilters, onResetFilters, 
     chips.push({ key: 'status', label: `Status: ${filters.status}`, onDelete: () => onFilters('status', '') });
   }
   if (filters.review) {
-    const label =
-      filters.review === 'none'
-        ? 'Review: no flags'
-        : filters.review === 'non_positive_consumption'
-        ? 'Review: invalid_reading'
-        : filters.review === 'no_reading_current_month'
-        ? 'Review: no_reading'
-        : filters.review === 'invalid_household_size'
-        ? 'Review: no_household_size'
-        : `Review: ${filters.review}`;
+    const reviewLabels: Record<string, string> = {
+      non_positive_consumption: 'invalid_reading',
+      no_reading_current_month: 'no_reading',
+      invalid_household_size: 'no_household_size',
+      no_previous_reading: 'no_previous_reading',
+    };
     chips.push({
       key: 'review',
-      label,
+      label: `Review: ${reviewLabels[filters.review] || filters.review}`,
       onDelete: () => onFilters('review', ''),
     });
   }

@@ -12,7 +12,9 @@ export const GET = async (req: NextRequest) => {
   const createdStart = searchParams.get('createdStart') || undefined;
   const createdEnd = searchParams.get('createdEnd') || undefined;
   const status = (searchParams.get('status') || undefined) as any;
-  const review = searchParams.get('review') || undefined;
+  const reviewFlags = searchParams.get('reviewFlags') || undefined;
+  const orderBy = searchParams.get('orderBy') || undefined;
+  const order = (searchParams.get('order') || undefined) as any;
   const page = searchParams.get('page');
   const pageSize = searchParams.get('pageSize');
 
@@ -22,7 +24,9 @@ export const GET = async (req: NextRequest) => {
     createdStart,
     createdEnd,
     status,
-    review,
+    reviewFlags: reviewFlags ? reviewFlags.split(',').filter(Boolean) : undefined,
+    orderBy,
+    order,
     page: page ? Number(page) : 0,
     pageSize: pageSize ? Number(pageSize) : 25,
   });

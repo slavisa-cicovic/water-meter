@@ -41,12 +41,14 @@ const defaultFilters: IBillingTableFilters = {
 };
 
 const TABLE_HEAD = [
-  { id: 'accountId', label: 'Account', minWidth: 200 },
-  { id: 'meterId', label: 'Meter', minWidth: 200 },
+  { id: 'account', label: 'Account', minWidth: 200 },
+  { id: 'meter', label: 'Meter', minWidth: 200 },
   { id: 'period', label: 'Period', minWidth: 200, disableSort: true },
-  { id: 'consumption', label: 'Consumption', width: 120, disableSort: true },
-  { id: 'totalAmount', label: 'Total', width: 140, disableSort: true },
-  { id: 'status', label: 'Status', width: 120, disableSort: true },
+  { id: 'createdAt', label: 'Created', width: 160 },
+  { id: 'updatedAt', label: 'Updated', width: 160 },
+  { id: 'consumption', label: 'Consumption', width: 120 },
+  { id: 'totalAmount', label: 'Total', width: 140 },
+  { id: 'status', label: 'Status', width: 120 },
   { id: 'review', label: 'Review', width: 140, disableSort: true },
   { id: '', label: 'Actions', align: 'right', width: 120, disableSort: true },
 ];
@@ -54,15 +56,17 @@ const TABLE_HEAD = [
 export function BillingOverviewView() {
   const settings = useSettingsContext();
   const [filters, setFilters] = useState(defaultFilters);
-  const table = useTable({ defaultRowsPerPage: 25, defaultDense: true });
+  const table = useTable({ defaultRowsPerPage: 25, defaultDense: true, defaultOrderBy: 'createdAt', defaultOrder: 'desc' });
 
   const { invoices, invoicesLoading, invoicesError, invoicesEmpty, total } = useGetInvoices({
     accountId: filters.accountId || undefined,
     meterId: filters.meterId || undefined,
     status: filters.status || undefined,
-    review: filters.review || undefined,
+    reviewFlags: filters.review ? [filters.review] : undefined,
     createdStart: filters.createdStart || undefined,
     createdEnd: filters.createdEnd || undefined,
+    orderBy: table.orderBy,
+    order: table.order,
     page: table.page,
     pageSize: table.rowsPerPage,
   });

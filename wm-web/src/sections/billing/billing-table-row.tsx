@@ -9,10 +9,9 @@ type Props = {
 };
 
 export function BillingTableRow({ row }: Props) {
-  const hasPreviousReading = !row.reviewFlags?.includes('no_previous_reading');
-  const periodEnd = row.periodEnd?.slice(0, 10) || '-';
-  const periodStart = row.periodStart?.slice(0, 10) || '-';
-  const period = hasPreviousReading && periodStart ? `${periodStart} → ${periodEnd}` : `→ ${periodEnd}`;
+  const periodEnd = row.periodEnd?.slice(0, 10) || '';
+  const periodStart = row.periodStart?.slice(0, 10) || '';
+  const period = periodStart || periodEnd ? `${periodStart} → ${periodEnd}`.trim() : '';
 
   return (
     <TableRow hover>
@@ -31,19 +30,25 @@ export function BillingTableRow({ row }: Props) {
         )}
       </TableCell>
       <TableCell sx={{ minWidth: 200 }}>{row.meter?.serialNumber || row.meterId || '-'}</TableCell>
-      <TableCell sx={{ minWidth: 200 }}>
-        {hasPreviousReading ? (
-          period
-        ) : (
-          <Box component="span" sx={{ pl: 6 }}>
-            {period}
-          </Box>
-        )}
-      </TableCell>
+      <TableCell sx={{ minWidth: 200 }}>{period}</TableCell>
+      <TableCell sx={{ width: 160 }}>{row.createdAt?.slice(0, 10) || '-'}</TableCell>
+      <TableCell sx={{ width: 160 }}>{row.updatedAt?.slice(0, 10) || '-'}</TableCell>
       <TableCell sx={{ width: 120 }}>{row.consumption}</TableCell>
       <TableCell sx={{ width: 140 }}>{row.totalAmount}</TableCell>
       <TableCell sx={{ width: 120 }}>
-        <Chip size="small" label={row.status} />
+        <Chip
+          size="small"
+          label={row.status}
+          color={
+            row.status === 'paid'
+              ? 'success'
+              : row.status === 'issued'
+              ? 'info'
+              : row.status === 'void'
+              ? 'default'
+              : 'warning'
+          }
+        />
       </TableCell>
       <TableCell sx={{ width: 140 }}>
         {row.reviewFlags && row.reviewFlags.length > 0 ? (

@@ -97,7 +97,9 @@ export type InvoiceListParams = {
   createdStart?: string;
   createdEnd?: string;
   status?: InvoiceStatus;
-  review?: string;
+  reviewFlags?: string[];
+  orderBy?: string;
+  order?: 'asc' | 'desc';
   page?: number;
   pageSize?: number;
 };

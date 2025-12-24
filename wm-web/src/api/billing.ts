@@ -9,7 +9,9 @@ type BillingQuery = {
   createdStart?: string;
   createdEnd?: string;
   status?: string;
-  review?: string;
+  reviewFlags?: string[];
+  orderBy?: string;
+  order?: 'asc' | 'desc';
   page?: number;
   pageSize?: number;
 };
@@ -21,7 +23,9 @@ export function useGetInvoices(params?: BillingQuery) {
   if (params?.createdStart) query.set('createdStart', params.createdStart);
   if (params?.createdEnd) query.set('createdEnd', params.createdEnd);
   if (params?.status) query.set('status', params.status);
-  if (params?.review) query.set('review', params.review);
+  if (params?.reviewFlags?.length) query.set('reviewFlags', params.reviewFlags.join(','));
+  if (params?.orderBy) query.set('orderBy', params.orderBy);
+  if (params?.order) query.set('order', params.order);
   if (params?.page !== undefined) query.set('page', String(params.page));
   if (params?.pageSize !== undefined) query.set('pageSize', String(params.pageSize));
 

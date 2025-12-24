@@ -64,16 +64,29 @@ export const BillingRepository = {
   },
 
   async listInvoices(params: InvoiceListParams) {
-    const { accountId, meterId, createdStart, createdEnd, status, review, page = 0, pageSize = 25 } = params;
+    const {
+      accountId,
+      meterId,
+      createdStart,
+      createdEnd,
+      status,
+      reviewFlags,
+      orderBy,
+      order = 'desc',
+      page = 0,
+      pageSize = 25,
+    } = params;
 
     const where: any = {
       ...(accountId ? { accountId } : {}),
       ...(meterId ? { meterId } : {}),
       ...(status ? { status } : {}),
-      ...(review === 'none'
-        ? { reviewFlags: { equals: Prisma.DbNull } }
-        : review
-        ? { reviewFlags: { array_contains: [review] } }
+      ...(reviewFlags?.length
+        ? {
+            OR: reviewFlags.map((flag) => ({
+              reviewFlags: { array_contains: [flag] },
+            })),
+          }
         : {}),
       ...(createdStart || createdEnd
         ? {
@@ -85,11 +98,28 @@ export const BillingRepository = {
         : {}),
     };
 
+    const orderByClause: Prisma.InvoiceOrderByWithRelationInput | Prisma.InvoiceOrderByWithRelationInput[] =
+      orderBy === 'account'
+        ? [{ account: { lastName: order } }, { account: { firstName: order } }]
+        : orderBy === 'meter'
+        ? { meter: { serialNumber: order } }
+        : orderBy === 'consumption'
+        ? { consumption: order }
+        : orderBy === 'totalAmount'
+        ? { totalAmount: order }
+        : orderBy === 'status'
+        ? { status: order }
+        : orderBy === 'createdAt'
+        ? { createdAt: order }
+        : orderBy === 'updatedAt'
+        ? { updatedAt: order }
+        : { createdAt: 'desc' as Prisma.SortOrder };
+
     const [total, invoices] = await Promise.all([
       prisma.invoice.count({ where }),
       prisma.invoice.findMany({
         where,
-        orderBy: { periodStart: 'desc' },
+        orderBy: orderByClause,
         skip: page * pageSize,
         take: pageSize,
         include: { lines: true, meter: true, account: true },
