@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
   Button,
@@ -61,7 +61,6 @@ const TABLE_HEAD = [
   { id: 'consumption', label: 'Consumption', width: 120 },
   { id: 'totalAmount', label: 'Total', width: 140 },
   { id: 'status', label: 'Status', width: 120 },
-  { id: 'review', label: 'Review', width: 140, disableSort: true },
   { id: '', label: 'Actions', align: 'right', width: 120, disableSort: true },
 ];
 
@@ -87,7 +86,17 @@ export function BillingOverviewView() {
   const denseHeight = table.dense ? 60 : 80;
   const canReset = !isEqual(defaultFilters, filters);
   const notFound = (!invoices.length && canReset) || invoicesEmpty;
-  const selectableIds = invoices.filter((row) => row.status === 'draft').map((row) => row.id);
+  const selectableIds = invoices
+    .filter((row) => row.status === 'draft' && (!row.reviewFlags || row.reviewFlags.length === 0))
+    .map((row) => row.id);
+  const sharedByMeterPeriod = useMemo(() => {
+    const counts = new Map<string, number>();
+    invoices.forEach((invoice) => {
+      const key = `${invoice.meterId || ''}|${invoice.periodStart || ''}|${invoice.periodEnd || ''}`;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    });
+    return counts;
+  }, [invoices]);
 
   const handleConfirmSelected = async () => {
     if (!table.selected.length) return;
@@ -217,7 +226,11 @@ export function BillingOverviewView() {
                         row={row}
                         selected={table.selected.includes(row.id)}
                         onSelectRow={() => table.onSelectRow(row.id)}
-                        selectable={row.status === 'draft'}
+                        selectable={row.status === 'draft' && (!row.reviewFlags || row.reviewFlags.length === 0)}
+                        onReviewed={mutate}
+                        isShared={
+                          (sharedByMeterPeriod.get(`${row.meterId || ''}|${row.periodStart || ''}|${row.periodEnd || ''}`) || 0) > 1
+                        }
                       />
                     ))}
                   <TableNoData notFound={notFound} />

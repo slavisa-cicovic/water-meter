@@ -77,17 +77,34 @@ export const BillingRepository = {
       pageSize = 25,
     } = params;
 
+    const hasNoFlags = reviewFlags?.includes('no_flags') ?? false;
+    const normalizedFlags = reviewFlags?.filter((flag) => flag !== 'no_flags') ?? [];
+    const emptyFlags = [] as Prisma.InputJsonValue;
+
+    const reviewWhere =
+      hasNoFlags || normalizedFlags.length
+        ? {
+            OR: [
+              ...(normalizedFlags.length
+                ? normalizedFlags.map((flag) => ({
+                    reviewFlags: { array_contains: [flag] },
+                  }))
+                : []),
+              ...(hasNoFlags
+                ? [
+                    { reviewFlags: { equals: Prisma.DbNull } },
+                    { reviewFlags: { equals: emptyFlags } },
+                  ]
+                : []),
+            ],
+          }
+        : {};
+
     const where: any = {
       ...(accountId ? { accountId } : {}),
       ...(meterId ? { meterId } : {}),
       ...(status ? { status } : {}),
-      ...(reviewFlags?.length
-        ? {
-            OR: reviewFlags.map((flag) => ({
-              reviewFlags: { array_contains: [flag] },
-            })),
-          }
-        : {}),
+      ...reviewWhere,
       ...(createdStart || createdEnd
         ? {
             createdAt: {
@@ -122,11 +139,18 @@ export const BillingRepository = {
         orderBy: orderByClause,
         skip: page * pageSize,
         take: pageSize,
-        include: { lines: true, meter: true, account: true },
+        include: { lines: true, meter: true, account: { include: { consumerProfile: true } } },
       }),
     ]);
 
     return { total, invoices };
+  },
+
+  async findInvoicesByIds(ids: string[]) {
+    return prisma.invoice.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, status: true, reviewFlags: true },
+    });
   },
 
   async findInvoiceById(id: string) {
@@ -188,6 +212,19 @@ export const BillingRepository = {
         ],
       },
       orderBy: { createdAt: 'desc' },
+    });
+  },
+
+  async listInvoicesForMeterPeriod(params: { meterId: string; periodStart: Date | null; periodEnd: Date | null }) {
+    const { meterId, periodStart, periodEnd } = params;
+    return prisma.invoice.findMany({
+      where: {
+        meterId,
+        periodStart,
+        periodEnd,
+      },
+      include: { lines: true, readings: { include: { reading: true } }, account: true },
+      orderBy: { createdAt: 'asc' },
     });
   },
 
@@ -273,5 +310,39 @@ export const BillingRepository = {
 
   async addReadingLink(params: { invoiceId: string; readingId: string; role: 'start' | 'end' }) {
     return prisma.invoiceReadingLink.create({ data: params });
+  },
+
+  async updateInvoice(id: string, data: {
+    consumption?: number;
+    unitPrice?: number;
+    subtotal?: number;
+    vatRate?: number;
+    vatAmount?: number;
+    totalAmount?: number;
+    periodStart?: Date | null;
+    periodEnd?: Date | null;
+    reviewFlags?: string[] | null;
+  }) {
+    const { reviewFlags, ...rest } = data;
+    return prisma.invoice.update({
+      where: { id },
+      data: {
+        ...rest,
+        ...(reviewFlags !== undefined
+          ? { reviewFlags: reviewFlags === null ? Prisma.DbNull : reviewFlags }
+          : {}),
+      },
+    });
+  },
+
+  async updateInvoiceLineByType(params: {
+    invoiceId: string;
+    type: 'consumption' | 'fee' | 'vat';
+    data: { quantity?: number; unitPrice?: number; amount?: number; description?: string | null };
+  }) {
+    return prisma.invoiceLine.updateMany({
+      where: { invoiceId: params.invoiceId, type: params.type },
+      data: params.data,
+    });
   },
 };

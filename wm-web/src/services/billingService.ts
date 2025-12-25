@@ -1,3 +1,4 @@
+import { AccountRepository } from 'src/repositories/accountRepository';
 import { BillingRepository } from 'src/repositories/billingRepository';
 import { MeterRepository } from 'src/repositories/meterRepository';
 import { ReadingRepository } from 'src/repositories/readingRepository';
@@ -457,12 +458,248 @@ export const BillingService = {
 
   async confirmInvoices(ids: string[]) {
     if (!ids.length) return { success: false, error: 'NO_IDS' };
+    const invoices = await BillingRepository.findInvoicesByIds(ids);
+    if (invoices.length !== ids.length) return { success: false, error: 'NOT_FOUND' };
+
+    const flagged = invoices.filter((invoice) =>
+      Array.isArray(invoice.reviewFlags) ? invoice.reviewFlags.length > 0 : Boolean(invoice.reviewFlags)
+    );
+    if (flagged.length) return { success: false, error: 'REVIEW_FLAGS_PRESENT' };
+
+    const notDraft = invoices.filter((invoice) => invoice.status !== 'draft');
+    if (notDraft.length) return { success: false, error: 'INVALID_STATUS' };
+
     const updated = await BillingRepository.bulkUpdateStatus({
       ids,
       status: 'confirmed',
       onlyFromStatus: 'draft',
     });
     return { success: true, data: { updated } };
+  },
+
+  async reviewInvoiceReadings(input: {
+    invoiceId: string;
+    previous: { value: number; readAt: string };
+    current: { value: number; readAt: string };
+    reason: string;
+    editorAccountId: string;
+    editorRole: 'admin' | 'staff_backoffice';
+    householdSize?: number;
+  }) {
+    const errors: Record<string, string[]> = {};
+    const pushError = (field: string, message: string) => {
+      if (!errors[field]) errors[field] = [];
+      errors[field].push(message);
+    };
+
+    if (!input.invoiceId) pushError('invoiceId', 'Required');
+    if (!input.reason?.trim()) pushError('reason', 'Required');
+    if (input.householdSize !== undefined) {
+      if (!Number.isFinite(input.householdSize) || input.householdSize <= 0) {
+        pushError('householdSize', 'Must be greater than 0');
+      }
+    }
+
+    const prevValue = Number(input.previous?.value);
+    const currentValue = Number(input.current?.value);
+    if (!Number.isFinite(prevValue) || !Number.isInteger(prevValue) || prevValue < 0) {
+      pushError('previous.value', 'Must be a non-negative integer');
+    }
+    if (!Number.isFinite(currentValue) || !Number.isInteger(currentValue) || currentValue < 0) {
+      pushError('current.value', 'Must be a non-negative integer');
+    }
+
+    const prevReadAt = new Date(input.previous?.readAt);
+    const currentReadAt = new Date(input.current?.readAt);
+    if (Number.isNaN(prevReadAt.getTime())) pushError('previous.readAt', 'Invalid date');
+    if (Number.isNaN(currentReadAt.getTime())) pushError('current.readAt', 'Invalid date');
+
+    const now = new Date();
+    if (!Number.isNaN(currentReadAt.getTime()) && currentReadAt > now) {
+      pushError('current.readAt', 'Cannot be in the future');
+    }
+    if (!Number.isNaN(prevReadAt.getTime()) && !Number.isNaN(currentReadAt.getTime()) && currentReadAt < prevReadAt) {
+      pushError('current.readAt', 'Must be after previous read time');
+    }
+    if (Number.isFinite(prevValue) && Number.isFinite(currentValue) && currentValue - prevValue <= 0) {
+      pushError('consumption', 'Must be greater than 0');
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return { success: false, error: 'VALIDATION_FAILED', details: errors };
+    }
+
+    const editor = await AccountRepository.findById(input.editorAccountId);
+    if (!editor) return { success: false, error: 'ACCOUNT_NOT_FOUND' };
+
+    const invoice = await BillingRepository.findInvoiceById(input.invoiceId);
+    if (!invoice) return { success: false, error: 'NOT_FOUND' };
+    const meterId = invoice.meterId;
+    if (!meterId) return { success: false, error: 'METER_MISSING' };
+
+    const consumers = await MeterRepository.listConsumersForMeter(meterId);
+    const isShared = consumers.length > 1;
+
+    if (isShared && input.householdSize !== undefined) {
+      await AccountRepository.updateConsumerHouseholdSize(invoice.accountId, input.householdSize);
+    }
+
+    const consumersWithSizes = isShared
+      ? await MeterRepository.listConsumersForMeter(meterId)
+      : consumers;
+
+    if (isShared) {
+      const invalid = consumersWithSizes.filter((consumer) => (consumer.account.consumerProfile?.householdSize || 0) <= 0);
+      if (invalid.length > 0) {
+        return { success: false, error: 'HOUSEHOLD_SIZE_REQUIRED' };
+      }
+    }
+
+    const updateOrCreate = async (role: 'start' | 'end', payload: { value: number; readAt: string }) => {
+      const existingLink = invoice.readings?.find((link: any) => link.role === role);
+      if (existingLink?.readingId) {
+        await ReadingRepository.update({
+          id: existingLink.readingId,
+          value: payload.value,
+          readAt: payload.readAt,
+        });
+        await ReadingRepository.addEdit({
+          readingId: existingLink.readingId,
+          accountId: input.editorAccountId,
+          editorRole: input.editorRole,
+          value: payload.value,
+          reason: input.reason,
+        });
+        return existingLink.readingId;
+      }
+
+      const created = await ReadingRepository.create({
+        meterId,
+        readerAccountId: input.editorAccountId,
+        readAt: payload.readAt,
+        method: 'manual',
+        value: payload.value,
+        originalValue: payload.value,
+      });
+
+      await ReadingRepository.addEdit({
+        readingId: created.id,
+        accountId: input.editorAccountId,
+        editorRole: input.editorRole,
+        value: payload.value,
+        reason: input.reason,
+      });
+
+      await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: created.id, role });
+      return created.id;
+    };
+
+    const previousId = await updateOrCreate('start', { value: prevValue, readAt: input.previous.readAt });
+    const currentId = await updateOrCreate('end', { value: currentValue, readAt: input.current.readAt });
+
+    const consumptionLine = invoice.lines?.find((line: any) => line.type === 'consumption');
+    const oldStart = invoice.readings?.find((link: any) => link.role === 'start')?.reading?.value;
+    const oldEnd = invoice.readings?.find((link: any) => link.role === 'end')?.reading?.value;
+    const oldTotal =
+      Number.isFinite(Number(oldStart)) && Number.isFinite(Number(oldEnd))
+        ? Number(oldEnd) - Number(oldStart)
+        : null;
+    const newTotal = currentValue - prevValue;
+    const periodStart = prevReadAt;
+    const periodEnd = currentReadAt;
+
+    const applyInvoiceTotals = async (target: any, shareRatio: number) => {
+      const unitPrice = toNumber(target.unitPrice);
+      const vatRate = toNumber(target.vatRate);
+      const consumptionQuantity = toQuantity(newTotal * shareRatio);
+      const consumptionInt = Math.round(newTotal * shareRatio);
+      const subtotal = toMoney(consumptionQuantity * unitPrice);
+      const vatAmount = toMoney(subtotal * vatRate);
+      const feesTotal = (target.lines || [])
+        .filter((line: any) => line.type === 'fee')
+        .reduce((sum: number, line: any) => sum + toNumber(line.amount), 0);
+      const totalAmount = toMoney(subtotal + vatAmount + feesTotal);
+
+      await BillingRepository.updateInvoice(target.id, {
+        consumption: consumptionInt,
+        unitPrice,
+        subtotal,
+        vatRate,
+        vatAmount,
+        totalAmount,
+        periodStart,
+        periodEnd,
+        reviewFlags: null,
+      });
+
+      const consumptionUpdate = await BillingRepository.updateInvoiceLineByType({
+        invoiceId: target.id,
+        type: 'consumption',
+        data: {
+          quantity: consumptionQuantity,
+          unitPrice,
+          amount: subtotal,
+        },
+      });
+      if (consumptionUpdate.count === 0) {
+        await BillingRepository.addInvoiceLine({
+          invoiceId: target.id,
+          type: 'consumption',
+          description: 'Water consumption',
+          quantity: consumptionQuantity,
+          unitPrice,
+          amount: subtotal,
+        });
+      }
+
+      const vatUpdate = await BillingRepository.updateInvoiceLineByType({
+        invoiceId: target.id,
+        type: 'vat',
+        data: {
+          amount: vatAmount,
+          description: `VAT ${toMoney(vatRate * 100)}%`,
+        },
+      });
+      if (vatUpdate.count === 0) {
+        await BillingRepository.addInvoiceLine({
+          invoiceId: target.id,
+          type: 'vat',
+          description: `VAT ${toMoney(vatRate * 100)}%`,
+          amount: vatAmount,
+        });
+      }
+    };
+
+    if (isShared) {
+      const householdSizes = consumersWithSizes.map((consumer) => ({
+        accountId: consumer.accountId,
+        size: consumer.account.consumerProfile?.householdSize || 0,
+      }));
+      const householdTotal = householdSizes.reduce((sum, entry) => sum + entry.size, 0);
+      const meterInvoices = await BillingRepository.listInvoicesForMeterPeriod({
+        meterId,
+        periodStart: invoice.periodStart ?? null,
+        periodEnd: invoice.periodEnd ?? null,
+      });
+
+      for (const meterInvoice of meterInvoices) {
+        const sizeEntry = householdSizes.find((entry) => entry.accountId === meterInvoice.accountId);
+        if (!sizeEntry || sizeEntry.size <= 0) continue;
+        const shareRatio = householdTotal > 0 ? sizeEntry.size / householdTotal : 1;
+        await applyInvoiceTotals(meterInvoice, shareRatio);
+      }
+    } else {
+      let shareRatio = 1;
+      if (oldTotal && oldTotal > 0) {
+        shareRatio =
+          (consumptionLine?.quantity !== undefined
+            ? toNumber(consumptionLine.quantity)
+            : Number(invoice.consumption)) / oldTotal;
+      }
+      await applyInvoiceTotals(invoice, shareRatio);
+    }
+
+    return { success: true, data: { previousId, currentId } };
   },
 
   async previewMonthlyOverrides(referenceDate = new Date()) {

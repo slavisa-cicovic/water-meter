@@ -98,6 +98,14 @@ export const AccountRepository = {
     });
   },
 
+  async updateConsumerHouseholdSize(accountId: string, householdSize: number) {
+    return prisma.consumerProfile.upsert({
+      where: { accountId },
+      update: { householdSize },
+      create: { accountId, householdSize },
+    });
+  },
+
   async list(params: ListParams) {
     const {
       search,

@@ -18,13 +18,25 @@ export const GET = async (req: NextRequest) => {
   const page = searchParams.get('page');
   const pageSize = searchParams.get('pageSize');
 
+  const mappedReviewFlags = reviewFlags
+    ? reviewFlags
+        .split(',')
+        .filter(Boolean)
+        .map((flag) => {
+          if (flag === 'invalid_reading') return 'non_positive_consumption';
+          if (flag === 'no_reading') return 'no_reading_current_month';
+          if (flag === 'no_household_size') return 'invalid_household_size';
+          return flag;
+        })
+    : undefined;
+
   const result = await BillingService.listInvoices({
     accountId,
     meterId,
     createdStart,
     createdEnd,
     status,
-    reviewFlags: reviewFlags ? reviewFlags.split(',').filter(Boolean) : undefined,
+    reviewFlags: mappedReviewFlags,
     orderBy,
     order,
     page: page ? Number(page) : 0,

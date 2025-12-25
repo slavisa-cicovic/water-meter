@@ -23,10 +23,11 @@ export function BillingTableFiltersResult({ filters, onFilters, onResetFilters, 
   }
   if (filters.review) {
     const reviewLabels: Record<string, string> = {
-      non_positive_consumption: 'invalid_reading',
-      no_reading_current_month: 'no_reading',
-      invalid_household_size: 'no_household_size',
+      no_flags: 'no flags',
+      invalid_reading: 'invalid_reading',
+      no_reading: 'no_reading',
       no_previous_reading: 'no_previous_reading',
+      no_household_size: 'no_household_size',
     };
     chips.push({
       key: 'review',

@@ -20,7 +20,12 @@ export type Tariff = {
 export type Invoice = {
   id: string;
   accountId: string;
-  account?: { firstName: string; lastName: string; address: string };
+  account?: {
+    firstName: string;
+    lastName: string;
+    address: string;
+    consumerProfile?: { householdSize?: number };
+  };
   meterId?: string;
   meter?: { serialNumber?: string };
   reviewFlags?: string[];

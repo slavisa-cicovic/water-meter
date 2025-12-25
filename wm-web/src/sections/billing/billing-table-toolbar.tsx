@@ -52,10 +52,11 @@ export function BillingTableToolbar({ filters, onFilters }: Props) {
         </TextField>
         <TextField select label="Review" value={filters.review} onChange={handleChange('review')} sx={{ minWidth: 200 }}>
           <MenuItem value="">All</MenuItem>
-          <MenuItem value="non_positive_consumption">invalid_reading</MenuItem>
-          <MenuItem value="no_reading_current_month">no_reading</MenuItem>
-          <MenuItem value="invalid_household_size">no_household_size</MenuItem>
+          <MenuItem value="no_flags">no flags</MenuItem>
+          <MenuItem value="invalid_reading">invalid_reading</MenuItem>
+          <MenuItem value="no_reading">no_reading</MenuItem>
           <MenuItem value="no_previous_reading">no_previous_reading</MenuItem>
+          <MenuItem value="no_household_size">no_household_size</MenuItem>
         </TextField>
         <TextField
           label="Created from"

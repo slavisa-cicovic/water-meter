@@ -54,6 +54,18 @@ export const BillingApi = {
     });
     return res.data;
   },
+  async reviewInvoiceReadings(
+    id: string,
+    payload: {
+      previous: { value: number; readAt: string };
+      current: { value: number; readAt: string };
+      reason: string;
+      householdSize?: number;
+    }
+  ) {
+    const res = await axiosInstance.patch(endpoints.billing.details(id), payload);
+    return res.data;
+  },
 };
 
 export function useGetInvoice(id?: string) {
