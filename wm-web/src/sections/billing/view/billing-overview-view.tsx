@@ -44,8 +44,7 @@ const getMonthBounds = () => {
 const { start: defaultCreatedStart, end: defaultCreatedEnd } = getMonthBounds();
 
 const defaultFilters: IBillingTableFilters = {
-  accountId: '',
-  meterId: '',
+  search: '',
   status: '',
   review: '',
   createdStart: defaultCreatedStart,
@@ -71,8 +70,7 @@ export function BillingOverviewView() {
   const table = useTable({ defaultRowsPerPage: 25, defaultDense: true, defaultOrderBy: 'createdAt', defaultOrder: 'desc' });
 
   const { invoices, invoicesLoading, invoicesError, invoicesEmpty, total, mutate } = useGetInvoices({
-    accountId: filters.accountId || undefined,
-    meterId: filters.meterId || undefined,
+    search: filters.search || undefined,
     status: filters.status || undefined,
     reviewFlags: filters.review ? [filters.review] : undefined,
     createdStart: filters.createdStart || undefined,
@@ -149,6 +147,7 @@ export function BillingOverviewView() {
         {canReset && (
           <BillingTableFiltersResult
             filters={filters}
+            defaultFilters={defaultFilters}
             onFilters={handleFilters}
             onResetFilters={handleResetFilters}
             results={total}

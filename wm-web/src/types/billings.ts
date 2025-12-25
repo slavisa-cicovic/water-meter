@@ -98,8 +98,7 @@ export type InvoiceCreateInput = {
 };
 
 export type InvoiceListParams = {
-  accountId?: string;
-  meterId?: string;
+  search?: string;
   createdStart?: string;
   createdEnd?: string;
   status?: InvoiceStatus;

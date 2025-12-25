@@ -65,8 +65,7 @@ export const BillingRepository = {
 
   async listInvoices(params: InvoiceListParams) {
     const {
-      accountId,
-      meterId,
+      search,
       createdStart,
       createdEnd,
       status,
@@ -100,9 +99,19 @@ export const BillingRepository = {
           }
         : {};
 
+    const searchWhere = search
+      ? {
+          OR: [
+            { account: { firstName: { contains: search } } },
+            { account: { lastName: { contains: search } } },
+            { account: { address: { contains: search } } },
+            { meter: { serialNumber: { contains: search } } },
+          ],
+        }
+      : {};
+
     const where: any = {
-      ...(accountId ? { accountId } : {}),
-      ...(meterId ? { meterId } : {}),
+      ...searchWhere,
       ...(status ? { status } : {}),
       ...reviewWhere,
       ...(createdStart || createdEnd

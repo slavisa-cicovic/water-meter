@@ -3,20 +3,25 @@ import { IBillingTableFilters, IBillingTableFilterValue } from './billing-table-
 
 type Props = {
   filters: IBillingTableFilters;
+  defaultFilters?: IBillingTableFilters;
   onFilters: (name: string, value: IBillingTableFilterValue) => void;
   onResetFilters: VoidFunction;
   results: number;
   sx?: any;
 };
 
-export function BillingTableFiltersResult({ filters, onFilters, onResetFilters, results, sx }: Props) {
+export function BillingTableFiltersResult({
+  filters,
+  defaultFilters,
+  onFilters,
+  onResetFilters,
+  results,
+  sx,
+}: Props) {
   const chips: Array<{ key: string; label: string; onDelete: VoidFunction }> = [];
 
-  if (filters.accountId) {
-    chips.push({ key: 'accountId', label: `Account: ${filters.accountId}`, onDelete: () => onFilters('accountId', '') });
-  }
-  if (filters.meterId) {
-    chips.push({ key: 'meterId', label: `Meter: ${filters.meterId}`, onDelete: () => onFilters('meterId', '') });
+  if (filters.search) {
+    chips.push({ key: 'search', label: `Search: ${filters.search}`, onDelete: () => onFilters('search', '') });
   }
   if (filters.status) {
     chips.push({ key: 'status', label: `Status: ${filters.status}`, onDelete: () => onFilters('status', '') });
@@ -35,14 +40,14 @@ export function BillingTableFiltersResult({ filters, onFilters, onResetFilters, 
       onDelete: () => onFilters('review', ''),
     });
   }
-  if (filters.createdStart) {
+  if (filters.createdStart && filters.createdStart !== defaultFilters?.createdStart) {
     chips.push({
       key: 'createdStart',
       label: `Created from: ${filters.createdStart}`,
       onDelete: () => onFilters('createdStart', ''),
     });
   }
-  if (filters.createdEnd) {
+  if (filters.createdEnd && filters.createdEnd !== defaultFilters?.createdEnd) {
     chips.push({
       key: 'createdEnd',
       label: `Created to: ${filters.createdEnd}`,

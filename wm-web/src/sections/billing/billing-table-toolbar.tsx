@@ -6,8 +6,7 @@ import TextField from '@mui/material/TextField';
 export type IBillingTableFilterValue = string;
 
 export type IBillingTableFilters = {
-  accountId: string;
-  meterId: string;
+  search: string;
   status: string;
   review: string;
   createdStart: string;
@@ -36,12 +35,11 @@ export function BillingTableToolbar({ filters, onFilters }: Props) {
     >
       <Stack direction="row" alignItems="center" spacing={2} flexGrow={1} sx={{ width: 1 }}>
         <TextField
-          label="Account ID"
-          value={filters.accountId}
-          onChange={handleChange('accountId')}
-          sx={{ minWidth: 180 }}
+          label="Search"
+          value={filters.search}
+          onChange={handleChange('search')}
+          sx={{ flexGrow: 1, minWidth: 220 }}
         />
-        <TextField label="Meter ID" value={filters.meterId} onChange={handleChange('meterId')} sx={{ minWidth: 160 }} />
         <TextField select label="Status" value={filters.status} onChange={handleChange('status')} sx={{ minWidth: 160 }}>
           <MenuItem value="">All</MenuItem>
           <MenuItem value="draft">draft</MenuItem>

@@ -7,8 +7,7 @@ export const GET = async (req: NextRequest) => {
   if (!guard.ok) return guard.response;
 
   const { searchParams } = new URL(req.url);
-  const accountId = searchParams.get('accountId') || undefined;
-  const meterId = searchParams.get('meterId') || undefined;
+  const search = searchParams.get('search') || undefined;
   const createdStart = searchParams.get('createdStart') || undefined;
   const createdEnd = searchParams.get('createdEnd') || undefined;
   const status = (searchParams.get('status') || undefined) as any;
@@ -31,8 +30,7 @@ export const GET = async (req: NextRequest) => {
     : undefined;
 
   const result = await BillingService.listInvoices({
-    accountId,
-    meterId,
+    search,
     createdStart,
     createdEnd,
     status,
