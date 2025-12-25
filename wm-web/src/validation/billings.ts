@@ -3,6 +3,7 @@ import {
   InvoiceStatus,
   TariffCreateInput,
   TariffUpdateInput,
+  TariffStatus,
   ValidationResult,
 } from 'src/types/billings';
 
@@ -28,6 +29,12 @@ const validateStatus = (status: InvoiceStatus | undefined, errors: Record<string
   if (!allowed.includes(status)) pushError(errors, 'status', 'Invalid status');
 };
 
+const validateTariffStatus = (status: TariffStatus | undefined, errors: Record<string, string[]>) => {
+  if (!status) return;
+  const allowed: TariffStatus[] = ['active', 'inactive'];
+  if (!allowed.includes(status)) pushError(errors, 'status', 'Invalid status');
+};
+
 const validateNonNegative = (value: number | undefined, field: string, errors: Record<string, string[]>) => {
   if (value === undefined) return;
   if (!Number.isFinite(value) || value < 0) pushError(errors, field, 'Must be a non-negative number');
@@ -49,6 +56,7 @@ export const validateTariffCreate = (input: TariffCreateInput): ValidationResult
   validateNonNegative(input.redMultiplier, 'redMultiplier', errors);
   validateDate(input.validFrom, 'validFrom', errors);
   if (input.validTo) validateDate(input.validTo, 'validTo', errors);
+  validateTariffStatus(input.status, errors);
 
   return { valid: Object.keys(errors).length === 0, errors };
 };
@@ -64,6 +72,7 @@ export const validateTariffUpdate = (input: TariffUpdateInput): ValidationResult
   if (input.redMultiplier !== undefined) validateNonNegative(input.redMultiplier, 'redMultiplier', errors);
   if (input.validFrom !== undefined) validateDate(input.validFrom, 'validFrom', errors);
   if (input.validTo !== undefined && input.validTo !== null) validateDate(input.validTo, 'validTo', errors);
+  validateTariffStatus(input.status, errors);
 
   return { valid: Object.keys(errors).length === 0, errors };
 };

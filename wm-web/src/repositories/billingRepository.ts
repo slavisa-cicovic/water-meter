@@ -6,7 +6,10 @@ const toDate = (value: string) => new Date(value);
 
 export const BillingRepository = {
   async listTariffs() {
-    return prisma.tariff.findMany({ orderBy: { validFrom: 'desc' } });
+    return prisma.tariff.findMany({
+      where: { deletedAt: null },
+      orderBy: { validFrom: 'desc' },
+    });
   },
 
   async findApplicableTariff(params: { groupCode?: string | null; periodStart: Date; periodEnd: Date }) {
@@ -14,6 +17,8 @@ export const BillingRepository = {
     const tariff = await prisma.tariff.findFirst({
       where: {
         ...(groupCode ? { groupCode } : {}),
+        status: 'active',
+        deletedAt: null,
         validFrom: { lte: periodEnd },
         OR: [{ validTo: null }, { validTo: { gte: periodStart } }],
       },
@@ -23,6 +28,8 @@ export const BillingRepository = {
     return prisma.tariff.findFirst({
       where: {
         groupCode: null,
+        status: 'active',
+        deletedAt: null,
         validFrom: { lte: periodEnd },
         OR: [{ validTo: null }, { validTo: { gte: periodStart } }],
       },
@@ -42,6 +49,7 @@ export const BillingRepository = {
         validFrom: toDate(input.validFrom),
         validTo: input.validTo ? toDate(input.validTo) : null,
         groupCode: input.groupCode ?? null,
+        status: input.status ?? 'active',
       },
     });
   },
@@ -59,8 +67,29 @@ export const BillingRepository = {
         ...(input.validFrom !== undefined ? { validFrom: toDate(input.validFrom) } : {}),
         ...(input.validTo !== undefined ? { validTo: input.validTo ? toDate(input.validTo) : null } : {}),
         ...(input.groupCode !== undefined ? { groupCode: input.groupCode } : {}),
+        ...(input.status !== undefined ? { status: input.status } : {}),
       },
     });
+  },
+
+  async findTariffById(id: string) {
+    return prisma.tariff.findUnique({ where: { id } });
+  },
+
+  async bulkUpdateTariffs(ids: string[], action: 'delete' | 'activate' | 'deactivate') {
+    if (action === 'delete') {
+      const result = await prisma.tariff.updateMany({
+        where: { id: { in: ids }, deletedAt: null },
+        data: { deletedAt: new Date(), status: 'inactive' },
+      });
+      return result.count;
+    }
+    const status = action === 'activate' ? 'active' : 'inactive';
+    const result = await prisma.tariff.updateMany({
+      where: { id: { in: ids }, deletedAt: null },
+      data: { status },
+    });
+    return result.count;
   },
 
   async listInvoices(params: InvoiceListParams) {

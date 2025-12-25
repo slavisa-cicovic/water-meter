@@ -33,6 +33,11 @@ export const paths = {
     billing: {
       root: `${ROOTS.DASHBOARD}/billing`,
       invoice: (id: string) => `${ROOTS.DASHBOARD}/billing/${id}`,
+      tariffs: {
+        root: `${ROOTS.DASHBOARD}/billing/tariffs`,
+        new: `${ROOTS.DASHBOARD}/billing/tariffs/new`,
+        details: (id: string) => `${ROOTS.DASHBOARD}/billing/tariffs/${id}`,
+      },
     },
     jobs: {
       root: `${ROOTS.DASHBOARD}/jobs`,

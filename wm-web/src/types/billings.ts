@@ -2,6 +2,8 @@ export type InvoiceStatus = 'draft' | 'confirmed' | 'issued' | 'paid' | 'void';
 export type InvoiceLineType = 'consumption' | 'fee' | 'vat';
 export type InvoiceReadingRole = 'start' | 'end';
 
+export type TariffStatus = 'active' | 'inactive';
+
 export type Tariff = {
   id: string;
   name: string;
@@ -13,6 +15,7 @@ export type Tariff = {
   validFrom: string;
   validTo?: string;
   groupCode?: string;
+  status?: TariffStatus;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -73,6 +76,7 @@ export type TariffCreateInput = {
   validFrom: string;
   validTo?: string | null;
   groupCode?: string | null;
+  status?: TariffStatus;
 };
 
 export type TariffUpdateInput = {
@@ -86,6 +90,7 @@ export type TariffUpdateInput = {
   validFrom?: string;
   validTo?: string | null;
   groupCode?: string | null;
+  status?: TariffStatus;
 };
 
 export type InvoiceCreateInput = {

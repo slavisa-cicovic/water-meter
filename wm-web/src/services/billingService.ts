@@ -35,6 +35,13 @@ export const BillingService = {
     return { success: true, data: { tariffs } };
   },
 
+  async findTariffById(id: string) {
+    if (!id) return { success: false, error: 'VALIDATION_FAILED', details: { id: ['Required'] } };
+    const tariff = await BillingRepository.findTariffById(id);
+    if (!tariff || tariff.deletedAt) return { success: false, error: 'NOT_FOUND' };
+    return { success: true, data: { tariff } };
+  },
+
   async createTariff(input: TariffCreateInput) {
     const validation = validateTariffCreate(input);
     if (!validation.valid) return { success: false, error: 'VALIDATION_FAILED', details: validation.errors };
@@ -46,12 +53,20 @@ export const BillingService = {
     const validation = validateTariffUpdate(input);
     if (!validation.valid) return { success: false, error: 'VALIDATION_FAILED', details: validation.errors };
     try {
+      const existing = await BillingRepository.findTariffById(input.id);
+      if (!existing || existing.deletedAt) return { success: false, error: 'NOT_FOUND' };
       const tariff = await BillingRepository.updateTariff(input);
       return { success: true, data: { tariff } };
     } catch (error: any) {
       if (error.code === 'P2025') return { success: false, error: 'NOT_FOUND' };
       return { success: false, error: 'SERVER_ERROR' };
     }
+  },
+
+  async bulkUpdateTariffs(ids: string[], action: 'delete' | 'activate' | 'deactivate') {
+    if (!ids.length) return { success: false, error: 'NO_IDS' };
+    const updated = await BillingRepository.bulkUpdateTariffs(ids, action);
+    return { success: true, data: { updated } };
   },
 
   async listInvoices(params: any) {

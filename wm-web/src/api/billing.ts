@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import useSWR from 'swr';
 import axiosInstance, { endpoints, fetcher } from 'src/utils/axios';
-import { Invoice } from 'src/types/billings';
+import { Invoice, Tariff, TariffCreateInput, TariffUpdateInput } from 'src/types/billings';
 
 type BillingQuery = {
   search?: string;
@@ -81,3 +81,50 @@ export function useGetInvoice(id?: string) {
     [data?.invoice, error, isLoading, isValidating, mutate]
   );
 }
+
+export function useGetTariffs() {
+  const { data, isLoading, error, isValidating, mutate } = useSWR(endpoints.billing.tariffs, fetcher);
+
+  return useMemo(
+    () => ({
+      tariffs: (data?.tariffs as Tariff[]) || [],
+      tariffsLoading: isLoading,
+      tariffsError: error,
+      tariffsValidating: isValidating,
+      tariffsEmpty: !isLoading && !data?.tariffs?.length,
+      mutate,
+    }),
+    [data?.tariffs, error, isLoading, isValidating, mutate]
+  );
+}
+
+export function useGetTariff(id?: string) {
+  const URL = id ? endpoints.billing.tariffDetails(id) : null;
+  const { data, isLoading, error, isValidating, mutate } = useSWR(URL, fetcher);
+
+  return useMemo(
+    () => ({
+      tariff: data?.tariff as Tariff | undefined,
+      tariffLoading: isLoading,
+      tariffError: error,
+      tariffValidating: isValidating,
+      mutate,
+    }),
+    [data?.tariff, error, isLoading, isValidating, mutate]
+  );
+}
+
+export const TariffsApi = {
+  async createTariff(payload: TariffCreateInput) {
+    const res = await axiosInstance.post(endpoints.billing.tariffs, payload);
+    return res.data;
+  },
+  async updateTariff(payload: TariffUpdateInput) {
+    const res = await axiosInstance.put(endpoints.billing.tariffs, payload);
+    return res.data;
+  },
+  async bulkUpdate(ids: string[], action: 'delete' | 'activate' | 'deactivate') {
+    const res = await axiosInstance.patch(endpoints.billing.tariffs, { ids, action });
+    return res.data;
+  },
+};

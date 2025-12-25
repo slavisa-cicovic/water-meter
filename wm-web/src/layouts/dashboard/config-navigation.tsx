@@ -52,6 +52,11 @@ export function useNavData() {
             icon: ICONS.billing,
           },
           {
+            title: 'Tariffs',
+            path: paths.dashboard.billing.tariffs.root,
+            icon: ICONS.billing,
+          },
+          {
             title: 'Jobs',
             path: paths.dashboard.jobs.root,
             icon: ICONS.jobs,

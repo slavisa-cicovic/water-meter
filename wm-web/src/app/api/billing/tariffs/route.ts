@@ -39,3 +39,23 @@ export const PUT = async (req: NextRequest) => {
   return NextResponse.json(result.data);
 };
 
+export const PATCH = async (req: NextRequest) => {
+  const guard = requireAccountsAccess(req);
+  if (!guard.ok) return guard.response;
+
+  const body = await req.json();
+  if (!body?.ids || !Array.isArray(body.ids) || !body.action) {
+    return NextResponse.json({ success: false, error: 'VALIDATION_FAILED' }, { status: 400 });
+  }
+
+  if (!['delete', 'activate', 'deactivate'].includes(body.action)) {
+    return NextResponse.json({ success: false, error: 'UNSUPPORTED_ACTION' }, { status: 400 });
+  }
+
+  const result = await BillingService.bulkUpdateTariffs(body.ids, body.action);
+  if (!result.success) {
+    return NextResponse.json({ success: false, error: result.error }, { status: 400 });
+  }
+
+  return NextResponse.json(result.data);
+};

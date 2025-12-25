@@ -62,6 +62,11 @@ enum JobRunStatus {
   failed
 }
 
+enum TariffStatus {
+  active
+  inactive
+}
+
 model JobDefinition {
   id             String          @id @default(uuid())
   name           String
@@ -245,10 +250,15 @@ model Tariff {
   validFrom      DateTime
   validTo        DateTime?
   groupCode      String?
+  status         TariffStatus @default(active)
+  deletedAt      DateTime?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   invoices Invoice[]
+
+  @@index([status])
+  @@index([deletedAt])
 }
 
 model Invoice {
