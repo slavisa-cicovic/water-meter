@@ -48,3 +48,24 @@ export const POST = async (req: NextRequest) => {
 
   return NextResponse.json(result.data, { status: 201 });
 };
+
+export const PATCH = async (req: NextRequest) => {
+  const guard = requireAccountsAccess(req);
+  if (!guard.ok) return guard.response;
+
+  const body = await req.json();
+  if (!body?.ids || !Array.isArray(body.ids)) {
+    return NextResponse.json({ success: false, error: 'VALIDATION_FAILED' }, { status: 400 });
+  }
+
+  if (body.status !== 'confirmed') {
+    return NextResponse.json({ success: false, error: 'UNSUPPORTED_STATUS' }, { status: 400 });
+  }
+
+  const result = await BillingService.confirmInvoices(body.ids);
+  if (!result.success) {
+    return NextResponse.json({ success: false, error: result.error }, { status: 400 });
+  }
+
+  return NextResponse.json(result.data);
+};

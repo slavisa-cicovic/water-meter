@@ -1,10 +1,8 @@
 import React from 'react';
 // @mui
 import Checkbox from '@mui/material/Checkbox';
-import Typography from '@mui/material/Typography';
 import Stack, { StackProps } from '@mui/material/Stack';
-// locales
-import { useLocales } from 'src/locales';
+import Typography from '@mui/material/Typography';
 
 // ----------------------------------------------------------------------
 
@@ -19,7 +17,6 @@ interface Props extends StackProps {
   rowCount: number;
   numSelected: number;
   onSelectAllRows: (checked: boolean) => void;
-  headerHeight: number;
 }
 
 export default function TableSelectedAction({
@@ -29,11 +26,8 @@ export default function TableSelectedAction({
   numSelected,
   onSelectAllRows,
   sx,
-  headerHeight,
   ...other
 }: Props) {
-
-  const { t } = useLocales();
 
   if (!numSelected) {
     return null;
@@ -44,18 +38,17 @@ export default function TableSelectedAction({
       direction="row"
       alignItems="center"
       sx={{
-        ml: 2.5,
         pl: 1,
         pr: 2,
-        top: 0,
+        top: 1,
         left: 0,
-        width: 'calc(100% - 40px)',
+        width: 1,
         zIndex: 9,
         height: 58,
         position: 'absolute',
         bgcolor: 'primary.lighter',
         ...(dense && {
-          height: headerHeight,
+          height: 38,
         }),
         ...sx,
       }}
@@ -80,7 +73,7 @@ export default function TableSelectedAction({
           }),
         }}
       >
-        {numSelected} {t('selected')}
+        {numSelected} selected
       </Typography>
 
       {actions?.map((action) => (

@@ -1,4 +1,4 @@
-export type InvoiceStatus = 'draft' | 'issued' | 'paid' | 'void';
+export type InvoiceStatus = 'draft' | 'confirmed' | 'issued' | 'paid' | 'void';
 export type InvoiceLineType = 'consumption' | 'fee' | 'vat';
 export type InvoiceReadingRole = 'start' | 'end';
 
@@ -23,6 +23,7 @@ export type Invoice = {
   account?: { firstName: string; lastName: string; address: string };
   meterId?: string;
   meter?: { serialNumber?: string };
+  reviewFlags?: string[];
   periodStart: string | null;
   periodEnd: string | null;
   status: InvoiceStatus;

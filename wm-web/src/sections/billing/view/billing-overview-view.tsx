@@ -1,14 +1,26 @@
 'use client';
 
 import React, { useCallback, useState } from 'react';
-import { Alert, Button, Card, CardContent, Container, Table, TableBody, TableContainer } from '@mui/material';
+import {
+  Alert,
+  Button,
+  Card,
+  CardContent,
+  Container,
+  Table,
+  TableBody,
+  TableContainer,
+  IconButton,
+  Tooltip,
+} from '@mui/material';
 import { isEqual } from 'lodash';
 import EmptyContent from 'src/components/empty-content';
 import Iconify from 'src/components/iconify';
 import { useSettingsContext } from 'src/components/settings';
-import { TableHeadCustom, TableNoData, TablePaginationCustom, useTable } from 'src/components/table';
+import { TableHeadCustom, TableNoData, TablePaginationCustom, TableSelectedAction, useTable } from 'src/components/table';
 import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
-import { useGetInvoices } from 'src/api/billing';
+import { ConfirmDialog } from 'src/components/custom-dialog';
+import { BillingApi, useGetInvoices } from 'src/api/billing';
 import { RouterLink } from 'src/routes/components';
 import { paths } from 'src/routes/paths';
 import { BillingTableFiltersResult } from '../billing-table-filters-result';
@@ -44,8 +56,8 @@ const TABLE_HEAD = [
   { id: 'account', label: 'Account', minWidth: 200 },
   { id: 'meter', label: 'Meter', minWidth: 200 },
   { id: 'period', label: 'Period', minWidth: 200, disableSort: true },
-  { id: 'createdAt', label: 'Created', width: 160 },
-  { id: 'updatedAt', label: 'Updated', width: 160 },
+  { id: 'createdAt', label: 'Created', width: 120 },
+  { id: 'updatedAt', label: 'Updated', width: 120 },
   { id: 'consumption', label: 'Consumption', width: 120 },
   { id: 'totalAmount', label: 'Total', width: 140 },
   { id: 'status', label: 'Status', width: 120 },
@@ -56,9 +68,10 @@ const TABLE_HEAD = [
 export function BillingOverviewView() {
   const settings = useSettingsContext();
   const [filters, setFilters] = useState(defaultFilters);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const table = useTable({ defaultRowsPerPage: 25, defaultDense: true, defaultOrderBy: 'createdAt', defaultOrder: 'desc' });
 
-  const { invoices, invoicesLoading, invoicesError, invoicesEmpty, total } = useGetInvoices({
+  const { invoices, invoicesLoading, invoicesError, invoicesEmpty, total, mutate } = useGetInvoices({
     accountId: filters.accountId || undefined,
     meterId: filters.meterId || undefined,
     status: filters.status || undefined,
@@ -74,6 +87,19 @@ export function BillingOverviewView() {
   const denseHeight = table.dense ? 60 : 80;
   const canReset = !isEqual(defaultFilters, filters);
   const notFound = (!invoices.length && canReset) || invoicesEmpty;
+  const selectableIds = invoices.filter((row) => row.status === 'draft').map((row) => row.id);
+
+  const handleConfirmSelected = async () => {
+    if (!table.selected.length) return;
+    try {
+      await BillingApi.confirmInvoices(table.selected as string[]);
+      setConfirmOpen(false);
+      table.setSelected([]);
+      await mutate();
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const handleFilters = useCallback(
     (name: string, value: IBillingTableFilterValue) => {
@@ -86,6 +112,15 @@ export function BillingOverviewView() {
   const handleResetFilters = useCallback(() => {
     setFilters(defaultFilters);
   }, []);
+
+  const handleOpenConfirm = () => {
+    if (!table.selected.length) return;
+    setConfirmOpen(true);
+  };
+
+  const handleCloseConfirm = () => {
+    setConfirmOpen(false);
+  };
 
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
@@ -134,26 +169,57 @@ export function BillingOverviewView() {
           {!invoicesLoading && invoicesEmpty && <Alert severity="info">No invoices found.</Alert>}
 
           {!invoicesLoading && !invoicesError && invoices && invoices.length > 0 && (
-            <TableContainer>
+            <TableContainer sx={{ position: 'relative' }}>
+              <TableSelectedAction
+                dense={table.dense}
+                rowCount={selectableIds.length}
+                numSelected={table.selected.length}
+                onSelectAllRows={(checked) => table.onSelectAllRows(checked, selectableIds)}
+                actions={[
+                  {
+                    key: 'confirm',
+                    node: (
+                      <Tooltip title="Confirm invoices" arrow>
+                          <IconButton
+                            color="primary"
+                            onClick={handleOpenConfirm}
+                            disabled={!table.selected.length}
+                          >
+                            <Iconify icon="eva:checkmark-circle-2-fill" />
+                          </IconButton>
+                      </Tooltip>
+                    ),
+                  },
+                ]}
+              />
               <Table size="small" sx={{ minWidth: 960 }}>
                 <TableHeadCustom
                   order={table.order}
                   orderBy={table.orderBy}
                   headLabel={TABLE_HEAD}
-                  rowCount={invoices.length}
+                  rowCount={selectableIds.length}
                   numSelected={table.selected.length}
+                  onSelectAllRows={(checked) => table.onSelectAllRows(checked, selectableIds)}
                   onSort={table.onSort}
                 />
                 <TableBody>
                   {invoicesLoading
                     ? [...Array(table.rowsPerPage)].map((_i, index) => (
-                        <BillingTableSkeleton
-                          key={index}
-                          columns={TABLE_HEAD.map((el) => el.width || el.minWidth || 100)}
-                          sx={{ height: denseHeight }}
-                        />
-                      ))
-                    : invoices.map((row) => <BillingTableRow key={row.id} row={row} />)}
+                      <BillingTableSkeleton
+                        key={index}
+                        columns={TABLE_HEAD.map((el) => el.width || el.minWidth || 100)}
+                        sx={{ height: denseHeight }}
+                      />
+                    ))
+                    : invoices.map((row) => (
+                      <BillingTableRow
+                        key={row.id}
+                        row={row}
+                        selected={table.selected.includes(row.id)}
+                        onSelectRow={() => table.onSelectRow(row.id)}
+                        selectable={row.status === 'draft'}
+                      />
+                    ))}
                   <TableNoData notFound={notFound} />
                 </TableBody>
               </Table>
@@ -171,6 +237,18 @@ export function BillingOverviewView() {
           />
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onClose={handleCloseConfirm}
+        title="Confirm invoices"
+        content={`You are about to confirm ${table.selected.length} invoice(s). This action cannot be undone.`}
+        action={
+          <Button variant="contained" color="primary" onClick={handleConfirmSelected}>
+            Confirm
+          </Button>
+        }
+      />
     </Container>
   );
 }

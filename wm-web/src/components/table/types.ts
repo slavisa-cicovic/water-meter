@@ -9,9 +9,9 @@ export type TableProps = {
   order: 'asc' | 'desc';
   orderBy: string;
   //
-  selected: number[];
-  onSelectRow: (id: number) => void;
-  onSelectAllRows: (checked: boolean, newSelecteds: number[]) => void;
+  selected: Array<string | number>;
+  onSelectRow: (id: string | number) => void;
+  onSelectAllRows: (checked: boolean, newSelecteds: Array<string | number>) => void;
   //
   onResetPage: VoidFunction;
   onSort: (id: string) => void;
@@ -33,6 +33,6 @@ export type TableProps = {
   setDense: React.Dispatch<React.SetStateAction<boolean>>;
   setOrder: React.Dispatch<React.SetStateAction<'desc' | 'asc'>>;
   setOrderBy: React.Dispatch<React.SetStateAction<string>>;
-  setSelected: React.Dispatch<React.SetStateAction<number[]>>;
+  setSelected: React.Dispatch<React.SetStateAction<Array<string | number>>>;
   setRowsPerPage: React.Dispatch<React.SetStateAction<number>>;
 };

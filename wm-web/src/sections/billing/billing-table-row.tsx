@@ -1,4 +1,4 @@
-import { TableRow, TableCell, Stack, IconButton, Tooltip, Chip, Typography, Box } from '@mui/material';
+import { TableRow, TableCell, Stack, IconButton, Tooltip, Chip, Typography, Box, Checkbox } from '@mui/material';
 import Iconify from 'src/components/iconify';
 import { Invoice } from 'src/types/billings';
 import { RouterLink } from 'src/routes/components';
@@ -6,15 +6,25 @@ import { paths } from 'src/routes/paths';
 
 type Props = {
   row: Invoice;
+  selected?: boolean;
+  onSelectRow?: VoidFunction;
+  selectable?: boolean;
 };
 
-export function BillingTableRow({ row }: Props) {
+export function BillingTableRow({ row, selected, onSelectRow, selectable = true }: Props) {
   const periodEnd = row.periodEnd?.slice(0, 10) || '';
   const periodStart = row.periodStart?.slice(0, 10) || '';
   const period = periodStart || periodEnd ? `${periodStart} → ${periodEnd}`.trim() : '';
 
   return (
     <TableRow hover>
+      <TableCell padding="checkbox">
+        <Checkbox
+          checked={!!selected}
+          onChange={onSelectRow}
+          disabled={!selectable}
+        />
+      </TableCell>
       <TableCell sx={{ minWidth: 200 }}>
         {row.account ? (
           <Stack spacing={0.5}>
@@ -42,6 +52,8 @@ export function BillingTableRow({ row }: Props) {
           color={
             row.status === 'paid'
               ? 'success'
+              : row.status === 'confirmed'
+              ? 'secondary'
               : row.status === 'issued'
               ? 'info'
               : row.status === 'void'

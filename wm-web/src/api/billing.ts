@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import useSWR from 'swr';
-import { endpoints, fetcher } from 'src/utils/axios';
+import axiosInstance, { endpoints, fetcher } from 'src/utils/axios';
 import { Invoice } from 'src/types/billings';
 
 type BillingQuery = {
@@ -45,6 +45,16 @@ export function useGetInvoices(params?: BillingQuery) {
     [data?.invoices, data?.total, error, isLoading, isValidating, mutate]
   );
 }
+
+export const BillingApi = {
+  async confirmInvoices(ids: string[]) {
+    const res = await axiosInstance.patch(endpoints.billing.list, {
+      ids,
+      status: 'confirmed',
+    });
+    return res.data;
+  },
+};
 
 export function useGetInvoice(id?: string) {
   const URL = id ? endpoints.billing.details(id) : null;

@@ -234,6 +234,23 @@ export const BillingRepository = {
     });
   },
 
+  async bulkUpdateStatus(params: {
+    ids: string[];
+    status: 'draft' | 'confirmed' | 'issued' | 'paid' | 'void';
+    onlyFromStatus?: 'draft' | 'confirmed' | 'issued' | 'paid' | 'void';
+  }) {
+    const { ids, status, onlyFromStatus } = params;
+    const where: any = { id: { in: ids } };
+    if (onlyFromStatus) where.status = onlyFromStatus;
+
+    const result = await prisma.invoice.updateMany({
+      where,
+      data: { status },
+    });
+
+    return result.count;
+  },
+
   async addInvoiceLine(params: {
     invoiceId: string;
     type: 'consumption' | 'fee' | 'vat';

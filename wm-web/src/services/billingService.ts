@@ -455,6 +455,16 @@ export const BillingService = {
     return { success: true, data: { invoices: created, skipped } };
   },
 
+  async confirmInvoices(ids: string[]) {
+    if (!ids.length) return { success: false, error: 'NO_IDS' };
+    const updated = await BillingRepository.bulkUpdateStatus({
+      ids,
+      status: 'confirmed',
+      onlyFromStatus: 'draft',
+    });
+    return { success: true, data: { updated } };
+  },
+
   async previewMonthlyOverrides(referenceDate = new Date()) {
     const meters = (await MeterRepository.listAll()).filter((meter) => meter.status === 'active');
     const meterIds = meters.map((meter) => meter.id);

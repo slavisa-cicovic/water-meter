@@ -24,7 +24,7 @@ const validateDate = (value: string | undefined | null, field: string, errors: R
 
 const validateStatus = (status: InvoiceStatus | undefined, errors: Record<string, string[]>) => {
   if (!status) return;
-  const allowed: InvoiceStatus[] = ['draft', 'issued', 'paid', 'void'];
+  const allowed: InvoiceStatus[] = ['draft', 'confirmed', 'issued', 'paid', 'void'];
   if (!allowed.includes(status)) pushError(errors, 'status', 'Invalid status');
 };
 
@@ -80,4 +80,3 @@ export const validateInvoiceCreate = (input: InvoiceCreateInput): ValidationResu
 };
 
 export { validateStatus };
-

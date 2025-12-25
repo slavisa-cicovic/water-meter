@@ -45,6 +45,7 @@ export function BillingTableToolbar({ filters, onFilters }: Props) {
         <TextField select label="Status" value={filters.status} onChange={handleChange('status')} sx={{ minWidth: 160 }}>
           <MenuItem value="">All</MenuItem>
           <MenuItem value="draft">draft</MenuItem>
+          <MenuItem value="confirmed">confirmed</MenuItem>
           <MenuItem value="issued">issued</MenuItem>
           <MenuItem value="paid">paid</MenuItem>
           <MenuItem value="void">void</MenuItem>

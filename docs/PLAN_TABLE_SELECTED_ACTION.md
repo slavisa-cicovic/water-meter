@@ -25,6 +25,6 @@
 1. `[d]` Define generic actions API for `TableSelectedAction` (label, icon, onClick, disabled, color).
 2. `[d]` Update `table-selected-action.tsx` to render actions from config.
 3. `[d]` Refactor existing usages to pass the action list (remove hardcoded props).
-4. `[h]` Add a usage example for invoices bulk action (confirm/issue) once status exists.
+4. `[d]` Add a usage example for invoices bulk action (confirm/issue) once status exists.
 5. `[r]` Quick QA: selection + action triggers still work.
 #
