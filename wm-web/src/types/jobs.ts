@@ -27,10 +27,20 @@ export type JobRun = {
   runAt: string;
   finishedAt?: string;
   error?: string;
+  resultSummary?: Record<string, any>;
 };
 
 export type JobCreateInput = Omit<JobDefinition, 'id' | 'nextRunAt' | 'lastRunAt'>;
 
 export type JobUpdateInput = Partial<JobCreateInput> & {
   id: string;
+};
+
+export type JobListParams = {
+  search?: string;
+  status?: 'enabled' | 'disabled';
+  orderBy?: 'name' | 'handlerKey' | 'nextRunAt' | 'enabled' | 'createdAt';
+  order?: 'asc' | 'desc';
+  page?: number;
+  pageSize?: number;
 };

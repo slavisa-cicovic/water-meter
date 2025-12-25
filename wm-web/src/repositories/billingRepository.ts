@@ -354,4 +354,26 @@ export const BillingRepository = {
       data: params.data,
     });
   },
+
+  async bulkIssueConfirmed() {
+    const emptyFlags = [] as Prisma.InputJsonValue;
+    const result = await prisma.invoice.updateMany({
+      where: {
+        status: 'confirmed',
+        OR: [{ reviewFlags: { equals: Prisma.DbNull } }, { reviewFlags: { equals: emptyFlags } }],
+      },
+      data: { status: 'issued' },
+    });
+    return result.count;
+  },
+
+  async countIssueEligible() {
+    const emptyFlags = [] as Prisma.InputJsonValue;
+    return prisma.invoice.count({
+      where: {
+        status: 'confirmed',
+        OR: [{ reviewFlags: { equals: Prisma.DbNull } }, { reviewFlags: { equals: emptyFlags } }],
+      },
+    });
+  },
 };

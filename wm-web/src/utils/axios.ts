@@ -57,5 +57,6 @@ export const endpoints = {
     list: '/api/jobs',
     details: (id: string) => `/api/jobs/${id}`,
     run: (id: string) => `/api/jobs/${id}/run`,
+    runs: (id: string) => `/api/jobs/${id}/runs`,
   },
 };

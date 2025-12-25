@@ -477,6 +477,12 @@ export const BillingService = {
     return { success: true, data: { updated } };
   },
 
+  async issueConfirmedInvoices() {
+    const eligible = await BillingRepository.countIssueEligible();
+    const updated = await BillingRepository.bulkIssueConfirmed();
+    return { success: true, data: { updated, eligible } };
+  },
+
   async reviewInvoiceReadings(input: {
     invoiceId: string;
     previous: { value: number; readAt: string };

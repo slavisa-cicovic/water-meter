@@ -75,12 +75,14 @@ model JobDefinition {
   lastRunAt      DateTime?
   lockedUntil    DateTime?
   lockedBy       String?
+  deletedAt      DateTime?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
   runs JobRun[]
 
   @@index([enabled, nextRunAt])
+  @@index([deletedAt])
   @@index([handlerKey])
 }
 
@@ -92,6 +94,7 @@ model JobRun {
   runAt      DateTime     @default(now())
   finishedAt DateTime?
   error      String?      @db.Text
+  resultSummary Json?
 
   job JobDefinition @relation(fields: [jobId], references: [id], onDelete: Cascade)
   overrideLogs InvoiceOverrideLog[]

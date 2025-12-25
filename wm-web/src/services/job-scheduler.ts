@@ -52,13 +52,19 @@ const createJobRun = async (jobId: string, attempt: number) =>
     },
   });
 
-const finishJobRun = async (runId: string, status: 'success' | 'failed', error?: string) =>
+const finishJobRun = async (
+  runId: string,
+  status: 'success' | 'failed',
+  error?: string,
+  resultSummary?: Record<string, any>
+) =>
   prisma.jobRun.update({
     where: { id: runId },
     data: {
       status,
       error: error ?? null,
       finishedAt: new Date(),
+      ...(resultSummary ? { resultSummary } : {}),
     },
   });
 
@@ -77,14 +83,14 @@ const executeJob = async (
   for (let attempt = 1; attempt <= job.maxAttempts; attempt += 1) {
     const run = await createJobRun(job.id, attempt);
     try {
-      await handler({
+      const result = await handler({
         job,
         runId: run.id,
         attempt,
         initiatorId: options?.initiatorId,
         payload: options?.payload,
       });
-      await finishJobRun(run.id, 'success');
+      await finishJobRun(run.id, 'success', undefined, result?.resultSummary);
       return;
     } catch (error: any) {
       await finishJobRun(run.id, 'failed', error?.message ?? 'Job failed');
@@ -100,7 +106,7 @@ export const runJobNow = async (
   options?: { initiatorId?: string; payload?: Record<string, any> }
 ) => {
   const jobRow = await prisma.jobDefinition.findUnique({ where: { id: jobId } });
-  if (!jobRow) return { success: false, error: 'NOT_FOUND' };
+  if (!jobRow || jobRow.deletedAt) return { success: false, error: 'NOT_FOUND' };
 
   const now = new Date();
   const acquired = await acquireLock(jobId, now);
@@ -137,6 +143,7 @@ const pollJobs = async () => {
   const dueJobs = await prisma.jobDefinition.findMany({
     where: {
       enabled: true,
+      deletedAt: null,
       nextRunAt: { lte: now },
     },
     orderBy: { nextRunAt: 'asc' },

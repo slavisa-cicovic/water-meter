@@ -1,5 +1,5 @@
 import prisma from 'src/utils/prisma';
-import { JobCreateInput, JobDefinition, JobScheduleConfig, JobScheduleType, JobUpdateInput } from 'src/types/jobs';
+import { JobCreateInput, JobDefinition, JobListParams, JobScheduleConfig, JobScheduleType, JobUpdateInput } from 'src/types/jobs';
 
 type ValidationResult = { valid: boolean; errors: Record<string, string[]> };
 
@@ -46,6 +46,17 @@ const toJobDefinition = (row: any): JobDefinition => ({
   backoffSeconds: row.backoffSeconds,
   nextRunAt: row.nextRunAt?.toISOString?.() ?? row.nextRunAt ?? undefined,
   lastRunAt: row.lastRunAt?.toISOString?.() ?? row.lastRunAt ?? undefined,
+});
+
+const toJobRun = (row: any) => ({
+  id: row.id,
+  jobId: row.jobId,
+  status: row.status,
+  attempt: row.attempt,
+  runAt: row.runAt?.toISOString?.() ?? row.runAt,
+  finishedAt: row.finishedAt?.toISOString?.() ?? row.finishedAt ?? undefined,
+  error: row.error ?? undefined,
+  resultSummary: row.resultSummary ?? undefined,
 });
 
 const getTargetDow = (weekday: number) => (weekday === 7 ? 0 : weekday);
@@ -114,14 +125,47 @@ export const computeNextRunAt = (
 };
 
 export const JobsService = {
-  async list() {
-    const jobs = await prisma.jobDefinition.findMany({ orderBy: { createdAt: 'asc' } });
-    return { success: true, data: { jobs: jobs.map(toJobDefinition) } };
+  async list(params: JobListParams = {}) {
+    const { search, status, orderBy = 'createdAt', order = 'desc', page = 0, pageSize = 25 } = params;
+
+    const where: any = {
+      deletedAt: null,
+      ...(status === 'enabled' ? { enabled: true } : {}),
+      ...(status === 'disabled' ? { enabled: false } : {}),
+      ...(search
+        ? {
+            OR: [{ name: { contains: search } }, { handlerKey: { contains: search } }],
+          }
+        : {}),
+    };
+
+    const orderByClause =
+      orderBy === 'name'
+        ? { name: order }
+        : orderBy === 'handlerKey'
+        ? { handlerKey: order }
+        : orderBy === 'nextRunAt'
+        ? { nextRunAt: order }
+        : orderBy === 'enabled'
+        ? { enabled: order }
+        : { createdAt: order };
+
+    const [total, jobs] = await Promise.all([
+      prisma.jobDefinition.count({ where }),
+      prisma.jobDefinition.findMany({
+        where,
+        orderBy: orderByClause,
+        skip: page * pageSize,
+        take: pageSize,
+      }),
+    ]);
+
+    return { success: true, data: { jobs: jobs.map(toJobDefinition), total } };
   },
 
   async findById(id: string) {
     const job = await prisma.jobDefinition.findUnique({ where: { id } });
-    if (!job) return { success: false, error: 'NOT_FOUND' };
+    if (!job || job.deletedAt) return { success: false, error: 'NOT_FOUND' };
     return { success: true, data: { job: toJobDefinition(job) } };
   },
 
@@ -150,7 +194,7 @@ export const JobsService = {
 
   async update(input: JobUpdateInput) {
     const existing = await prisma.jobDefinition.findUnique({ where: { id: input.id } });
-    if (!existing) return { success: false, error: 'NOT_FOUND' };
+    if (!existing || existing.deletedAt) return { success: false, error: 'NOT_FOUND' };
 
     const scheduleType = (input.scheduleType ?? existing.scheduleType) as JobScheduleType;
     const scheduleConfig = (input.scheduleConfig ?? existing.scheduleConfig) as JobScheduleConfig;
@@ -171,5 +215,36 @@ export const JobsService = {
     });
 
     return { success: true, data: { job: toJobDefinition(job) } };
+  },
+
+  async bulkUpdate(ids: string[], action: 'delete' | 'activate' | 'deactivate') {
+    if (!ids.length) return { success: false, error: 'NO_IDS' };
+
+    if (action === 'delete') {
+      const result = await prisma.jobDefinition.updateMany({
+        where: { id: { in: ids }, deletedAt: null },
+        data: { deletedAt: new Date(), enabled: false },
+      });
+      return { success: true, data: { updated: result.count } };
+    }
+
+    const enabled = action === 'activate';
+    const result = await prisma.jobDefinition.updateMany({
+      where: { id: { in: ids }, deletedAt: null },
+      data: { enabled },
+    });
+    return { success: true, data: { updated: result.count } };
+  },
+
+  async listRuns(jobId: string, limit = 10) {
+    if (!jobId) return { success: false, error: 'VALIDATION_FAILED' };
+    const job = await prisma.jobDefinition.findUnique({ where: { id: jobId } });
+    if (!job || job.deletedAt) return { success: false, error: 'NOT_FOUND' };
+    const runs = await prisma.jobRun.findMany({
+      where: { jobId },
+      orderBy: { runAt: 'desc' },
+      take: limit,
+    });
+    return { success: true, data: { runs: runs.map(toJobRun) } };
   },
 };
