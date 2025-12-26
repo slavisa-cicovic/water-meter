@@ -69,6 +69,7 @@ export function TariffEditForm({ currentTariff }: Props) {
   } = methods;
 
   const onSubmit = async (data: any) => {
+    console.log('......................................')
     const payload = {
       name: data.name,
       basePrice: Number(data.basePrice),
@@ -85,7 +86,7 @@ export function TariffEditForm({ currentTariff }: Props) {
     if (isCreate) {
       const result = await TariffsApi.createTariff(payload);
       const id = result?.tariff?.id;
-      if (id) router.push(paths.dashboard.billing.tariffs.details(id));
+      if (id) router.push(paths.dashboard.billing.tariffs.root);
       return;
     }
 
@@ -123,19 +124,17 @@ export function TariffEditForm({ currentTariff }: Props) {
                   <RHFTextField name="redMultiplier" label="Red multiplier" type="number" />
                 </Stack>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                  <TextField
+                  <RHFTextField
+                    name="validFrom"
                     label="Valid from"
                     type="date"
-                    value={methods.getValues('validFrom')}
-                    onChange={(event) => methods.setValue('validFrom', event.target.value)}
                     slotProps={{ inputLabel: { shrink: true } }}
                     sx={{ flex: 1 }}
                   />
-                  <TextField
+                  <RHFTextField
+                    name="validTo"
                     label="Valid to"
                     type="date"
-                    value={methods.getValues('validTo')}
-                    onChange={(event) => methods.setValue('validTo', event.target.value)}
                     slotProps={{ inputLabel: { shrink: true } }}
                     sx={{ flex: 1 }}
                   />
@@ -144,7 +143,9 @@ export function TariffEditForm({ currentTariff }: Props) {
                   select
                   label="Status"
                   value={methods.getValues('status')}
-                  onChange={(event) => methods.setValue('status', event.target.value)}
+                  onChange={(event) =>
+                    methods.setValue('status', event.target.value as 'active' | 'inactive')
+                  }
                 >
                   <MenuItem value="active">active</MenuItem>
                   <MenuItem value="inactive">inactive</MenuItem>
