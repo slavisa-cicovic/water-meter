@@ -94,6 +94,7 @@ export const BillingRepository = {
 
   async listInvoices(params: InvoiceListParams) {
     const {
+      accountId,
       search,
       createdStart,
       createdEnd,
@@ -139,15 +140,22 @@ export const BillingRepository = {
         }
       : {};
 
+    const createdStartDate = createdStart ? new Date(createdStart) : undefined;
+    const createdEndDate = createdEnd ? new Date(createdEnd) : undefined;
+    if (createdEndDate) {
+      createdEndDate.setHours(23, 59, 59, 999);
+    }
+
     const where: any = {
       ...searchWhere,
+      ...(accountId ? { accountId } : {}),
       ...(status ? { status } : {}),
       ...reviewWhere,
       ...(createdStart || createdEnd
         ? {
             createdAt: {
-              ...(createdStart ? { gte: new Date(createdStart) } : {}),
-              ...(createdEnd ? { lte: new Date(createdEnd) } : {}),
+              ...(createdStartDate ? { gte: createdStartDate } : {}),
+              ...(createdEndDate ? { lte: createdEndDate } : {}),
             },
           }
         : {}),

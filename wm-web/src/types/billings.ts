@@ -103,6 +103,7 @@ export type InvoiceCreateInput = {
 };
 
 export type InvoiceListParams = {
+  accountId?: string;
   search?: string;
   createdStart?: string;
   createdEnd?: string;

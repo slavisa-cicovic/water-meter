@@ -9,6 +9,7 @@ import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 import CardContent from '@mui/material/CardContent';
 import Grid from '@mui/material/Grid2';
+import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Table from '@mui/material/Table';
@@ -37,7 +38,7 @@ import { useLocales } from 'src/locales';
 // hooks
 import { useResponsive } from 'src/hooks/use-responsive';
 // api
-import { useGetInvoices, useGetTariffs } from 'src/api/billing';
+import { BillingApi, useGetInvoices, useGetTariffs } from 'src/api/billing';
 import { ReadingsApi, useGetReadings } from 'src/api/readings';
 import { AccountsApi } from 'src/api/accounts';
 // auth
@@ -46,14 +47,26 @@ import { useAuthContext } from 'src/auth/hooks';
 import FormProvider, { RHFTextField } from 'src/components/hook-form';
 import { ChartWrapper, useChart } from 'src/components/chart';
 // types
-import { AccountRow } from 'src/types/accounts';
+import { AccountRole, AccountRow } from 'src/types/accounts';
+import { Invoice, InvoiceStatus } from 'src/types/billings';
 import { Reading } from 'src/types/readings';
+import { ReadingsReviewDialog } from 'src/components/billing/readings-review-dialog';
+import { ConfirmDialog } from 'src/components/custom-dialog';
+import Iconify from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
 type Props = {
   currentAccount?: AccountRow;
 };
+
+const BILLING_STATUS_OPTIONS: Array<{ label: string; value: InvoiceStatus }> = [
+  { label: 'Draft', value: 'draft' },
+  { label: 'Confirmed', value: 'confirmed' },
+  { label: 'Issued', value: 'issued' },
+  { label: 'Paid', value: 'paid' },
+  { label: 'Void', value: 'void' },
+];
 
 export default function AccountEditForm({ currentAccount }: Props) {
   const { t } = useLocales();
@@ -99,7 +112,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
   const [addressPromptOpen, setAddressPromptOpen] = useState(false);
   const [pendingSubmit, setPendingSubmit] = useState<any>(null);
 
-  const viewerRole = (user as any)?.role as string | undefined;
+  const viewerRole = (user as any)?.role as AccountRole | undefined;
   const viewerId = (user as any)?.accountId || (user as any)?.id;
   const canEditReadings = viewerRole === 'staff_backoffice';
   const canEdit =
@@ -155,11 +168,11 @@ export default function AccountEditForm({ currentAccount }: Props) {
   const isConsumer = currentAccount?.type === 'consumer';
   const isStaffField = currentAccount?.type === 'staff_field';
 
-  const { invoices, invoicesLoading, invoicesEmpty } = useGetInvoices(
-    isConsumer && accountId ? { accountId } : undefined
-  );
-
   const currentYear = new Date().getFullYear();
+  const [billingFrom, setBillingFrom] = useState(`${currentYear}-01-01`);
+  const [billingTo, setBillingTo] = useState(`${currentYear}-12-31`);
+  const [billingStatus, setBillingStatus] = useState<'' | InvoiceStatus>('');
+  const [billingTab, setBillingTab] = useState<'chart' | 'table'>('chart');
   const [readingFrom, setReadingFrom] = useState(`${currentYear}-01-01`);
   const [readingTo, setReadingTo] = useState(`${currentYear}-12-31`);
   const [readingsTab, setReadingsTab] = useState<'chart' | 'table'>('chart');
@@ -172,6 +185,22 @@ export default function AccountEditForm({ currentAccount }: Props) {
   const [editSaving, setEditSaving] = useState(false);
   const [editBounds, setEditBounds] = useState<{ min?: number; max?: number } | null>(null);
   const [editingReading, setEditingReading] = useState<Reading | null>(null);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [reviewInvoice, setReviewInvoice] = useState<Invoice | null>(null);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [confirmInvoice, setConfirmInvoice] = useState<Invoice | null>(null);
+  const { invoices, invoicesLoading, mutate: mutateInvoices } = useGetInvoices(
+    isConsumer && accountId
+      ? {
+          accountId,
+          createdStart: billingFrom || undefined,
+          createdEnd: billingTo || undefined,
+          status: billingStatus || undefined,
+          orderBy: 'createdAt',
+          order: 'desc',
+        }
+      : undefined
+  );
   const { readings, readingsLoading, readingsEmpty, mutate: mutateReadings } = useGetReadings(
     isStaffField && accountId
       ? { accountId, from: readingFrom || undefined, to: readingTo || undefined }
@@ -280,6 +309,122 @@ export default function AccountEditForm({ currentAccount }: Props) {
     if (readingsLoading) return <Typography variant="body2">Loading readings...</Typography>;
     if (readingsEmpty || readingsFilteredEmpty) return <Typography variant="body2">No readings found.</Typography>;
     return content;
+  };
+
+  const billingBuckets = useMemo(() => {
+    const parsedFrom = new Date(billingFrom);
+    const baseYear = Number.isNaN(parsedFrom.getTime()) ? new Date().getFullYear() : parsedFrom.getFullYear();
+    const buckets = Array.from({ length: 12 }, (_, month) => {
+      const bucketDate = new Date(baseYear, month, 1);
+      return {
+        key: `${baseYear}-${month}`,
+        label: format(bucketDate, 'MMM yyyy'),
+        total: 0,
+        flags: new Set<string>(),
+        latestInvoice: null as Invoice | null,
+        latestCreatedAt: 0,
+      };
+    });
+
+    const byKey = new Map(buckets.map((bucket) => [bucket.key, bucket]));
+
+    invoices.forEach((invoice) => {
+      if (!invoice.createdAt) return;
+      const createdAt = new Date(invoice.createdAt);
+      if (Number.isNaN(createdAt.getTime())) return;
+      if (createdAt.getFullYear() !== baseYear) return;
+      const amount = Number(invoice.totalAmount);
+      if (!Number.isFinite(amount)) return;
+
+      const key = `${createdAt.getFullYear()}-${createdAt.getMonth()}`;
+      const bucket = byKey.get(key);
+      if (!bucket) return;
+
+      bucket.total += amount;
+      if (invoice.reviewFlags?.length) {
+        invoice.reviewFlags.forEach((flag) => bucket.flags.add(flag));
+      }
+      if (createdAt.getTime() >= bucket.latestCreatedAt) {
+        bucket.latestCreatedAt = createdAt.getTime();
+        bucket.latestInvoice = invoice;
+      }
+    });
+
+    return buckets;
+  }, [billingFrom, invoices]);
+
+  const billingChartData = useMemo(
+    () => ({
+      categories: billingBuckets.map((bucket) => bucket.label),
+      data: billingBuckets.map((bucket) => bucket.total),
+    }),
+    [billingBuckets]
+  );
+
+  const billingChartOptions = useChart(
+    useMemo(
+      () => ({
+        xaxis: { categories: billingChartData.categories },
+        tooltip: {
+          y: {
+            formatter: (value: number) => value.toFixed(2),
+            title: { formatter: () => 'Total' },
+          },
+        },
+      }),
+      [billingChartData.categories]
+    )
+  );
+
+  const billingChartSeries = useMemo(
+    () => [{ name: 'Total billed', data: billingChartData.data }],
+    [billingChartData.data]
+  );
+
+  const renderBillingContent = (content: ReactNode) => {
+    if (invoicesLoading) return <Typography variant="body2">Loading invoices...</Typography>;
+    return content;
+  };
+
+  const getInvoiceStatusColor = (status: InvoiceStatus) => {
+    if (status === 'paid') return 'success';
+    if (status === 'confirmed') return 'secondary';
+    if (status === 'issued') return 'info';
+    if (status === 'void') return 'default';
+    return 'warning';
+  };
+
+  const currentMonthKey = `${new Date().getFullYear()}-${new Date().getMonth()}`;
+
+  const handleOpenReviewDialog = (invoice: Invoice) => {
+    setReviewInvoice(invoice);
+    setReviewDialogOpen(true);
+  };
+
+  const handleCloseReviewDialog = () => {
+    setReviewDialogOpen(false);
+    setReviewInvoice(null);
+  };
+
+  const handleOpenConfirmDialog = (invoice: Invoice) => {
+    setConfirmInvoice(invoice);
+    setConfirmDialogOpen(true);
+  };
+
+  const handleCloseConfirmDialog = () => {
+    setConfirmDialogOpen(false);
+    setConfirmInvoice(null);
+  };
+
+  const handleConfirmInvoice = async () => {
+    if (!confirmInvoice) return;
+    try {
+      await BillingApi.confirmInvoices([confirmInvoice.id]);
+      await mutateInvoices();
+      handleCloseConfirmDialog();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleOpenEditDialog = (reading: Reading, index: number) => {
@@ -407,25 +552,124 @@ export default function AccountEditForm({ currentAccount }: Props) {
       <Card>
         <CardHeader title="Billing history" />
         <CardContent>
-          {invoicesLoading && <Typography variant="body2">Loading invoices...</Typography>}
-          {!invoicesLoading && invoicesEmpty && <Typography variant="body2">No invoices found.</Typography>}
-          {!invoicesLoading && invoices && invoices.length > 0 && (
-            <TableContainer>
-              <Table size="small">
-                <TableBody>
-                  {invoices.map((invoice) => (
-                    <TableRow key={invoice.id}>
-                      <TableCell sx={{ width: 160 }}>
-                        {invoice.periodStart?.slice(0, 10)} → {invoice.periodEnd?.slice(0, 10)}
+          <Stack direction="row" spacing={2} mb={2}>
+            <TextField
+              label="Created from"
+              type="date"
+              value={billingFrom}
+              onChange={(event) => setBillingFrom(event.target.value)}
+              slotProps={{ inputLabel: { shrink: true } }}
+              sx={{ minWidth: 160 }}
+            />
+            <TextField
+              label="Created to"
+              type="date"
+              value={billingTo}
+              onChange={(event) => setBillingTo(event.target.value)}
+              slotProps={{ inputLabel: { shrink: true } }}
+              sx={{ minWidth: 160 }}
+            />
+            <TextField
+              select
+              label="Status"
+              value={billingStatus}
+              onChange={(event) => setBillingStatus(event.target.value as '' | InvoiceStatus)}
+              sx={{ minWidth: 200 }}
+            >
+              <MenuItem value="">All</MenuItem>
+              {BILLING_STATUS_OPTIONS.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Stack>
+
+          <Tabs value={billingTab} onChange={(_, value) => setBillingTab(value)} sx={{ mb: 2 }}>
+            <Tab value="chart" label="Chart" />
+            <Tab value="table" label="Table" />
+          </Tabs>
+
+          {billingTab === 'chart' &&
+            renderBillingContent(
+              <ChartWrapper type="bar" series={billingChartSeries} options={billingChartOptions} height={320} />
+            )}
+
+          {billingTab === 'table' &&
+            renderBillingContent(
+              <TableContainer>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ width: 180 }}>Month</TableCell>
+                      <TableCell sx={{ width: 120 }}>Total</TableCell>
+                      <TableCell sx={{ width: 120 }}>Status</TableCell>
+                      <TableCell sx={{ width: 80 }} align="right">
+                        Review flags
                       </TableCell>
-                      <TableCell sx={{ width: 120 }}>{invoice.totalAmount}</TableCell>
-                      <TableCell sx={{ width: 120 }}>{invoice.status}</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
+                  </TableHead>
+                  <TableBody>
+                    {billingBuckets.map((bucket) => {
+                      const status = bucket.latestInvoice?.status;
+                      const flags = Array.from(bucket.flags.values());
+                      const invoice = bucket.latestInvoice;
+                      const canEdit =
+                        invoice?.status === 'draft' && bucket.key === currentMonthKey;
+                      const canConfirm =
+                        invoice?.status === 'draft' &&
+                        bucket.key === currentMonthKey &&
+                        (!invoice.reviewFlags || invoice.reviewFlags.length === 0);
+                      return (
+                        <TableRow key={bucket.key}>
+                          <TableCell sx={{ width: 180 }}>{bucket.label}</TableCell>
+                          <TableCell sx={{ width: 120 }}>{bucket.total.toFixed(2)}</TableCell>
+                          <TableCell sx={{ width: 120 }}>
+                            {status ? (
+                              <Chip
+                                size="small"
+                                label={status}
+                                color={getInvoiceStatusColor(status)}
+                                clickable={canConfirm}
+                                onClick={canConfirm && invoice ? () => handleOpenConfirmDialog(invoice) : undefined}
+                              />
+                            ) : (
+                              ''
+                            )}
+                          </TableCell>
+                          <TableCell sx={{ width: 80 }} align="right">
+                            <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
+                              {flags.length > 0 && (
+                                <Tooltip
+                                  title={
+                                    <Stack spacing={0.5} sx={{ py: 0.5 }}>
+                                      {flags.map((flag) => (
+                                        <Typography key={flag} variant="caption" display="block">
+                                          {flag}
+                                        </Typography>
+                                      ))}
+                                    </Stack>
+                                  }
+                                >
+                                  <IconButton
+                                    size="small"
+                                    color="warning"
+                                    onClick={canEdit && invoice ? () => handleOpenReviewDialog(invoice) : undefined}
+                                    aria-label="Review flags"
+                                  >
+                                    <Iconify icon="eva:alert-circle-fill" width={16} />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
+                            </Stack>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            )}
         </CardContent>
       </Card>
     </Grid>
@@ -597,6 +841,57 @@ export default function AccountEditForm({ currentAccount }: Props) {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <ReadingsReviewDialog
+        open={reviewDialogOpen}
+        onClose={handleCloseReviewDialog}
+        invoice={reviewInvoice}
+        isShared={Boolean(reviewInvoice?.reviewFlags?.includes('invalid_household_size'))}
+        onReviewed={mutateInvoices}
+      />
+
+      <ConfirmDialog
+        open={confirmDialogOpen}
+        onClose={handleCloseConfirmDialog}
+        title="Confirm invoice"
+        content={
+          <Stack spacing={1.5}>
+            <Typography variant="body2">
+              You are about to confirm this invoice. This action cannot be undone.
+            </Typography>
+            {confirmInvoice?.lines && confirmInvoice.lines.length > 0 ? (
+              <Stack spacing={1}>
+                <Typography variant="subtitle2">Invoice items</Typography>
+                <Stack spacing={0.5}>
+                  {confirmInvoice.lines.map((line) => (
+                    <Stack
+                      key={line.id}
+                      direction="row"
+                      spacing={1}
+                      justifyContent="space-between"
+                      alignItems="center"
+                    >
+                      <Typography variant="body2" color="text.secondary">
+                        {line.description || line.type}
+                      </Typography>
+                      <Typography variant="body2">{line.amount}</Typography>
+                    </Stack>
+                  ))}
+                </Stack>
+              </Stack>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                No invoice items available.
+              </Typography>
+            )}
+          </Stack>
+        }
+        action={
+          <Button variant="contained" color="primary" onClick={handleConfirmInvoice}>
+            Confirm
+          </Button>
+        }
+      />
 
       <Dialog open={addressPromptOpen} onClose={() => setAddressPromptOpen(false)}>
         <DialogTitle>Update meter address?</DialogTitle>

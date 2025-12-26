@@ -4,6 +4,7 @@ import axiosInstance, { endpoints, fetcher } from 'src/utils/axios';
 import { Invoice, Tariff, TariffCreateInput, TariffUpdateInput } from 'src/types/billings';
 
 type BillingQuery = {
+  accountId?: string;
   search?: string;
   createdStart?: string;
   createdEnd?: string;
@@ -17,6 +18,7 @@ type BillingQuery = {
 
 export function useGetInvoices(params?: BillingQuery) {
   const query = new URLSearchParams();
+  if (params?.accountId) query.set('accountId', params.accountId);
   if (params?.search) query.set('search', params.search);
   if (params?.createdStart) query.set('createdStart', params.createdStart);
   if (params?.createdEnd) query.set('createdEnd', params.createdEnd);
