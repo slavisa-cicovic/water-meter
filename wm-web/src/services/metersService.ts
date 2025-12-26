@@ -11,6 +11,17 @@ const toMeter = (row: any): Meter => ({
   status: row.status,
   type: row.type,
   consumersCount: Array.isArray(row.consumers) ? row.consumers.length : undefined,
+  consumers: Array.isArray(row.consumers)
+    ? row.consumers
+        .map((link: any) => link.account)
+        .filter(Boolean)
+        .map((account: any) => ({
+          id: account.id,
+          firstName: account.firstName,
+          lastName: account.lastName,
+          address: account.address,
+        }))
+    : undefined,
   installedAt: row.installedAt?.toISOString?.() ?? row.installedAt ?? undefined,
   notes: row.notes ?? undefined,
   createdAt: row.createdAt?.toISOString?.() ?? row.createdAt ?? undefined,

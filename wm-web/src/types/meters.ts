@@ -11,6 +11,12 @@ export type Meter = {
   status: MeterStatus;
   type: MeterType;
   consumersCount?: number;
+  consumers?: Array<{
+    id: string;
+    firstName: string;
+    lastName: string;
+    address: string;
+  }>;
   installedAt?: string;
   notes?: string;
   createdAt?: string;

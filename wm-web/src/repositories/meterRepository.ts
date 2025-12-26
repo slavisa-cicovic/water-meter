@@ -43,7 +43,7 @@ export const MeterRepository = {
   async findById(id: string) {
     return prisma.meter.findUnique({
       where: { id },
-      include: { consumers: true },
+      include: { consumers: { include: { account: true } } },
     });
   },
 

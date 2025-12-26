@@ -41,7 +41,7 @@ export function MeterDetailView({ id }: Props) {
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
       <CustomBreadcrumbs
         heading={meter?.serialNumber ? `Meter ${meter.serialNumber}` : 'Meter'}
-        description="Meter details and billing history."
+        description="Meter details and readings history."
         links={[
           { name: 'App', href: paths.dashboard.root },
           { name: 'Meters', href: paths.dashboard.meters.root },
