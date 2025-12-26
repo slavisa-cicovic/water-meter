@@ -5,6 +5,7 @@ import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 // theme
 import { bgBlur } from 'src/theme/css';
+import { useAuthContext } from 'src/auth/hooks';
 // components
 import { NavSectionHorizontal } from 'src/components/nav-section';
 //
@@ -15,7 +16,8 @@ import { useNavData } from './config-navigation';
 
 function NavHorizontal() {
   const theme = useTheme();
-
+  const { user } = useAuthContext();
+  const currentRole = user?.role;
 
   const navData = useNavData();
 
@@ -33,7 +35,7 @@ function NavHorizontal() {
           }),
         }}
       >
-        <NavSectionHorizontal data={navData} />
+        <NavSectionHorizontal data={navData} config={{ currentRole }} />
       </Toolbar>
     </AppBar>
   );

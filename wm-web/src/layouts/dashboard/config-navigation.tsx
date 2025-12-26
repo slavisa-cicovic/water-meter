@@ -60,6 +60,7 @@ export function useNavData() {
             title: 'Jobs',
             path: paths.dashboard.jobs.root,
             icon: ICONS.jobs,
+            roles: ['admin'],
           },
         ],
       },

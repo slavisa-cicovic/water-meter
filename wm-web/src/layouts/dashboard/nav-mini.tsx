@@ -16,6 +16,8 @@ import { NavToggleButton } from '../_common';
 export default function NavMini() {
 
   const navData = useNavData();
+  const { user } = useAuthContext();
+  const currentRole = user?.role;
 
   return (
     <Box
@@ -44,13 +46,9 @@ export default function NavMini() {
       >
         <Logo sx={{ mx: 'auto', my: 2 }} />
 
-        <NavSectionMini
-          data={navData}
-          config={{
-            currentRole: 'back-office',
-          }}
-        />
+        <NavSectionMini data={navData} config={{ currentRole }} />
       </Stack>
     </Box>
   );
 }
+import { useAuthContext } from 'src/auth/hooks';
