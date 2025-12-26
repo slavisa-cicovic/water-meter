@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import useSWR from 'swr';
 import axiosInstance, { endpoints, fetcher } from 'src/utils/axios';
-import { AccountRow, VerificationStatus } from 'src/types/accounts';
+import { AccountRow, AccountUpdateInput, VerificationStatus } from 'src/types/accounts';
 
 type AccountsQuery = {
   search?: string;
@@ -64,5 +64,10 @@ export const AccountsApi = {
       status,
       reviewerId: 'backoffice-user',
     });
+  },
+
+  async updateAccount(id: string, payload: AccountUpdateInput) {
+    const res = await axiosInstance.put(endpoints.accounts.details(id), payload);
+    return res.data;
   },
 };

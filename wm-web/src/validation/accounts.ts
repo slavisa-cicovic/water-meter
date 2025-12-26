@@ -1,5 +1,6 @@
 import {
   AccountRole,
+  AccountUpdateInput,
   ConsumerRegistrationInput,
   StaffRegistrationInput,
   StaffRole,
@@ -133,6 +134,16 @@ export const validateVerificationAction = (action: VerificationAction): Validati
   } else {
     validateVerificationStatus(action.status, errors);
   }
+
+  return { valid: Object.keys(errors).length === 0, errors };
+};
+
+export const validateAccountUpdate = (input: AccountUpdateInput): ValidationResult => {
+  const errors: Record<string, string[]> = {};
+
+  validateName(input.firstName, 'firstName', errors);
+  validateName(input.lastName, 'lastName', errors);
+  validateAddress(input.address, errors);
 
   return { valid: Object.keys(errors).length === 0, errors };
 };

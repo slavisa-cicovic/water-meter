@@ -106,6 +106,40 @@ export const AccountRepository = {
     });
   },
 
+  async updateAccountDetails(accountId: string, data: { firstName: string; lastName: string; address: string }) {
+    return prisma.account.update({
+      where: { id: accountId },
+      data: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        address: data.address,
+      },
+      include: {
+        consumerProfile: true,
+        staffProfile: true,
+        verificationLogs: true,
+      },
+    });
+  },
+
+  async updateConsumerProfile(
+    accountId: string,
+    data: { householdSize?: number; tariffId?: string | null }
+  ) {
+    return prisma.consumerProfile.upsert({
+      where: { accountId },
+      update: {
+        ...(data.householdSize !== undefined ? { householdSize: data.householdSize } : {}),
+        ...(data.tariffId !== undefined ? { tariffId: data.tariffId } : {}),
+      },
+      create: {
+        accountId,
+        householdSize: data.householdSize ?? 1,
+        tariffId: data.tariffId ?? null,
+      },
+    });
+  },
+
   async list(params: ListParams) {
     const {
       search,

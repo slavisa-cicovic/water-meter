@@ -79,6 +79,14 @@ export type VerificationResponse = {
   token?: string;
 };
 
+export type AccountUpdateInput = {
+  firstName: string;
+  lastName: string;
+  address: string;
+  tariffId?: string | null;
+  updateMeterAddress?: boolean;
+};
+
 export type AccountTokenPayload = {
   accountId: string;
   role: AccountRole;
@@ -100,6 +108,7 @@ type BaseAccountRow = {
     address: string;
     householdSize?: number;
     staffRole?: string;
+    tariffId?: string | null;
   };
   verificationLog?: VerificationAuditEntry[];
 };

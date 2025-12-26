@@ -123,6 +123,13 @@ export const MeterRepository = {
     });
   },
 
+  async listByConsumer(accountId: string) {
+    return prisma.meter.findMany({
+      where: { consumers: { some: { accountId } } },
+      orderBy: { createdAt: 'asc' },
+    });
+  },
+
   async listAll() {
     return prisma.meter.findMany({ orderBy: { createdAt: 'asc' } });
   },

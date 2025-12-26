@@ -37,8 +37,9 @@ import { useLocales } from 'src/locales';
 // hooks
 import { useResponsive } from 'src/hooks/use-responsive';
 // api
-import { useGetInvoices } from 'src/api/billing';
+import { useGetInvoices, useGetTariffs } from 'src/api/billing';
 import { ReadingsApi, useGetReadings } from 'src/api/readings';
+import { AccountsApi } from 'src/api/accounts';
 // auth
 import { useAuthContext } from 'src/auth/hooks';
 // components
@@ -59,11 +60,13 @@ export default function AccountEditForm({ currentAccount }: Props) {
   const router = useRouter();
   const mdUp = useResponsive('up', 'md');
   const { user } = useAuthContext();
+  const { tariffs, tariffsLoading } = useGetTariffs();
 
   const AccountSchema = Yup.object().shape({
     firstName: Yup.string().required('Required'),
     lastName: Yup.string().required('Required'),
     address: Yup.string().required('Required'),
+    tariffId: Yup.string().nullable(),
   });
 
   const defaultValues = useMemo(
@@ -73,6 +76,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
       lastName: currentAccount?.data.lastName || '',
       address: currentAccount?.data.address || '',
       email: currentAccount?.data.email || '',
+      tariffId: currentAccount?.data.tariffId || '',
     }),
     [currentAccount]
   );
@@ -111,8 +115,17 @@ export default function AccountEditForm({ currentAccount }: Props) {
 
   const applySubmit = async (data: any, updateMeterAddress: boolean) => {
     try {
-      console.info('[AccountEditForm] Save account', { data, updateMeterAddress });
-      reset();
+      if (!currentAccount?.id) return;
+      const payload = {
+        firstName: data.firstName?.trim?.() ?? data.firstName,
+        lastName: data.lastName?.trim?.() ?? data.lastName,
+        address: data.address?.trim?.() ?? data.address,
+        tariffId: currentAccount?.type === 'consumer' ? (data.tariffId ? data.tariffId : null) : undefined,
+        updateMeterAddress,
+      };
+
+      await AccountsApi.updateAccount(currentAccount.id, payload);
+      reset(data);
       router.push(paths.dashboard.accounts.root);
     } catch (error) {
       console.error(error);
@@ -360,6 +373,24 @@ export default function AccountEditForm({ currentAccount }: Props) {
             <RHFTextField name="lastName" label="Last name" disabled={!canEdit} />
             <RHFTextField name="address" label="Address" disabled={!canEdit} />
             <RHFTextField name="email" label="Email" disabled />
+            {isConsumer && (
+              <RHFTextField
+                name="tariffId"
+                label="Tariff"
+                select
+                disabled={!canEdit || tariffsLoading}
+                helperText={tariffsLoading ? 'Loading tariffs...' : 'Override billing tariff (optional).'}
+              >
+                <MenuItem value="">Default (meter)</MenuItem>
+                {tariffs.map((tariff) => (
+                  <MenuItem key={tariff.id} value={tariff.id}>
+                    {tariff.name}
+                    {tariff.groupCode ? ` (${tariff.groupCode})` : ''}
+                    {tariff.status === 'inactive' ? ' - inactive' : ''}
+                  </MenuItem>
+                ))}
+              </RHFTextField>
+            )}
             <Stack direction="row" justifyContent="flex-end">
               <LoadingButton type="submit" variant="contained" size="large" loading={isSubmitting} disabled={!canEdit}>
                 save_changes

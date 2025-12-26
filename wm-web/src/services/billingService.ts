@@ -29,6 +29,35 @@ const buildTariffSnapshot = (tariff: any) => ({
   groupCode: tariff.groupCode ?? null,
 });
 
+const isTariffValidForPeriod = (tariff: any, periodStart: Date, periodEnd: Date) => {
+  if (!tariff || tariff.deletedAt) return false;
+  if (tariff.status && tariff.status !== 'active') return false;
+  const validFrom = tariff.validFrom instanceof Date ? tariff.validFrom : new Date(tariff.validFrom);
+  const validTo = tariff.validTo
+    ? tariff.validTo instanceof Date
+      ? tariff.validTo
+      : new Date(tariff.validTo)
+    : null;
+  return validFrom <= periodEnd && (!validTo || validTo >= periodStart);
+};
+
+const resolveConsumerTariff = async (options: {
+  tariffId?: string | null;
+  fallback: any | null;
+  periodStart: Date;
+  periodEnd: Date;
+  cache: Map<string, any | null>;
+}) => {
+  const { tariffId, fallback, periodStart, periodEnd, cache } = options;
+  if (!tariffId) return fallback;
+  if (cache.has(tariffId)) return cache.get(tariffId) ?? fallback;
+
+  const override = await BillingRepository.findTariffById(tariffId);
+  const usable = override && isTariffValidForPeriod(override, periodStart, periodEnd) ? override : null;
+  cache.set(tariffId, usable);
+  return usable ?? fallback;
+};
+
 export const BillingService = {
   async listTariffs() {
     const tariffs = await BillingRepository.listTariffs();
@@ -123,21 +152,30 @@ export const BillingService = {
         continue;
       }
 
-      const tariff = await BillingRepository.findApplicableTariff({
+      const tariffPeriodStart = periodStart ?? periodEnd ?? new Date();
+      const tariffPeriodEnd = periodEnd ?? periodStart ?? new Date();
+      const baseTariff = await BillingRepository.findApplicableTariff({
         groupCode: meter.groupCode ?? null,
-        periodStart: periodStart ?? periodEnd ?? new Date(),
-        periodEnd: periodEnd ?? periodStart ?? new Date(),
+        periodStart: tariffPeriodStart,
+        periodEnd: tariffPeriodEnd,
       });
-      if (!tariff) {
-        skipped.push({ meterId: meter.id, reason: 'NO_TARIFF' });
-        continue;
-      }
-
-      const unitPrice = toNumber(tariff.basePrice);
-      const tariffSnapshot = buildTariffSnapshot(tariff);
+      const tariffCache = new Map<string, any | null>();
 
       if (consumers.length === 1) {
         const accountId = consumers[0].accountId;
+        const tariff = await resolveConsumerTariff({
+          tariffId: consumers[0].account.consumerProfile?.tariffId ?? null,
+          fallback: baseTariff,
+          periodStart: tariffPeriodStart,
+          periodEnd: tariffPeriodEnd,
+          cache: tariffCache,
+        });
+        if (!tariff) {
+          skipped.push({ meterId: meter.id, reason: 'NO_TARIFF' });
+          continue;
+        }
+        const unitPrice = toNumber(tariff.basePrice);
+        const tariffSnapshot = buildTariffSnapshot(tariff);
         const subtotal = toMoney(consumptionTotal * unitPrice);
         const vatAmount = toMoney(subtotal * vatRate);
         const totalAmount = toMoney(subtotal + vatAmount);
@@ -180,11 +218,36 @@ export const BillingService = {
       }
 
       const householdTotal = consumers.reduce((sum, c) => sum + (c.account.consumerProfile?.householdSize || 1), 0);
+      const tariffsByAccount = new Map<string, any>();
+      let missingTariff = false;
+
+      for (const consumer of consumers) {
+        const tariff = await resolveConsumerTariff({
+          tariffId: consumer.account.consumerProfile?.tariffId ?? null,
+          fallback: baseTariff,
+          periodStart: tariffPeriodStart,
+          periodEnd: tariffPeriodEnd,
+          cache: tariffCache,
+        });
+        if (!tariff) {
+          missingTariff = true;
+          break;
+        }
+        tariffsByAccount.set(consumer.accountId, tariff);
+      }
+
+      if (missingTariff) {
+        skipped.push({ meterId: meter.id, reason: 'NO_TARIFF' });
+        continue;
+      }
 
       for (const consumer of consumers) {
         const householdSize = consumer.account.consumerProfile?.householdSize || 1;
         const share = householdSize / householdTotal;
         const consumptionShare = toQuantity(consumptionTotal * share);
+        const tariff = tariffsByAccount.get(consumer.accountId);
+        const unitPrice = toNumber(tariff.basePrice);
+        const tariffSnapshot = buildTariffSnapshot(tariff);
         const subtotal = toMoney(consumptionShare * unitPrice);
         const vatAmount = toMoney(subtotal * vatRate);
         const totalAmount = toMoney(subtotal + vatAmount);
@@ -339,22 +402,31 @@ export const BillingService = {
         continue;
       }
 
-      const tariff = await BillingRepository.findApplicableTariff({
+      const tariffPeriodStart = periodStart ?? periodEnd ?? referenceDate;
+      const tariffPeriodEnd = periodEnd ?? periodStart ?? referenceDate;
+      const baseTariff = await BillingRepository.findApplicableTariff({
         groupCode: meter.groupCode ?? null,
-        periodStart: periodStart ?? periodEnd ?? referenceDate,
-        periodEnd: periodEnd ?? periodStart ?? referenceDate,
+        periodStart: tariffPeriodStart,
+        periodEnd: tariffPeriodEnd,
       });
-      if (!tariff) {
-        skipped.push({ meterId: meter.id, reason: 'NO_TARIFF' });
-        continue;
-      }
-
-      const unitPrice = toNumber(tariff.basePrice);
+      const tariffCache = new Map<string, any | null>();
       const vatRate = 0.19;
-      const tariffSnapshot = buildTariffSnapshot(tariff);
 
       if (consumers.length === 1) {
         const accountId = consumers[0].accountId;
+        const tariff = await resolveConsumerTariff({
+          tariffId: consumers[0].account.consumerProfile?.tariffId ?? null,
+          fallback: baseTariff,
+          periodStart: tariffPeriodStart,
+          periodEnd: tariffPeriodEnd,
+          cache: tariffCache,
+        });
+        if (!tariff) {
+          skipped.push({ meterId: meter.id, reason: 'NO_TARIFF' });
+          continue;
+        }
+        const unitPrice = toNumber(tariff.basePrice);
+        const tariffSnapshot = buildTariffSnapshot(tariff);
         const subtotal = toMoney(consumptionTotal * unitPrice);
         const vatAmount = toMoney(subtotal * vatRate);
         const totalAmount = toMoney(subtotal + vatAmount);
@@ -414,10 +486,36 @@ export const BillingService = {
       householdTotal = householdSizes.reduce((sum, entry) => sum + entry.size, 0);
       if (householdTotal <= 0) householdTotal = consumers.length;
 
+      const tariffsByAccount = new Map<string, any>();
+      let missingTariff = false;
+
+      for (const consumer of consumers) {
+        const tariff = await resolveConsumerTariff({
+          tariffId: consumer.account.consumerProfile?.tariffId ?? null,
+          fallback: baseTariff,
+          periodStart: tariffPeriodStart,
+          periodEnd: tariffPeriodEnd,
+          cache: tariffCache,
+        });
+        if (!tariff) {
+          missingTariff = true;
+          break;
+        }
+        tariffsByAccount.set(consumer.accountId, tariff);
+      }
+
+      if (missingTariff) {
+        skipped.push({ meterId: meter.id, reason: 'NO_TARIFF' });
+        continue;
+      }
+
       for (const consumer of consumers) {
         const sizeEntry = householdSizes.find((entry) => entry.accountId === consumer.accountId);
         const share = (sizeEntry?.size || 1) / householdTotal;
         const consumptionShare = toQuantity(consumptionTotal * share);
+        const tariff = tariffsByAccount.get(consumer.accountId);
+        const unitPrice = toNumber(tariff.basePrice);
+        const tariffSnapshot = buildTariffSnapshot(tariff);
         const subtotal = toMoney(consumptionShare * unitPrice);
         const vatAmount = toMoney(subtotal * vatRate);
         const totalAmount = toMoney(subtotal + vatAmount);

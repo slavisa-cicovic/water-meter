@@ -144,11 +144,15 @@ model Account {
 }
 
 model ConsumerProfile {
-  id          Int     @id @default(autoincrement())
-  accountId   String  @unique
+  id            Int     @id @default(autoincrement())
+  accountId     String  @unique
   householdSize Int
+  tariffId      String?
 
   account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  tariff  Tariff? @relation(fields: [tariffId], references: [id], onDelete: SetNull)
+
+  @@index([tariffId])
 }
 
 model StaffProfile {
@@ -256,6 +260,7 @@ model Tariff {
   updatedAt      DateTime @updatedAt
 
   invoices Invoice[]
+  consumers ConsumerProfile[]
 
   @@index([status])
   @@index([deletedAt])

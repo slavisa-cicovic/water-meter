@@ -1,6 +1,7 @@
 import { TokenService } from './tokenService';
 import {
   AccountRow,
+  AccountUpdateInput,
   ConsumerRegistrationInput,
   StaffRegistrationInput,
   VerificationAction,
@@ -10,9 +11,12 @@ import {
 import {
   validateConsumerRegistration,
   validateStaffRegistration,
+  validateAccountUpdate,
   validateVerificationAction,
 } from 'src/validation/accounts';
 import { AccountRepository } from 'src/repositories/accountRepository';
+import { BillingRepository } from 'src/repositories/billingRepository';
+import { MeterRepository } from 'src/repositories/meterRepository';
 import { AccountRole } from '@prisma/client';
 
 const toAccountRole = (staffRole?: string) => (staffRole === 'backoffice' ? 'staff_backoffice' : 'staff_field');
@@ -32,6 +36,7 @@ const mapAccountToRow = (acct: any): AccountRow => ({
     address: acct.address,
     householdSize: acct.consumerProfile?.householdSize,
     staffRole: acct.staffProfile?.staffRole,
+    tariffId: acct.consumerProfile?.tariffId ?? null,
   },
   verificationLog: acct.verificationLogs?.map((log: any) => ({
     id: log.id,
@@ -226,5 +231,59 @@ export const AccountsService = {
     }
 
     return mapAccountToRow(acct);
+  },
+
+  async updateAccount(
+    id: string,
+    input: AccountUpdateInput,
+    options: { viewerRole?: 'admin' | 'staff_backoffice'; viewerId?: string } = {}
+  ): Promise<{ success: boolean; error?: string; details?: any; data?: { account: AccountRow } }> {
+    const validation = validateAccountUpdate(input);
+    if (!validation.valid) return { success: false, error: 'VALIDATION_FAILED', details: validation.errors };
+
+    const account = await AccountRepository.findById(id);
+    if (!account) return { success: false, error: 'NOT_FOUND' };
+
+    const viewerRole = options.viewerRole;
+    if (viewerRole === 'staff_backoffice' && !(account.role === 'consumer' || account.role === 'staff_field')) {
+      return { success: false, error: 'FORBIDDEN' };
+    }
+    if (viewerRole === 'admin' && (account.role === 'consumer' || account.role === 'staff_field')) {
+      return { success: false, error: 'FORBIDDEN' };
+    }
+
+    const normalizedTariffId =
+      typeof input.tariffId === 'string' ? (input.tariffId.trim() ? input.tariffId.trim() : null) : input.tariffId;
+
+    if (normalizedTariffId !== undefined && account.role !== 'consumer') {
+      return { success: false, error: 'INVALID_TARIFF_ASSIGNMENT' };
+    }
+
+    if (normalizedTariffId) {
+      const tariff = await BillingRepository.findTariffById(normalizedTariffId);
+      if (!tariff || tariff.deletedAt) {
+        return { success: false, error: 'TARIFF_NOT_FOUND' };
+      }
+    }
+
+    await AccountRepository.updateAccountDetails(id, {
+      firstName: input.firstName,
+      lastName: input.lastName,
+      address: input.address,
+    });
+
+    if (account.role === 'consumer' && normalizedTariffId !== undefined) {
+      await AccountRepository.updateConsumerProfile(id, { tariffId: normalizedTariffId ?? null });
+    }
+
+    if (account.role === 'consumer' && input.updateMeterAddress) {
+      const meters = await MeterRepository.listByConsumer(id);
+      await Promise.all(meters.map((meter) => MeterRepository.update({ id: meter.id, address: input.address })));
+    }
+
+    const updated = await AccountRepository.findById(id);
+    if (!updated) return { success: false, error: 'NOT_FOUND' };
+
+    return { success: true, data: { account: mapAccountToRow(updated) } };
   },
 };
