@@ -60,4 +60,7 @@ export const endpoints = {
     run: (id: string) => `/api/jobs/${id}/run`,
     runs: (id: string) => `/api/jobs/${id}/runs`,
   },
+  notifications: {
+    summary: '/api/notifications',
+  },
 };

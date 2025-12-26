@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client';
 import prisma from 'src/utils/prisma';
-import { InvoiceListParams, TariffCreateInput, TariffUpdateInput } from 'src/types/billings';
+import { InvoiceListParams, InvoiceStatus, TariffCreateInput, TariffUpdateInput } from 'src/types/billings';
 
 const toDate = (value: string) => new Date(value);
 
@@ -190,6 +190,25 @@ export const BillingRepository = {
     ]);
 
     return { total, invoices };
+  },
+
+  async countInvoicesByReviewFlag(flag: string, status?: InvoiceStatus) {
+    return prisma.invoice.count({
+      where: {
+        ...(status ? { status } : {}),
+        reviewFlags: { array_contains: [flag] },
+      },
+    });
+  },
+
+  async countDraftInvoicesWithoutFlags() {
+    const emptyFlags = [] as Prisma.InputJsonValue;
+    return prisma.invoice.count({
+      where: {
+        status: 'draft',
+        OR: [{ reviewFlags: { equals: Prisma.DbNull } }, { reviewFlags: { equals: emptyFlags } }],
+      },
+    });
   },
 
   async findInvoicesByIds(ids: string[]) {

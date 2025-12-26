@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Alert,
   Button,
@@ -65,9 +66,25 @@ const TABLE_HEAD = [
 
 export function BillingOverviewView() {
   const settings = useSettingsContext();
-  const [filters, setFilters] = useState(defaultFilters);
+  const searchParams = useSearchParams();
+  const statusParam = searchParams.get('status') ?? '';
+  const reviewParam = searchParams.get('review') ?? '';
+  const [filters, setFilters] = useState<IBillingTableFilters>(() => ({
+    ...defaultFilters,
+    status: statusParam,
+    review: reviewParam,
+  }));
   const [confirmOpen, setConfirmOpen] = useState(false);
   const table = useTable({ defaultRowsPerPage: 25, defaultDense: true, defaultOrderBy: 'createdAt', defaultOrder: 'desc' });
+
+  useEffect(() => {
+    setFilters((prev) => {
+      if (prev.status === statusParam && prev.review === reviewParam) return prev;
+      return { ...prev, status: statusParam, review: reviewParam };
+    });
+    table.onResetPage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reviewParam, statusParam]);
 
   const { invoices, invoicesLoading, invoicesError, invoicesEmpty, total, mutate } = useGetInvoices({
     search: filters.search || undefined,
