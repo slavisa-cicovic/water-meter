@@ -14,6 +14,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { LoginService } from "@src/services/auth/login.service";
 import AuthHero from "@src/screens/auth/components/ui/auth-hero";
+import AuthHeader from "@src/screens/auth/components/ui/auth-header";
 
 const initialForm = {
   identifier: "",
@@ -52,8 +53,7 @@ export default function LoginScreen() {
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <AuthHero />
-        <Text style={styles.title}>Welcome to WMeter!</Text>
-        <Text style={styles.subtitle}>Log in to your account</Text>
+        <AuthHeader title="Welcome to WMeter!" subtitle="Log in to your account" />
 
         <FormField
           label="Email"
@@ -144,8 +144,6 @@ const validateLogin = (form: typeof initialForm) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f7ff" },
   content: { padding: 24, paddingBottom: 40, alignItems: "center" },
-  title: { color: "#415a9c", fontSize: 26, fontWeight: "700"},
-  subtitle: { color: "#7c8bb5", fontSize: 14, marginBottom: 24 },
   field: { width: "100%", marginBottom: 14 },
   inputRow: {
     flexDirection: "row",

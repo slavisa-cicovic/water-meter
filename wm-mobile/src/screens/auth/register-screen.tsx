@@ -13,6 +13,7 @@ import {
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { AccountsService } from "@src/services/accounts";
+import AuthHeader from "@src/screens/auth/components/ui/auth-header";
 
 const initialForm = {
   firstName: "",
@@ -68,8 +69,7 @@ export default function RegisterScreen() {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>Create Account</Text>
-        <Text style={styles.subtitle}>Fill in your details to get started.</Text>
+        <AuthHeader title="Create Account" subtitle="Fill in your details to get started." />
 
         <FormField
           label="First Name"
@@ -231,8 +231,6 @@ const validateForm = (form: typeof initialForm) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f7ff" },
   content: { padding: 24, paddingBottom: 40, alignItems: "center" },
-  title: { color: "#415a9c", fontSize: 26, fontWeight: "700", marginTop: 8 },
-  subtitle: { color: "#7c8bb5", fontSize: 14, marginBottom: 24 },
   field: { width: "100%", marginBottom: 14 },
   inputRow: {
     flexDirection: "row",
