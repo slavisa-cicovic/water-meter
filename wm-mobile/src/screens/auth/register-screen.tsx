@@ -7,6 +7,7 @@ import AuthField from "@src/screens/auth/components/ui/auth-field";
 import AuthScreenLayout from "@src/screens/auth/components/layout/auth-screen-layout";
 import SubmitButton from "@src/components/ui/submit-button";
 import LinkButton from "@src/components/ui/link-button";
+import ApiFeedback from "@src/components/ui/api-feedback";
 
 const initialForm = {
   firstName: "",
@@ -137,7 +138,7 @@ export default function RegisterScreen() {
           error={formErrors.password}
         />
 
-        {message ? <Text style={styles.message}>{message}</Text> : null}
+        <ApiFeedback message={message} />
 
         <SubmitButton label="Sign Up" loadingLabel="Submitting..." loading={loading} onPress={onSubmit} />
 
@@ -169,6 +170,5 @@ const validateForm = (form: typeof initialForm) => {
 };
 
 const styles = StyleSheet.create({
-  message: { color: "#2f8f5b", marginTop: 8, marginBottom: 4 },
   hint: { color: "#7c8bb5", fontSize: 12, marginTop: 12, lineHeight: 16, textAlign: "center" },
 });

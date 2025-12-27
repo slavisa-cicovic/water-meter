@@ -8,6 +8,7 @@ import AuthField from "@src/screens/auth/components/ui/auth-field";
 import AuthScreenLayout from "@src/screens/auth/components/layout/auth-screen-layout";
 import SubmitButton from "@src/components/ui/submit-button";
 import LinkButton from "@src/components/ui/link-button";
+import ApiFeedback from "@src/components/ui/api-feedback";
 
 const initialForm = {
   identifier: "",
@@ -59,7 +60,7 @@ export default function ForgotPasswordScreen() {
           error={formErrors.identifier}
         />
 
-        {message ? <Text style={styles.message}>{message}</Text> : null}
+        <ApiFeedback message={message} />
 
         <SubmitButton
           label="Send Reset Link"
@@ -80,5 +81,4 @@ const validateForm = (form: typeof initialForm) => {
 };
 
 const styles = StyleSheet.create({
-  message: { color: "#2f8f5b", marginTop: 8, marginBottom: 4, textAlign: "center" },
 });

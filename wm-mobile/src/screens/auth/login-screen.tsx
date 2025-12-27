@@ -8,6 +8,7 @@ import AuthField from "@src/screens/auth/components/ui/auth-field";
 import AuthScreenLayout from "@src/screens/auth/components/layout/auth-screen-layout";
 import SubmitButton from "@src/components/ui/submit-button";
 import LinkButton from "@src/components/ui/link-button";
+import ApiFeedback from "@src/components/ui/api-feedback";
 
 const initialForm = {
   identifier: "",
@@ -79,7 +80,7 @@ export default function LoginScreen() {
           <Text style={styles.forgotText}>Forgot Password?</Text>
         </TouchableOpacity>
 
-        {message ? <Text style={styles.message}>{message}</Text> : null}
+        <ApiFeedback message={message} />
 
         <SubmitButton label="Log In" loadingLabel="Signing in..." loading={loading} onPress={onSubmit} />
 
@@ -98,5 +99,4 @@ const validateLogin = (form: typeof initialForm) => {
 const styles = StyleSheet.create({
   forgotButton: { alignSelf: "flex-end", marginBottom: 8 },
   forgotText: { color: "#6b7aa6", fontSize: 12, fontWeight: "600" },
-  message: { color: "#2f8f5b", marginTop: 8, marginBottom: 4 },
 });
