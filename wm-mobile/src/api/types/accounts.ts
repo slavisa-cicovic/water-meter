@@ -16,6 +16,7 @@ export type StaffRegistrationInput = {
   firstName: string;
   lastName: string;
   address: string;
+  householdSize: number;
   email: string;
   phone?: string;
   password: string;

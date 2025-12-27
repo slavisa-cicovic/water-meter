@@ -114,6 +114,10 @@ export default function LoginScreen() {
         <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={onSubmit} disabled={loading}>
           <Text style={styles.buttonText}>{loading ? "Signing in..." : "Log In"}</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity style={styles.signupButton} onPress={() => router.push("/register")}>
+          <Text style={styles.signupText}>Don&apos;t have an account? Sign Up</Text>
+        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -247,4 +251,6 @@ const styles = StyleSheet.create({
   buttonDisabled: { opacity: 0.7 },
   buttonText: { color: "#fff", fontWeight: "700", fontSize: 16 },
   message: { color: "#2f8f5b", marginTop: 8, marginBottom: 4 },
+  signupButton: { marginTop: 14 },
+  signupText: { color: "#6b7aa6", fontSize: 12, fontWeight: "600" },
 });
