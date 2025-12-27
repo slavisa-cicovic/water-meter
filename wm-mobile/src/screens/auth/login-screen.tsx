@@ -2,13 +2,13 @@ import { useMemo, useRef, useState } from "react";
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { LoginService } from "@src/services/auth/login.service";
-import AuthHero from "@src/screens/auth/components/ui/auth-hero";
-import AuthHeader from "@src/screens/auth/components/ui/auth-header";
-import AuthField from "@src/screens/auth/components/ui/auth-field";
-import AuthScreenLayout from "@src/screens/auth/components/layout/auth-screen-layout";
-import SubmitButton from "@src/components/ui/submit-button";
-import LinkButton from "@src/components/ui/link-button";
 import ApiFeedback from "@src/components/ui/api-feedback";
+import LinkButton from "@src/components/ui/link-button";
+import SubmitButton from "@src/components/ui/submit-button";
+import AuthScreenLayout from "@src/screens/auth/components/layout/auth-screen-layout";
+import AuthField from "@src/screens/auth/components/ui/auth-field";
+import AuthHeader from "@src/screens/auth/components/ui/auth-header";
+import AuthHero from "@src/screens/auth/components/ui/auth-hero";
 
 const initialForm = {
   identifier: "",
