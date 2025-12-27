@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import { LoginService } from "@src/services/auth/login.service";
 
 const initialForm = {
@@ -21,6 +22,7 @@ const initialForm = {
 };
 
 export default function LoginScreen() {
+  const router = useRouter();
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -103,7 +105,7 @@ export default function LoginScreen() {
           error={formErrors.password}
         />
 
-        <TouchableOpacity style={styles.forgotButton} disabled>
+        <TouchableOpacity style={styles.forgotButton} onPress={() => router.push("/forgot-password")}>
           <Text style={styles.forgotText}>Forgot Password?</Text>
         </TouchableOpacity>
 

@@ -20,3 +20,11 @@ export type LoginResult = {
   accessToken: string;
   user: LoginUser;
 };
+
+export type ForgotPasswordInput = {
+  identifier: string;
+};
+
+export type ForgotPasswordResult = {
+  success: true;
+};
