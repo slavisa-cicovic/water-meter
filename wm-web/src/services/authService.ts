@@ -25,6 +25,9 @@ export const AuthService = {
       return NextResponse.json({ success: false, error: "INVALID_CREDENTIALS" }, { status: 401 });
     }
 
+    if (account.verificationStatus !== "verified") {
+      return NextResponse.json({ success: false, error: "ACCOUNT_NOT_VERIFIED" }, { status: 403 });
+    }
 
     return NextResponse.json({
       success: true,
