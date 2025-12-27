@@ -1,18 +1,11 @@
 import { useMemo, useState } from "react";
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-} from "react-native";
+import { Alert, StyleSheet, Text, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { ForgotPasswordService } from "@src/services/auth/forgot-password.service";
 import AuthHero from "@src/screens/auth/components/ui/auth-hero";
 import AuthHeader from "@src/screens/auth/components/ui/auth-header";
 import AuthField from "@src/screens/auth/components/ui/auth-field";
+import AuthScreenLayout from "@src/screens/auth/components/layout/auth-screen-layout";
 import SubmitButton from "@src/components/ui/submit-button";
 import LinkButton from "@src/components/ui/link-button";
 
@@ -49,13 +42,12 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <AuthHero />
-        <AuthHeader
-          title="Forgot Password"
-          subtitle="Enter your email or phone to reset your password."
-        />
+    <AuthScreenLayout paddingBottom={100}>
+      <AuthHero />
+      <AuthHeader
+        title="Forgot Password"
+        subtitle="Enter your email or phone to reset your password."
+      />
 
         <AuthField
           label="Email or Phone"
@@ -77,8 +69,7 @@ export default function ForgotPasswordScreen() {
         />
 
         <LinkButton label="Back to Login" onPress={() => router.push("/login")} />
-      </ScrollView>
-    </KeyboardAvoidingView>
+    </AuthScreenLayout>
   );
 }
 
@@ -89,7 +80,5 @@ const validateForm = (form: typeof initialForm) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f7ff" },
-  content: { padding: 24, paddingBottom: 40, alignItems: "center" },
   message: { color: "#2f8f5b", marginTop: 8, marginBottom: 4, textAlign: "center" },
 });

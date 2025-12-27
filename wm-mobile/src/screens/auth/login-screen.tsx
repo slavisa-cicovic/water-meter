@@ -1,18 +1,11 @@
-import { useMemo, useState } from "react";
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-} from "react-native";
+import { useMemo, useRef, useState } from "react";
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import { LoginService } from "@src/services/auth/login.service";
 import AuthHero from "@src/screens/auth/components/ui/auth-hero";
 import AuthHeader from "@src/screens/auth/components/ui/auth-header";
 import AuthField from "@src/screens/auth/components/ui/auth-field";
+import AuthScreenLayout from "@src/screens/auth/components/layout/auth-screen-layout";
 import SubmitButton from "@src/components/ui/submit-button";
 import LinkButton from "@src/components/ui/link-button";
 
@@ -26,6 +19,10 @@ export default function LoginScreen() {
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const refs = {
+    identifier: useRef<TextInput | null>(null),
+    password: useRef<TextInput | null>(null),
+  };
 
   const formErrors = useMemo(() => validateLogin(form), [form]);
 
@@ -50,10 +47,9 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <AuthHero />
-        <AuthHeader title="Welcome to WMeter!" subtitle="Log in to your account" />
+    <AuthScreenLayout paddingBottom={100}>
+      <AuthHero />
+      <AuthHeader title="Welcome to WMeter!" subtitle="Log in to your account" />
 
         <AuthField
           label="Email"
@@ -61,6 +57,9 @@ export default function LoginScreen() {
           onChange={(value) => setForm({ ...form, identifier: value })}
           placeholder="Enter your email"
           keyboardType="email-address"
+          returnKeyType="next"
+          inputRef={refs.identifier}
+          onSubmitEditing={() => refs.password.current?.focus()}
           iconName="email-outline"
           error={formErrors.identifier}
         />
@@ -70,6 +69,8 @@ export default function LoginScreen() {
           onChange={(value) => setForm({ ...form, password: value })}
           placeholder="Enter your password"
           secureTextEntry
+          returnKeyType="done"
+          inputRef={refs.password}
           iconName="lock-outline"
           error={formErrors.password}
         />
@@ -83,8 +84,7 @@ export default function LoginScreen() {
         <SubmitButton label="Log In" loadingLabel="Signing in..." loading={loading} onPress={onSubmit} />
 
         <LinkButton label="Don't have an account? Sign Up" onPress={() => router.push("/register")} />
-      </ScrollView>
-    </KeyboardAvoidingView>
+    </AuthScreenLayout>
   );
 }
 
@@ -96,8 +96,6 @@ const validateLogin = (form: typeof initialForm) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f7ff" },
-  content: { padding: 24, paddingBottom: 40, alignItems: "center" },
   forgotButton: { alignSelf: "flex-end", marginBottom: 8 },
   forgotText: { color: "#6b7aa6", fontSize: 12, fontWeight: "600" },
   message: { color: "#2f8f5b", marginTop: 8, marginBottom: 4 },

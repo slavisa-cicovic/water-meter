@@ -1,17 +1,10 @@
 import { useMemo, useRef, useState } from "react";
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-} from "react-native";
+import { Alert, StyleSheet, Text, TextInput } from "react-native";
 import { useRouter } from "expo-router";
 import { AccountsService } from "@src/services/accounts";
 import AuthHeader from "@src/screens/auth/components/ui/auth-header";
 import AuthField from "@src/screens/auth/components/ui/auth-field";
+import AuthScreenLayout from "@src/screens/auth/components/layout/auth-screen-layout";
 import SubmitButton from "@src/components/ui/submit-button";
 import LinkButton from "@src/components/ui/link-button";
 
@@ -67,12 +60,8 @@ export default function RegisterScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
-    >
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <AuthHeader title="Create Account" subtitle="Fill in your details to get started." />
+    <AuthScreenLayout paddingBottom={140}>
+      <AuthHeader title="Create Account" subtitle="Fill in your details to get started." />
 
         <AuthField
           label="First Name"
@@ -157,8 +146,7 @@ export default function RegisterScreen() {
         <Text style={styles.hint}>
           If this identifier/phone is already registered, we&apos;ll ask you to confirm instead of creating a new account.
         </Text>
-      </ScrollView>
-    </KeyboardAvoidingView>
+    </AuthScreenLayout>
   );
 }
 
@@ -181,8 +169,6 @@ const validateForm = (form: typeof initialForm) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f7ff" },
-  content: { padding: 24, paddingBottom: 140, alignItems: "center" },
   message: { color: "#2f8f5b", marginTop: 8, marginBottom: 4 },
   hint: { color: "#7c8bb5", fontSize: 12, marginTop: 12, lineHeight: 16, textAlign: "center" },
 });
