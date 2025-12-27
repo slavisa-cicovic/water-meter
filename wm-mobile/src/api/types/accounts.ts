@@ -1,8 +1,6 @@
 export type VerificationStatus = "pending" | "verified" | "rejected";
 
-export type StaffRole = "field" | "backoffice";
-
-export type ConsumerRegistrationInput = {
+export type RegistrationInput = {
   firstName: string;
   lastName: string;
   address: string;
@@ -10,17 +8,6 @@ export type ConsumerRegistrationInput = {
   email: string;
   phone?: string;
   password: string;
-};
-
-export type StaffRegistrationInput = {
-  firstName: string;
-  lastName: string;
-  address: string;
-  householdSize: number;
-  email: string;
-  phone?: string;
-  password: string;
-  staffRole: StaffRole;
 };
 
 export type ApiResponse<T> = {

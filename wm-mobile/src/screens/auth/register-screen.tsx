@@ -46,7 +46,7 @@ export default function RegisterScreen() {
     setMessage(null);
 
     const { identifier, householdSize, ...rest } = form;
-    const result = await AccountsService.registerConsumer({
+    const result = await AccountsService.register({
       ...rest,
       email: identifier,
       householdSize: Number(householdSize),
