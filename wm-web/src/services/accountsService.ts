@@ -17,36 +17,52 @@ import {
 import { AccountRepository } from 'src/repositories/accountRepository';
 import { BillingRepository } from 'src/repositories/billingRepository';
 import { MeterRepository } from 'src/repositories/meterRepository';
-import { AccountRole } from '@prisma/client';
+import { AccountRole, Prisma } from '@prisma/client';
 
 const toAccountRole = (staffRole?: string) => (staffRole === 'backoffice' ? 'staff_backoffice' : 'staff_field');
 
-const mapAccountToRow = (acct: any): AccountRow => ({
-  id: acct.id,
-  type: acct.role as AccountRole,
-  ...(acct.role === 'consumer' ? {} : { avatar: (acct.avatarUrl ?? acct.avatar ?? undefined) as string | undefined }),
-  verificationStatus: acct.verificationStatus as VerificationStatus,
-  createdAt: acct.createdAt?.toISOString?.() ?? acct.createdAt,
-  updatedAt: acct.updatedAt?.toISOString?.() ?? acct.updatedAt,
-  data: {
-    firstName: acct.firstName,
-    lastName: acct.lastName,
-    email: acct.email,
-    phone: acct.phone || undefined,
-    address: acct.address,
-    householdSize: acct.consumerProfile?.householdSize,
-    staffRole: acct.staffProfile?.staffRole,
-    tariffId: acct.consumerProfile?.tariffId ?? null,
-  },
-  verificationLog: acct.verificationLogs?.map((log: any) => ({
-    id: log.id,
-    accountId: log.accountId,
-    reviewerId: log.reviewerId,
-    status: log.status as VerificationStatus,
-    note: log.note || undefined,
-    reviewedAt: log.reviewedAt.toISOString(),
-  })),
-});
+type AccountWithProfiles = Prisma.AccountGetPayload<{
+  include: { consumerProfile: true; staffProfile: true; verificationLogs: true };
+}>;
+
+const mapAccountToRow = (acct: AccountWithProfiles): AccountRow => {
+  const base = {
+    id: acct.id,
+    verificationStatus: acct.verificationStatus as VerificationStatus,
+    createdAt: acct.createdAt?.toISOString?.() ?? acct.createdAt,
+    updatedAt: acct.updatedAt?.toISOString?.() ?? acct.updatedAt,
+    data: {
+      firstName: acct.firstName,
+      lastName: acct.lastName,
+      email: acct.email,
+      phone: acct.phone || undefined,
+      address: acct.address,
+      householdSize: acct.consumerProfile?.householdSize,
+      staffRole: acct.staffProfile?.staffRole,
+      tariffId: acct.consumerProfile?.tariffId ?? null,
+    },
+    verificationLog: acct.verificationLogs?.map((log) => ({
+      id: log.id,
+      accountId: log.accountId,
+      reviewerId: log.reviewerId,
+      status: log.status as VerificationStatus,
+      note: log.note || undefined,
+      reviewedAt: log.reviewedAt.toISOString(),
+    })),
+  };
+
+  if (acct.role === 'consumer') {
+    return {
+      ...base,
+      type: 'consumer',
+    };
+  }
+
+  return {
+    ...base,
+    type: acct.role as Exclude<AccountRole, 'consumer'>,
+  };
+};
 
 export const AccountsService = {
   async registerConsumer(input: ConsumerRegistrationInput) {
