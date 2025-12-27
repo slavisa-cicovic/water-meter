@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import {
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -12,9 +11,9 @@ import {
   View,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { ForgotPasswordService } from "@src/services/auth/forgot-password.service";
+import AuthHero from "@src/screens/auth/components/ui/auth-hero";
 
 const initialForm = {
   identifier: "",
@@ -51,37 +50,7 @@ export default function ForgotPasswordScreen() {
   return (
     <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.heroWrap}>
-          <Image
-            source={require("assets/login-screen.png")}
-            style={styles.hero}
-            resizeMode="contain"
-          />
-          <LinearGradient
-            colors={["rgba(245, 247, 255, 0)", "rgba(245, 247, 255, 1)"]}
-            style={styles.heroFade}
-            pointerEvents="none"
-          />
-          <LinearGradient
-            colors={["rgba(245, 247, 255, 1)", "rgba(245, 247, 255, 0)"]}
-            style={styles.heroFadeTop}
-            pointerEvents="none"
-          />
-          <LinearGradient
-            colors={["rgba(245, 247, 255, 1)", "rgba(245, 247, 255, 0)"]}
-            style={styles.heroFadeLeft}
-            pointerEvents="none"
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-          />
-          <LinearGradient
-            colors={["rgba(245, 247, 255, 0)", "rgba(245, 247, 255, 1)"]}
-            style={styles.heroFadeRight}
-            pointerEvents="none"
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-          />
-        </View>
+        <AuthHero />
         <Text style={styles.title}>Forgot Password</Text>
         <Text style={styles.subtitle}>Enter your email or phone to reset your password.</Text>
 
@@ -149,36 +118,6 @@ const validateForm = (form: typeof initialForm) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f7ff" },
   content: { padding: 24, paddingBottom: 40, alignItems: "center" },
-  heroWrap: { width: "100%", height: 200, marginTop: 56, marginBottom: 8 },
-  hero: { width: "100%", height: "100%" },
-  heroFade: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 90,
-  },
-  heroFadeTop: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: 0,
-    height: 70,
-  },
-  heroFadeLeft: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 40,
-  },
-  heroFadeRight: {
-    position: "absolute",
-    right: 0,
-    top: 0,
-    bottom: 0,
-    width: 40,
-  },
   title: { color: "#415a9c", fontSize: 26, fontWeight: "700", marginTop: 8 },
   subtitle: { color: "#7c8bb5", fontSize: 14, marginBottom: 24, textAlign: "center" },
   field: { width: "100%", marginBottom: 14 },
