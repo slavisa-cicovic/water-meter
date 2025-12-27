@@ -1,4 +1,4 @@
-import RegisterScreen from "@src/screens/auth/RegisterScreen";
+import RegisterScreen from "@src/screens/auth/register-screen";
 
 export default function RegisterRoute() {
   return <RegisterScreen />;

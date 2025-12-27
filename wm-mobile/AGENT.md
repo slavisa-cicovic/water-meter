@@ -47,11 +47,16 @@ src/
 ## Agent rules (very important)
 When writing new code:
 1. screens go under `src/screens/<domain>`
+1.1 components go under `src/screens/<domain>/components/ui`
+1.2 layouts go under `src/screens/<domain>/components/layout`
+1.3 utils go under `src/screens/<domain>/utils`
 2. API calls under `src/api`
 3. business logic under `src/services`
 4. types under `src/api/types`
 5. persistent state under `src/state`
 6. UI components under `src/components/ui`
+6.1 shared UI components go under `src/components/ui`
+6.2 shared layouts go under `src/components/layout`
 
 ## Authentication
 - Mobile and web share JWT tokens
