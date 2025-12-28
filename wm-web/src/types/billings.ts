@@ -31,7 +31,6 @@ export type Invoice = {
   };
   meterId?: string;
   meter?: { serialNumber?: string };
-  reviewFlags?: string[];
   periodStart: string | null;
   periodEnd: string | null;
   status: InvoiceStatus;
