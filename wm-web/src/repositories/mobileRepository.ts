@@ -36,6 +36,84 @@ export const MobileRepository = {
     };
   },
 
+  async findConsumerMeterLink(accountId: string): Promise<{ meterId: string; serialNumber: string } | null> {
+    const link = await prisma.meterConsumer.findFirst({
+      where: { accountId },
+      orderBy: { meterId: "asc" },
+      include: { meter: true },
+    });
+
+    if (!link?.meter) {
+      return null;
+    }
+
+    return { meterId: link.meterId, serialNumber: link.meter.serialNumber };
+  },
+
+  async listMeterReadingsForYear(
+    meterId: string,
+    year: number
+  ): Promise<Array<{ id: string; readAt: string; value: number }>> {
+    const start = new Date(Date.UTC(year, 0, 1));
+    const end = new Date(Date.UTC(year + 1, 0, 1));
+
+    const readings = await prisma.reading.findMany({
+      where: { meterId, readAt: { gte: start, lt: end } },
+      orderBy: { readAt: "asc" },
+      select: { id: true, readAt: true, value: true },
+    });
+
+    return readings.map((reading) => ({
+      id: reading.id,
+      readAt: reading.readAt.toISOString(),
+      value: reading.value,
+    }));
+  },
+
+  async listInvoicesForYear(
+    accountId: string,
+    year: number
+  ): Promise<Array<{ id: string; updatedAt: string; totalAmount: number; status: string }>> {
+    const start = new Date(Date.UTC(year, 0, 1));
+    const end = new Date(Date.UTC(year + 1, 0, 1));
+
+    const invoices = await prisma.invoice.findMany({
+      where: {
+        accountId,
+        status: "issued",
+        updatedAt: { gte: start, lt: end },
+      },
+      orderBy: { updatedAt: "asc" },
+      select: { id: true, updatedAt: true, totalAmount: true, status: true },
+    });
+
+    return invoices.map((invoice) => ({
+      id: invoice.id,
+      updatedAt: invoice.updatedAt.toISOString(),
+      totalAmount: Number(invoice.totalAmount),
+      status: invoice.status,
+    }));
+  },
+
+  async findLatestReadingBefore(
+    meterId: string,
+    before: Date
+  ): Promise<{ id: string; readAt: string; value: number } | null> {
+    const reading = await prisma.reading.findFirst({
+      where: { meterId, readAt: { lt: before } },
+      orderBy: { readAt: "desc" },
+      select: { id: true, readAt: true, value: true },
+    });
+
+    if (!reading) return null;
+
+    return {
+      id: reading.id,
+      readAt: reading.readAt.toISOString(),
+      value: reading.value,
+    };
+  },
+
   async findMobileAccount(accountId: string): Promise<(AccountBase & { meter: MobileAccountMeter | null }) | null> {
     const account = await this.findAccountBase(accountId);
     if (!account) return null;
