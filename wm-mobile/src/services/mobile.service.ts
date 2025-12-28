@@ -1,5 +1,10 @@
 import { MobileApi } from "@src/api/mobile";
-import { MobileAccountData, MobileProfileUpdateInput } from "@src/api/types/mobile";
+import {
+  MobileAccountData,
+  MobileBillingData,
+  MobileConsumptionData,
+  MobileProfileUpdateInput,
+} from "@src/api/types/mobile";
 import { useAuthStore } from "@src/state/auth-store";
 
 type ServiceResult<T> =
@@ -68,6 +73,50 @@ export const MobileService = {
       const message = error?.response?.data?.error
         ? ERROR_MESSAGES[error.response.data.error] || "Unable to update profile."
         : "Unable to update profile.";
+      return { success: false, message };
+    }
+  },
+
+  async getConsumption(year: number): Promise<ServiceResult<MobileConsumptionData>> {
+    try {
+      const res = await MobileApi.getConsumption(year);
+      if (!res.success) {
+        const message = (res.error && ERROR_MESSAGES[res.error]) || "Unable to load consumption.";
+        return { success: false, message, details: res.details };
+      }
+
+      const data = res.data as MobileConsumptionData | undefined;
+      if (!data) {
+        return { success: false, message: "Invalid consumption response." };
+      }
+
+      return { success: true, data };
+    } catch (error: any) {
+      const message = error?.response?.data?.error
+        ? ERROR_MESSAGES[error.response.data.error] || "Unable to load consumption."
+        : "Unable to load consumption.";
+      return { success: false, message };
+    }
+  },
+
+  async getBilling(year: number): Promise<ServiceResult<MobileBillingData>> {
+    try {
+      const res = await MobileApi.getBilling(year);
+      if (!res.success) {
+        const message = (res.error && ERROR_MESSAGES[res.error]) || "Unable to load billing.";
+        return { success: false, message, details: res.details };
+      }
+
+      const data = res.data as MobileBillingData | undefined;
+      if (!data) {
+        return { success: false, message: "Invalid billing response." };
+      }
+
+      return { success: true, data };
+    } catch (error: any) {
+      const message = error?.response?.data?.error
+        ? ERROR_MESSAGES[error.response.data.error] || "Unable to load billing."
+        : "Unable to load billing.";
       return { success: false, message };
     }
   },
