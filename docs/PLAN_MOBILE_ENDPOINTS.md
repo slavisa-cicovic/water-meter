@@ -11,6 +11,8 @@ Add `GET` and `PUT /api/mobile` to serve and update the data used on the mobile 
 - Mobile repository layer for mobile-specific queries
 - Response shape for mobile account card (name, email, meter info)
 - Validation for profile updates (first/last name, email)
+- Consumption endpoint + UI for yearly chart/table
+- Billing endpoint + UI for yearly chart/table
 
 ## Rationale
 - Keep mobile logic isolated for easier migration to a dedicated mobile backend later.
@@ -48,10 +50,16 @@ Note: confirm exact `meter` fields and how "shared" is derived.
 ## Tasks
 - [d] Define final mobile response shape (confirm meter fields + shared flag logic)
 - [d] Add `app/api/mobile/route.ts` (GET/PUT)
+- [d] Add `app/api/mobile/consumption/route.ts` (GET)
+- [d] Add `app/api/mobile/billing/route.ts` (GET)
 - [d] Add `services/mobileService.ts` for mobile read/update functions
 - [d] Add `repositories/mobileRepository.ts` for account + meter queries
+- [d] Add mobile consumption aggregation (yearly chart + readings list)
+- [d] Add mobile billing aggregation (yearly chart + status table)
 - [d] Add validation for PUT payload (names + email)
 - [d] Update mobile app to consume the new endpoint once available
+- [d] Update mobile home screen with chart/table tabs
+- [d] Update mobile home screen with billing chart/table tabs
 
 ## Open questions
 - Should shared be a boolean from DB or computed via `MeterConsumer` count?
