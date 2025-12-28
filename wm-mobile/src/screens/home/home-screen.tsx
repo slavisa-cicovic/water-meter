@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthStore } from "@src/state/auth-store";
 import { useRouter } from "expo-router";
@@ -27,10 +27,6 @@ export default function HomeScreen() {
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [billingYear, setBillingYear] = useState(currentYear);
   const minYear = currentYear - 10;
-
-  const handleComingSoon = (label: string) => {
-    Alert.alert("Coming soon", `${label} is not available yet.`);
-  };
 
   useEffect(() => {
     let active = true;
@@ -185,22 +181,6 @@ export default function HomeScreen() {
         ) : null}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick actions</Text>
-          <TouchableOpacity style={styles.actionCard} onPress={() => handleComingSoon("Start reading")}>
-            <Text style={styles.actionTitle}>Start reading</Text>
-            <Text style={styles.actionSubtitle}>Begin your meter route</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionCard} onPress={() => handleComingSoon("Manual entry")}>
-            <Text style={styles.actionTitle}>Manual entry</Text>
-            <Text style={styles.actionSubtitle}>Add a reading without a route</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionCard} onPress={() => handleComingSoon("Sync data")}>
-            <Text style={styles.actionTitle}>Sync data</Text>
-            <Text style={styles.actionSubtitle}>Upload pending readings</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
@@ -297,16 +277,6 @@ const styles = StyleSheet.create({
     borderColor: "#e1e6f3",
   },
   emptyText: { color: "#6b7aa6", fontSize: 12, marginTop: 8 },
-  actionCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#e1e6f3",
-    marginBottom: 12,
-  },
-  actionTitle: { color: "#1f2a44", fontSize: 15, fontWeight: "700" },
-  actionSubtitle: { color: "#6b7aa6", fontSize: 12, marginTop: 6 },
   infoCard: {
     backgroundColor: "#ffffff",
     borderRadius: 16,
