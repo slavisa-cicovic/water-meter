@@ -86,6 +86,10 @@ export default function HomeScreen() {
               <Text style={styles.infoLabel}>Email</Text>
               <Text style={styles.infoValue}>{user?.email ?? "-"}</Text>
             </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Address</Text>
+              <Text style={styles.infoValue}>{user?.address ?? "-"}</Text>
+            </View>
           </View>
         </View>
 

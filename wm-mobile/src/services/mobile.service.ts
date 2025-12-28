@@ -27,6 +27,7 @@ const updateAuthUser = (data: MobileAccountData) => {
     firstName: data.firstName,
     lastName: data.lastName,
     email: data.email,
+    address: data.address,
   });
 };
 

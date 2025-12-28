@@ -42,6 +42,7 @@ export const AuthService = {
           firstName: account.firstName,
           lastName: account.lastName,
           email: account.email,
+          address: account.address,
           role: account.role,
           verificationStatus: account.verificationStatus,
         },

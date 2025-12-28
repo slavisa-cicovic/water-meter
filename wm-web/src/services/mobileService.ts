@@ -15,12 +15,14 @@ const toMobileAccountData = (record: {
   firstName: string;
   lastName: string;
   email: string;
+  address: string;
   meter: MobileAccountData["meter"];
 }): MobileAccountData => ({
   id: record.id,
   firstName: record.firstName,
   lastName: record.lastName,
   email: record.email,
+  address: record.address,
   meter: record.meter ?? null,
 });
 

@@ -9,6 +9,7 @@ export type MobileAccountData = {
   firstName: string;
   lastName: string;
   email: string;
+  address: string;
   meter: MobileAccountMeter | null;
 };
 

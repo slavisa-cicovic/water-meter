@@ -3,14 +3,14 @@ import prisma from "src/utils/prisma";
 import { MobileAccountMeter, MobileProfileUpdateInput } from "src/types/mobile";
 
 type AccountBase = Prisma.AccountGetPayload<{
-  select: { id: true; firstName: true; lastName: true; email: true; role: true };
+  select: { id: true; firstName: true; lastName: true; email: true; address: true; role: true };
 }>;
 
 export const MobileRepository = {
   async findAccountBase(accountId: string): Promise<AccountBase | null> {
     return prisma.account.findUnique({
       where: { id: accountId },
-      select: { id: true, firstName: true, lastName: true, email: true, role: true },
+      select: { id: true, firstName: true, lastName: true, email: true, address: true, role: true },
     });
   },
 
