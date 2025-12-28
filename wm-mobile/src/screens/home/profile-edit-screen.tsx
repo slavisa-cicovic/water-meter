@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthStore } from "@src/state/auth-store";
 import { MobileService } from "@src/services/mobile.service";
+import AppBar from "@src/components/layout/app-bar";
 
 export default function ProfileEditScreen() {
   const router = useRouter();
@@ -57,12 +58,8 @@ export default function ProfileEditScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <AppBar title="Profile" />
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Edit profile</Text>
-          <Text style={styles.subtitle}>Update your personal details</Text>
-        </View>
-
         <View style={styles.card}>
           <Text style={styles.label}>First name</Text>
           <TextInput
@@ -108,9 +105,6 @@ export default function ProfileEditScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f7ff" },
   content: { padding: 20, paddingBottom: 32 },
-  header: { marginBottom: 20 },
-  title: { color: "#1f2a44", fontSize: 22, fontWeight: "700" },
-  subtitle: { color: "#6b7aa6", fontSize: 13, marginTop: 6 },
   card: {
     backgroundColor: "#ffffff",
     borderRadius: 16,
