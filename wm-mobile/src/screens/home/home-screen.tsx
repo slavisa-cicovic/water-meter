@@ -161,9 +161,6 @@ export default function HomeScreen() {
               <Text style={styles.infoLabel}>Email</Text>
               <Text style={styles.infoValue}>{user?.email ?? "-"}</Text>
             </View>
-            <TouchableOpacity style={styles.editButton} onPress={() => router.push("/profile-edit")}>
-              <Text style={styles.editButtonText}>Edit profile</Text>
-            </TouchableOpacity>
           </View>
         </View>
 
@@ -410,21 +407,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     borderRadius: 16,
     padding: 16,
-    paddingBottom: 48,
     borderWidth: 1,
     borderColor: "#e1e6f3",
   },
   infoRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
   infoLabel: { color: "#6b7aa6", fontSize: 12, fontWeight: "600" },
   infoValue: { color: "#1f2a44", fontSize: 12, fontWeight: "600" },
-  editButton: {
-    position: "absolute",
-    right: 12,
-    bottom: 12,
-    backgroundColor: "#e9edfb",
-    borderRadius: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-  },
-  editButtonText: { color: "#3a4c7a", fontSize: 12, fontWeight: "600" },
 });
