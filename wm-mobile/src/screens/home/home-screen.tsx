@@ -86,6 +86,43 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          <View style={styles.infoCard}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Name</Text>
+              <Text style={styles.infoValue}>{displayName}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Email</Text>
+              <Text style={styles.infoValue}>{user?.email ?? "-"}</Text>
+            </View>
+            <TouchableOpacity style={styles.editButton} onPress={() => router.push("/profile-edit")}>
+              <Text style={styles.editButtonText}>Edit profile</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {isConsumer ? (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Meter</Text>
+            <View style={styles.infoCard}>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Serial number</Text>
+                <Text style={styles.infoValue}>{meterInfo?.serialNumber ?? "-"}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Shared</Text>
+                <Text style={styles.infoValue}>{formatShared(meterInfo?.shared)}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Status</Text>
+                <Text style={styles.infoValue}>{meterInfo?.status ?? "-"}</Text>
+              </View>
+            </View>
+          </View>
+        ) : null}
+
         {isConsumer ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -180,42 +217,6 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
-          <View style={styles.infoCard}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Name</Text>
-              <Text style={styles.infoValue}>{displayName}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Email</Text>
-              <Text style={styles.infoValue}>{user?.email ?? "-"}</Text>
-            </View>
-            <TouchableOpacity style={styles.editButton} onPress={() => router.push("/profile-edit")}>
-              <Text style={styles.editButtonText}>Edit profile</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {isConsumer ? (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Meter</Text>
-            <View style={styles.infoCard}>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Serial number</Text>
-                <Text style={styles.infoValue}>{meterInfo?.serialNumber ?? "-"}</Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Shared</Text>
-                <Text style={styles.infoValue}>{formatShared(meterInfo?.shared)}</Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Status</Text>
-                <Text style={styles.infoValue}>{meterInfo?.status ?? "-"}</Text>
-              </View>
-            </View>
-          </View>
-        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
