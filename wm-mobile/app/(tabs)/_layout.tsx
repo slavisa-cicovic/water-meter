@@ -5,6 +5,10 @@ import { TouchableOpacity } from "react-native";
 import { MobileService } from "@src/services/mobile.service";
 import { useAuthStore } from "@src/state/auth-store";
 
+const resolveHandler = <T extends ((...args: any[]) => void) | null | undefined>(
+  handler: T
+): Exclude<T, null> | undefined => (handler ?? undefined) as Exclude<T, null> | undefined;
+
 export default function TabsLayout() {
   const user = useAuthStore((state) => state.user);
   const [sharedMeter, setSharedMeter] = useState<boolean | null>(null);
@@ -98,13 +102,35 @@ export default function TabsLayout() {
             <MaterialCommunityIcons name="credit-card-outline" color={color} size={size} />
           ),
           tabBarBadge: paymentEnabled ? "1" : undefined,
-          tabBarButton: (props) => (
-            <TouchableOpacity
-              {...props}
-              disabled={!paymentEnabled}
-              style={[props.style, !paymentEnabled ? { opacity: 0.4 } : null]}
-            />
-          ),
+          tabBarButton: (props) => {
+            const {
+              onPress,
+              onLongPress,
+              onPressIn,
+              onPressOut,
+              onFocus,
+              onBlur,
+              accessibilityLabel,
+              accessibilityState,
+              testID,
+              style,
+            } = props;
+            return (
+              <TouchableOpacity
+                onPress={resolveHandler(onPress)}
+                onLongPress={resolveHandler(onLongPress)}
+                onPressIn={resolveHandler(onPressIn)}
+                onPressOut={resolveHandler(onPressOut)}
+                onFocus={resolveHandler(onFocus)}
+                onBlur={resolveHandler(onBlur)}
+                accessibilityLabel={accessibilityLabel}
+                accessibilityState={accessibilityState}
+                testID={testID}
+                disabled={!paymentEnabled}
+                style={[style, !paymentEnabled ? { opacity: 0.4 } : null]}
+              />
+            );
+          },
         }}
       />
       <Tabs.Screen
