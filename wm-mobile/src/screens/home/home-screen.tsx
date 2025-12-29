@@ -72,8 +72,8 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <AppBar title="Dashboard" />
       <ScrollView contentContainerStyle={styles.content}>
-        <AppBar title="Dashboard" />
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>

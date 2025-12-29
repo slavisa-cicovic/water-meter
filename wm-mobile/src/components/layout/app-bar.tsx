@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuthStore } from "@src/state/auth-store";
 
@@ -35,8 +35,32 @@ export default function AppBar({ title }: AppBarProps) {
 
   return (
     <View style={styles.wrapper}>
-      {showNotifications ? (
-        <Pressable style={styles.overlay} onPress={() => setShowNotifications(false)} />
+      {showNotifications && hasNotifications ? (
+        <Modal transparent animationType="fade" visible onRequestClose={() => setShowNotifications(false)}>
+          <View style={styles.modalContainer}>
+            <Pressable style={styles.modalOverlay} onPress={() => setShowNotifications(false)} />
+            <View style={styles.menu}>
+              {notifications.map((item) => (
+                <View key={item.id} style={styles.menuRow}>
+                  <View
+                    style={[
+                      styles.dot,
+                      item.tone === "error"
+                        ? styles.dotError
+                        : item.tone === "warning"
+                        ? styles.dotWarning
+                        : styles.dotInfo,
+                    ]}
+                  />
+                  <View style={styles.menuBody}>
+                    <Text style={styles.menuTitle}>{item.title}</Text>
+                    <Text style={styles.menuDescription}>{item.description}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        </Modal>
       ) : null}
       <View style={styles.bar}>
         <View style={styles.headerContent}>
@@ -63,36 +87,15 @@ export default function AppBar({ title }: AppBarProps) {
             <MaterialCommunityIcons name="logout-variant" size={18} color="#3a4c7a" />
           </TouchableOpacity>
         </View>
-        {showNotifications && hasNotifications ? (
-          <View style={styles.menu}>
-            {notifications.map((item) => (
-              <View key={item.id} style={styles.menuRow}>
-                <View
-                  style={[
-                    styles.dot,
-                    item.tone === "error"
-                      ? styles.dotError
-                      : item.tone === "warning"
-                      ? styles.dotWarning
-                      : styles.dotInfo,
-                  ]}
-                />
-                <View style={styles.menuBody}>
-                  <Text style={styles.menuTitle}>{item.title}</Text>
-                  <Text style={styles.menuDescription}>{item.description}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        ) : null}
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrapper: { marginBottom: 18, position: "relative", zIndex: 2 },
-  overlay: { ...StyleSheet.absoluteFillObject, zIndex: 1 },
+  wrapper: { marginBottom: 18 },
+  modalContainer: { flex: 1 },
+  modalOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "transparent" },
   bar: {
     flexDirection: "row",
     alignItems: "center",
@@ -130,8 +133,8 @@ const styles = StyleSheet.create({
   badgeText: { color: "#ffffff", fontSize: 10, fontWeight: "700" },
   menu: {
     position: "absolute",
-    top: 44,
-    right: 0,
+    top: 56,
+    right: 16,
     width: 260,
     maxWidth: 260,
     backgroundColor: "#ffffff",
