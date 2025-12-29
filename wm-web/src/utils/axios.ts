@@ -63,4 +63,5 @@ export const endpoints = {
   notifications: {
     summary: '/api/notifications',
   },
+  settings: '/api/settings',
 };

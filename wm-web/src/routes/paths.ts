@@ -42,5 +42,8 @@ export const paths = {
     jobs: {
       root: `${ROOTS.DASHBOARD}/jobs`,
     },
+    settings: {
+      root: `${ROOTS.DASHBOARD}/settings`,
+    },
   },
 };

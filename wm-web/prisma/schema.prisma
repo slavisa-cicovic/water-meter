@@ -344,3 +344,11 @@ model InvoiceReadingLink {
   @@index([invoiceId])
   @@index([readingId])
 }
+
+model AppSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

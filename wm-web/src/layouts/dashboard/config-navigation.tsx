@@ -20,6 +20,7 @@ const ICONS = {
   meters: icon('ic_dashboard'),
   billing: icon('ic_dashboard'),
   jobs: icon('ic_dashboard'),
+  settings: icon('ic_dashboard'),
 };
 
 // ----------------------------------------------------------------------
@@ -60,6 +61,12 @@ export function useNavData() {
             title: 'Jobs',
             path: paths.dashboard.jobs.root,
             icon: ICONS.jobs,
+            roles: ['admin'],
+          },
+          {
+            title: 'Settings',
+            path: paths.dashboard.settings.root,
+            icon: ICONS.settings,
             roles: ['admin'],
           },
         ],
