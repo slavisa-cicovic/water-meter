@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthStore } from "@src/state/auth-store";
 import { MobileService } from "@src/services/mobile.service";
-import AppBar from "@src/components/layout/app-bar";
+import ScrollScreen from "@src/components/layout/scroll-screen";
 
 export default function ProfileEditScreen() {
   const router = useRouter();
@@ -57,9 +56,7 @@ export default function ProfileEditScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <AppBar title="Profile" />
-      <ScrollView contentContainerStyle={styles.content}>
+    <ScrollScreen title="Profile" contentContainerStyle={styles.content}>
         <View style={styles.card}>
           <Text style={styles.label}>First name</Text>
           <TextInput
@@ -97,13 +94,11 @@ export default function ProfileEditScreen() {
             <Text style={styles.primaryButtonText}>{saving ? "Saving..." : "Save changes"}</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+    </ScrollScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f7ff" },
   content: { padding: 20, paddingBottom: 32 },
   card: {
     backgroundColor: "#ffffff",

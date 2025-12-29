@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuthStore } from "@src/state/auth-store";
 import { MobileService } from "@src/services/mobile.service";
 import { MobileAccountData, MobileBillingData, MobileConsumptionData } from "@src/api/types/mobile";
@@ -10,7 +9,7 @@ import ConsumptionChart from "@src/screens/home/components/ui/consumption-chart"
 import ConsumptionTable from "@src/screens/home/components/ui/consumption-table";
 import YearPicker from "@src/screens/home/components/ui/year-picker";
 import { TABLE_BODY_HEIGHT } from "@src/screens/home/utils/layout";
-import AppBar from "@src/components/layout/app-bar";
+import ScrollScreen from "@src/components/layout/scroll-screen";
 
 export default function HomeScreen() {
   const user = useAuthStore((state) => state.user);
@@ -71,9 +70,7 @@ export default function HomeScreen() {
   }, [billingYear, isConsumer]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <AppBar title="Dashboard" />
-      <ScrollView contentContainerStyle={styles.content}>
+    <ScrollScreen title="Dashboard" contentContainerStyle={styles.content}>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
@@ -207,8 +204,7 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
-      </ScrollView>
-    </SafeAreaView>
+    </ScrollScreen>
   );
 }
 
@@ -220,7 +216,6 @@ const formatShared = (value?: boolean) => {
 
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f7ff" },
   content: { padding: 20, paddingBottom: 32 },
   section: { marginBottom: 22 },
   sectionTitle: { color: "#2b3a67", fontSize: 16, fontWeight: "700", marginBottom: 12 },

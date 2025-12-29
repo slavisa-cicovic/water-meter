@@ -95,6 +95,45 @@ export const MobileRepository = {
     }));
   },
 
+  async findLatestPaidInvoiceReading(
+    accountId: string,
+    meterId: string
+  ): Promise<{ value: number; readAt: string } | null> {
+    const invoice = await prisma.invoice.findFirst({
+      where: { accountId, meterId, status: "paid" },
+      orderBy: { updatedAt: "desc" },
+      select: {
+        readings: {
+          select: {
+            role: true,
+            reading: { select: { value: true, readAt: true } },
+          },
+        },
+      },
+    });
+
+    if (!invoice || invoice.readings.length === 0) {
+      return null;
+    }
+
+    type ReadingSnapshot = { value: number; readAt: Date };
+
+    const endReading = invoice.readings.find((link) => link.role === "end")?.reading ?? null;
+    let latest: ReadingSnapshot | null = null;
+
+    invoice.readings.forEach((link) => {
+      const reading = link.reading;
+      if (!latest || reading.readAt > latest.readAt) {
+        latest = reading;
+      }
+    });
+
+    const resolved = endReading ?? latest;
+    if (!resolved) return null;
+
+    return { value: resolved.value, readAt: resolved.readAt.toISOString() };
+  },
+
   async findLatestReadingBefore(
     meterId: string,
     before: Date

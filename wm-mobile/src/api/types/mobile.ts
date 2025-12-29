@@ -54,3 +54,31 @@ export type MobileBillingData = {
   chart: MobileBillingPoint[];
   rows: MobileBillingRow[];
 };
+
+export type MobileReadingContext = {
+  meter: { id: string; serialNumber: string } | null;
+  previousPaidValue: number;
+};
+
+export type MobileReadingCreateInput = {
+  meterId: string;
+  accountId: string;
+  method: "manual" | "photo_ocr";
+  value: number;
+  originalValue: number;
+  imageFilename?: string | null;
+  readAt?: string;
+};
+
+export type MobileReadingResult = {
+  reading: {
+    id: string;
+    meterId: string;
+    readerAccountId: string;
+    readAt: string;
+    method: "manual" | "photo_ocr";
+    value: number;
+    originalValue: number;
+    imageFilename?: string;
+  };
+};

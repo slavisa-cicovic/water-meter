@@ -56,3 +56,8 @@ export type MobileBillingData = {
   chart: MobileBillingPoint[];
   rows: MobileBillingRow[];
 };
+
+export type MobileReadingContext = {
+  meter: { id: string; serialNumber: string } | null;
+  previousPaidValue: number;
+};

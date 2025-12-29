@@ -5,6 +5,9 @@ import {
   MobileBillingData,
   MobileConsumptionData,
   MobileProfileUpdateInput,
+  MobileReadingContext,
+  MobileReadingCreateInput,
+  MobileReadingResult,
 } from "@src/api/types/mobile";
 
 export const MobileApi = {
@@ -28,6 +31,16 @@ export const MobileApi = {
     const res = await apiClient.get<ApiResponse<MobileBillingData>>("/api/mobile/billing", {
       params: { year },
     });
+    return res.data;
+  },
+  getReadingContext: async (): Promise<ApiResponse<MobileReadingContext>> => {
+    const res = await apiClient.get<ApiResponse<MobileReadingContext>>("/api/mobile/readings");
+    return res.data;
+  },
+  createReading: async (
+    payload: MobileReadingCreateInput
+  ): Promise<ApiResponse<MobileReadingResult>> => {
+    const res = await apiClient.post<ApiResponse<MobileReadingResult>>("/api/mobile/readings", payload);
     return res.data;
   },
 };

@@ -4,9 +4,12 @@ import {
   MobileBillingData,
   MobileConsumptionData,
   MobileProfileUpdateInput,
+  MobileReadingContext,
 } from "src/types/mobile";
 import { validateMobileProfileUpdate } from "src/validation/mobile";
 import { Prisma } from "@prisma/client";
+import { ReadingsService } from "src/services/readingsService";
+import { Reading, ReadingCreateInput } from "src/types/readings";
 
 type ServiceResult<T> = { success: true; data: T } | { success: false; error: string; details?: Record<string, string[]> };
 
@@ -93,6 +96,33 @@ export const MobileService = {
     const chart = rows.map((row) => ({ month: row.month, amount: row.amount }));
 
     return { success: true, data: { year, chart, rows } };
+  },
+
+  async getReadingContext(accountId: string): Promise<ServiceResult<MobileReadingContext>> {
+    const meter = await MobileRepository.findConsumerMeterLink(accountId);
+    if (!meter) {
+      return { success: true, data: { meter: null, previousPaidValue: 0 } };
+    }
+
+    const latestPaid = await MobileRepository.findLatestPaidInvoiceReading(accountId, meter.meterId);
+    return {
+      success: true,
+      data: {
+        meter: { id: meter.meterId, serialNumber: meter.serialNumber },
+        previousPaidValue: latestPaid?.value ?? 0,
+      },
+    };
+  },
+
+  async createReading(
+    accountId: string,
+    input: Omit<ReadingCreateInput, "readerAccountId">
+  ): Promise<ServiceResult<{ reading: Reading }>> {
+    const result = await ReadingsService.create({ ...input, readerAccountId: accountId });
+    if (!result.success) {
+      return { success: false, error: result.error, details: result.details };
+    }
+    return { success: true, data: result.data };
   },
 };
 
