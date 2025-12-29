@@ -73,14 +73,24 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: "#3a4c7a",
         tabBarInactiveTintColor: "#6b7aa6",
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
+        tabBarStyle: {
+          borderTopColor: "#e1e6f3",
+          borderTopWidth: 1,
+          backgroundColor: "#ffffff",
+        },
       }}
     >
       <Tabs.Screen
         name="home"
         options={{
           title: "Home",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="home-outline" color={color} size={size} />
+          tabBarIcon: ({ focused, size }) => (
+            <MaterialCommunityIcons
+              name="home-outline"
+              color={focused ? "#3a4c7a" : "#6b7aa6"}
+              size={size}
+            />
           ),
         }}
       />
@@ -88,8 +98,12 @@ export default function TabsLayout() {
         name="readings"
         options={{
           title: "Read meter",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="meter-gas-outline" color={color} size={size} />
+          tabBarIcon: ({ focused, size }) => (
+            <MaterialCommunityIcons
+              name="meter-gas-outline"
+              color={focused ? "#3a4c7a" : "#6b7aa6"}
+              size={size}
+            />
           ),
           ...(hideReadings ? { tabBarItemStyle: { display: "none" } } : {}),
         }}
@@ -98,8 +112,12 @@ export default function TabsLayout() {
         name="payment"
         options={{
           title: "Payment",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="credit-card-outline" color={color} size={size} />
+          tabBarIcon: ({ focused, size }) => (
+            <MaterialCommunityIcons
+              name="credit-card-outline"
+              color={focused ? "#3a4c7a" : "#6b7aa6"}
+              size={size}
+            />
           ),
           tabBarBadge: paymentEnabled ? "1" : undefined,
           tabBarButton: (props) => {
@@ -137,8 +155,12 @@ export default function TabsLayout() {
         name="send-message"
         options={{
           title: "Message",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="message-text-outline" color={color} size={size} />
+          tabBarIcon: ({ focused, size }) => (
+            <MaterialCommunityIcons
+              name="message-text-outline"
+              color={focused ? "#3a4c7a" : "#6b7aa6"}
+              size={size}
+            />
           ),
         }}
       />
@@ -146,8 +168,12 @@ export default function TabsLayout() {
         name="profile-edit"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="account-circle-outline" color={color} size={size} />
+          tabBarIcon: ({ focused, size }) => (
+            <MaterialCommunityIcons
+              name="account-circle-outline"
+              color={focused ? "#3a4c7a" : "#6b7aa6"}
+              size={size}
+            />
           ),
         }}
       />

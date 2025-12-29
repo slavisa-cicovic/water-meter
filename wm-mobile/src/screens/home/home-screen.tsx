@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useAuthStore } from "@src/state/auth-store";
 import { MobileService } from "@src/services/mobile.service";
@@ -19,6 +19,8 @@ export default function HomeScreen() {
   const [billing, setBilling] = useState<MobileBillingData | null>(null);
   const [billingTab, setBillingTab] = useState<"chart" | "table">("chart");
   const [showNotifications, setShowNotifications] = useState(false);
+  const [refreshingConsumption, setRefreshingConsumption] = useState(false);
+  const [refreshingBilling, setRefreshingBilling] = useState(false);
   const displayName = user ? `${user.firstName} ${user.lastName}`.trim() : "Field operator";
   const isConsumer = user?.role === "consumer";
   const currentYear = useMemo(() => new Date().getFullYear(), []);
@@ -39,35 +41,55 @@ export default function HomeScreen() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!isConsumer) return;
-    let active = true;
-    const loadConsumption = async () => {
+  const loadConsumption = useCallback(
+    async (setLoading?: (value: boolean) => void) => {
+      if (!isConsumer) return;
+      setLoading?.(true);
       const result = await MobileService.getConsumption(selectedYear);
-      if (active && result.success) {
+      if (result.success) {
         setConsumption(result.data);
       }
-    };
-    loadConsumption();
-    return () => {
-      active = false;
-    };
-  }, [isConsumer, selectedYear]);
+      setLoading?.(false);
+    },
+    [isConsumer, selectedYear]
+  );
 
   useEffect(() => {
-    if (!isConsumer) return;
     let active = true;
-    const loadBilling = async () => {
-      const result = await MobileService.getBilling(billingYear);
-      if (active && result.success) {
-        setBilling(result.data);
-      }
+    const load = async () => {
+      if (!active) return;
+      await loadConsumption();
     };
-    loadBilling();
+    load();
     return () => {
       active = false;
     };
-  }, [billingYear, isConsumer]);
+  }, [loadConsumption]);
+
+  const loadBilling = useCallback(
+    async (setLoading?: (value: boolean) => void) => {
+      if (!isConsumer) return;
+      setLoading?.(true);
+      const result = await MobileService.getBilling(billingYear);
+      if (result.success) {
+        setBilling(result.data);
+      }
+      setLoading?.(false);
+    },
+    [billingYear, isConsumer]
+  );
+
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      if (!active) return;
+      await loadBilling();
+    };
+    load();
+    return () => {
+      active = false;
+    };
+  }, [loadBilling]);
 
   return (
     <ScrollScreen title="Dashboard" contentContainerStyle={styles.content}>
@@ -114,7 +136,18 @@ export default function HomeScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Consumption</Text>
-              <YearPicker value={selectedYear} minYear={minYear} maxYear={currentYear} onChange={setSelectedYear} />
+              <View style={styles.sectionActions}>
+                <YearPicker value={selectedYear} minYear={minYear} maxYear={currentYear} onChange={setSelectedYear} />
+                <TouchableOpacity
+                  style={styles.refreshButton}
+                  onPress={() => loadConsumption(setRefreshingConsumption)}
+                  disabled={refreshingConsumption}
+                >
+                  <Text style={styles.refreshText}>
+                    {refreshingConsumption ? "Refreshing..." : "Refresh"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
             <View style={styles.tabs}>
               <TouchableOpacity
@@ -161,7 +194,18 @@ export default function HomeScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Billing</Text>
-              <YearPicker value={billingYear} minYear={minYear} maxYear={currentYear} onChange={setBillingYear} />
+              <View style={styles.sectionActions}>
+                <YearPicker value={billingYear} minYear={minYear} maxYear={currentYear} onChange={setBillingYear} />
+                <TouchableOpacity
+                  style={styles.refreshButton}
+                  onPress={() => loadBilling(setRefreshingBilling)}
+                  disabled={refreshingBilling}
+                >
+                  <Text style={styles.refreshText}>
+                    {refreshingBilling ? "Refreshing..." : "Refresh"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
             <View style={styles.tabs}>
               <TouchableOpacity
@@ -220,6 +264,14 @@ const styles = StyleSheet.create({
   section: { marginBottom: 22 },
   sectionTitle: { color: "#2b3a67", fontSize: 16, fontWeight: "700", marginBottom: 12 },
   sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  sectionActions: { flexDirection: "row", alignItems: "center", gap: 8 },
+  refreshButton: {
+    backgroundColor: "#e9edfb",
+    borderRadius: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
+  refreshText: { color: "#3a4c7a", fontSize: 11, fontWeight: "600" },
   tabs: { flexDirection: "row", gap: 8, marginTop: 10 },
   tabButton: {
     backgroundColor: "#e9edfb",
