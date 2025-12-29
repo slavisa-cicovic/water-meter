@@ -153,6 +153,58 @@ export const MobileRepository = {
     };
   },
 
+  async findLatestIssuedInvoice(accountId: string): Promise<{
+    id: string;
+    status: "issued";
+    meterSerialNumber?: string;
+    periodStart: Date | null;
+    periodEnd: Date | null;
+    consumption: number;
+    unitPrice: number;
+    subtotal: number;
+    vatRate: number;
+    vatAmount: number;
+    totalAmount: number;
+    lines: Array<{
+      id: string;
+      type: "consumption" | "fee" | "vat";
+      description?: string | null;
+      quantity?: number | null;
+      unitPrice?: number | null;
+      amount: number;
+    }>;
+  } | null> {
+    const invoice = await prisma.invoice.findFirst({
+      where: { accountId, status: "issued" },
+      orderBy: { updatedAt: "desc" },
+      include: { lines: true, meter: true },
+    });
+
+    if (!invoice) return null;
+
+    return {
+      id: invoice.id,
+      status: "issued",
+      meterSerialNumber: invoice.meter?.serialNumber ?? undefined,
+      periodStart: invoice.periodStart,
+      periodEnd: invoice.periodEnd,
+      consumption: invoice.consumption,
+      unitPrice: Number(invoice.unitPrice),
+      subtotal: Number(invoice.subtotal),
+      vatRate: Number(invoice.vatRate),
+      vatAmount: Number(invoice.vatAmount),
+      totalAmount: Number(invoice.totalAmount),
+      lines: invoice.lines.map((line) => ({
+        id: line.id,
+        type: line.type,
+        description: line.description ?? undefined,
+        quantity: line.quantity === null ? null : line.quantity ? Number(line.quantity) : null,
+        unitPrice: line.unitPrice === null ? null : line.unitPrice ? Number(line.unitPrice) : null,
+        amount: Number(line.amount),
+      })),
+    };
+  },
+
   async findMobileAccount(accountId: string): Promise<(AccountBase & { meter: MobileAccountMeter | null }) | null> {
     const account = await this.findAccountBase(accountId);
     if (!account) return null;

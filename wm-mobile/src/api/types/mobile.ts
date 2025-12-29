@@ -82,3 +82,31 @@ export type MobileReadingResult = {
     imageFilename?: string;
   };
 };
+
+export type MobilePaymentInvoiceLine = {
+  id: string;
+  type: "consumption" | "fee" | "vat";
+  description?: string;
+  quantity?: number | null;
+  unitPrice?: number | null;
+  amount: number;
+};
+
+export type MobilePaymentInvoice = {
+  id: string;
+  status: "issued";
+  meterSerialNumber?: string;
+  periodStart: string | null;
+  periodEnd: string | null;
+  consumption: number;
+  unitPrice: number;
+  subtotal: number;
+  vatRate: number;
+  vatAmount: number;
+  totalAmount: number;
+  lines: MobilePaymentInvoiceLine[];
+};
+
+export type MobilePaymentData = {
+  invoice: MobilePaymentInvoice | null;
+};

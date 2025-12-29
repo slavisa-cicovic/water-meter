@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { Tabs } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { TouchableOpacity } from "react-native";
 import { MobileService } from "@src/services/mobile.service";
 import { useAuthStore } from "@src/state/auth-store";
 
 export default function TabsLayout() {
   const user = useAuthStore((state) => state.user);
   const [sharedMeter, setSharedMeter] = useState<boolean | null>(null);
+  const [hasIssuedInvoice, setHasIssuedInvoice] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -33,7 +35,33 @@ export default function TabsLayout() {
     };
   }, [user?.role]);
 
+  useEffect(() => {
+    let active = true;
+    if (!user) {
+      setHasIssuedInvoice(false);
+      return () => {
+        active = false;
+      };
+    }
+
+    const loadPayment = async () => {
+      const result = await MobileService.getPayment();
+      if (!active) return;
+      if (result.success && result.data.invoice) {
+        setHasIssuedInvoice(true);
+        return;
+      }
+      setHasIssuedInvoice(false);
+    };
+
+    loadPayment();
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
+
   const hideReadings = user?.role === "consumer" && sharedMeter === true;
+  const paymentEnabled = user?.role === "consumer" ? hasIssuedInvoice : true;
 
   return (
     <Tabs
@@ -68,6 +96,14 @@ export default function TabsLayout() {
           title: "Payment",
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="credit-card-outline" color={color} size={size} />
+          ),
+          tabBarBadge: paymentEnabled ? "1" : undefined,
+          tabBarButton: (props) => (
+            <TouchableOpacity
+              {...props}
+              disabled={!paymentEnabled}
+              style={[props.style, !paymentEnabled ? { opacity: 0.4 } : null]}
+            />
           ),
         }}
       />

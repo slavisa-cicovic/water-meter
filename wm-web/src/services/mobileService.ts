@@ -5,6 +5,7 @@ import {
   MobileConsumptionData,
   MobileProfileUpdateInput,
   MobileReadingContext,
+  MobilePaymentInvoice,
 } from "src/types/mobile";
 import { validateMobileProfileUpdate } from "src/validation/mobile";
 import { Prisma } from "@prisma/client";
@@ -96,6 +97,40 @@ export const MobileService = {
     const chart = rows.map((row) => ({ month: row.month, amount: row.amount }));
 
     return { success: true, data: { year, chart, rows } };
+  },
+
+  async getLatestIssuedInvoice(accountId: string): Promise<ServiceResult<{ invoice: MobilePaymentInvoice | null }>> {
+    const invoice = await MobileRepository.findLatestIssuedInvoice(accountId);
+    if (!invoice) {
+      return { success: true, data: { invoice: null } };
+    }
+
+    return {
+      success: true,
+      data: {
+        invoice: {
+          id: invoice.id,
+          status: "issued",
+          meterSerialNumber: invoice.meterSerialNumber,
+          periodStart: invoice.periodStart ? invoice.periodStart.toISOString() : null,
+          periodEnd: invoice.periodEnd ? invoice.periodEnd.toISOString() : null,
+          consumption: invoice.consumption,
+          unitPrice: invoice.unitPrice,
+          subtotal: invoice.subtotal,
+          vatRate: invoice.vatRate,
+          vatAmount: invoice.vatAmount,
+          totalAmount: invoice.totalAmount,
+          lines: invoice.lines.map((line) => ({
+            id: line.id,
+            type: line.type,
+            description: line.description,
+            quantity: line.quantity ?? null,
+            unitPrice: line.unitPrice ?? null,
+            amount: line.amount,
+          })),
+        },
+      },
+    };
   },
 
   async getReadingContext(accountId: string): Promise<ServiceResult<MobileReadingContext>> {
