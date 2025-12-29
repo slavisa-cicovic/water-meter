@@ -23,10 +23,6 @@ export const GET = async (req: NextRequest) => {
     pageSize: pageSize ? Number(pageSize) : 25,
   });
 
-  if (!result.success) {
-    return NextResponse.json({ success: false, error: result.error, details: (result as any).details }, { status: 400 });
-  }
-
   return NextResponse.json(result.data);
 };
 
@@ -44,4 +40,3 @@ export const POST = async (req: NextRequest) => {
 
   return NextResponse.json(result.data, { status: 201 });
 };
-
