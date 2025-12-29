@@ -123,7 +123,7 @@ export const MobileService = {
           lines: invoice.lines.map((line) => ({
             id: line.id,
             type: line.type,
-            description: line.description,
+            description: line.description ?? undefined,
             quantity: line.quantity ?? null,
             unitPrice: line.unitPrice ?? null,
             amount: line.amount,
@@ -155,7 +155,10 @@ export const MobileService = {
   ): Promise<ServiceResult<{ reading: Reading }>> {
     const result = await ReadingsService.create({ ...input, readerAccountId: accountId });
     if (!result.success) {
-      return { success: false, error: result.error, details: result.details };
+      return { success: false, error: result.error ?? "SERVER_ERROR", details: result.details };
+    }
+    if (!result.data?.reading) {
+      return { success: false, error: "SERVER_ERROR" };
     }
     return { success: true, data: result.data };
   },
