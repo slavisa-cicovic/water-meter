@@ -78,10 +78,16 @@ export type MobilePaymentInvoice = {
   periodStart: string | null;
   periodEnd: string | null;
   consumption: number;
+  previousValue: number | null;
+  currentValue: number | null;
   unitPrice: number;
   subtotal: number;
   vatRate: number;
   vatAmount: number;
   totalAmount: number;
   lines: MobilePaymentInvoiceLine[];
+};
+
+export type MobileNotificationsData = {
+  hasIssuedInvoice: boolean;
 };

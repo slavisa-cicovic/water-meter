@@ -9,6 +9,7 @@ import {
   MobileReadingCreateInput,
   MobileReadingResult,
   MobilePaymentData,
+  MobileNotificationsData,
 } from "@src/api/types/mobile";
 
 export const MobileApi = {
@@ -46,6 +47,16 @@ export const MobileApi = {
   },
   getPayment: async (): Promise<ApiResponse<MobilePaymentData>> => {
     const res = await apiClient.get<ApiResponse<MobilePaymentData>>("/api/mobile/payments");
+    return res.data;
+  },
+  payInvoice: async (invoiceId: string): Promise<ApiResponse<{ updated: number }>> => {
+    const res = await apiClient.post<ApiResponse<{ updated: number }>>("/api/mobile/payments", {
+      invoiceId,
+    });
+    return res.data;
+  },
+  getNotifications: async (): Promise<ApiResponse<MobileNotificationsData>> => {
+    const res = await apiClient.get<ApiResponse<MobileNotificationsData>>("/api/mobile/notifications");
     return res.data;
   },
 };

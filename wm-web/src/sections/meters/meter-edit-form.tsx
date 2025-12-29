@@ -40,6 +40,7 @@ import { Fragment, ReactNode, useLayoutEffect, useMemo, useRef, useState } from 
 import { useGetAccounts } from 'src/api/accounts';
 import { MetersApi } from 'src/api/meters-actions';
 import { ReadingsApi, useGetReadings } from 'src/api/readings';
+import { useGetSettings } from 'src/api/settings';
 import { ChartWrapper, useChart } from 'src/components/chart';
 import { useAuthContext } from 'src/auth/hooks';
 
@@ -256,7 +257,23 @@ export function MeterEditForm({ currentMeter }: Props) {
     return `${parsed.getFullYear()}-${parsed.getMonth()}`;
   };
 
-  const currentMonthKey = `${new Date().getFullYear()}-${new Date().getMonth()}`;
+  const { settings: appSettings } = useGetSettings();
+  const effectiveDate = useMemo(() => {
+    const now = new Date();
+    if (appSettings?.currentDateMode !== 'manual' || !appSettings.currentDateValue) return now;
+    const parsed = new Date(`${appSettings.currentDateValue}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) return now;
+    return new Date(
+      parsed.getFullYear(),
+      parsed.getMonth(),
+      parsed.getDate(),
+      now.getHours(),
+      now.getMinutes(),
+      now.getSeconds(),
+      now.getMilliseconds()
+    );
+  }, [appSettings?.currentDateMode, appSettings?.currentDateValue]);
+  const currentMonthKey = `${effectiveDate.getFullYear()}-${effectiveDate.getMonth()}`;
 
   const handleOpenEditDialog = (readingId: string, index: number) => {
     const reading = sortedReadings[index];

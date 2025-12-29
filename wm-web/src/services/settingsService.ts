@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { SettingsRepository } from "src/repositories/settingsRepository";
 import {
-  CurrentMonthMode,
+  CurrentDateMode,
   SettingsData,
   SettingsKey,
   SettingsUpdateInput,
@@ -12,20 +12,17 @@ import { validateSettingsUpdate } from "src/validation/settings";
 type ServiceResult<T> = { success: true; data: T } | { success: false; error: string; details?: Record<string, string[]> };
 
 const DEFAULTS: SettingsData = {
-  currentMonthMode: "auto",
-  currentMonthValue: null,
+  currentDateMode: "auto",
+  currentDateValue: null,
   currency: "RSD",
 };
 
-const SETTINGS_KEYS: SettingsKey[] = ["currentMonth.mode", "currentMonth.value", "currency"];
+const SETTINGS_KEYS: SettingsKey[] = ["currentDate.mode", "currentDate.value", "currency"];
 
 const resolveString = (value: Prisma.JsonValue, fallback: string) =>
   typeof value === "string" ? value : fallback;
 
-const resolveNumber = (value: Prisma.JsonValue, fallback: number | null) =>
-  typeof value === "number" && Number.isFinite(value) ? value : fallback;
-
-const resolveMode = (value: Prisma.JsonValue, fallback: CurrentMonthMode) =>
+const resolveMode = (value: Prisma.JsonValue, fallback: CurrentDateMode) =>
   value === "auto" || value === "manual" ? value : fallback;
 
 export const SettingsService = {
@@ -36,10 +33,42 @@ export const SettingsService = {
     return {
       success: true,
       data: {
-        currentMonthMode: resolveMode(map.get("currentMonth.mode") ?? DEFAULTS.currentMonthMode, DEFAULTS.currentMonthMode),
-        currentMonthValue: resolveNumber(map.get("currentMonth.value") ?? DEFAULTS.currentMonthValue, DEFAULTS.currentMonthValue),
+        currentDateMode: resolveMode(map.get("currentDate.mode") ?? DEFAULTS.currentDateMode, DEFAULTS.currentDateMode),
+        currentDateValue: resolveString(
+          map.get("currentDate.value") ?? DEFAULTS.currentDateValue ?? "",
+          DEFAULTS.currentDateValue ?? ""
+        ) || DEFAULTS.currentDateValue,
         currency: resolveString(map.get("currency") ?? DEFAULTS.currency, DEFAULTS.currency),
       },
+    };
+  },
+
+  async getEffectiveDate(now: Date = new Date()): Promise<ServiceResult<Date>> {
+    const settings = await this.getSettings();
+    if (!settings.success) {
+      return { success: false, error: settings.error, details: settings.details };
+    }
+
+    if (settings.data.currentDateMode !== "manual" || !settings.data.currentDateValue) {
+      return { success: true, data: now };
+    }
+
+    const parsed = new Date(`${settings.data.currentDateValue}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) {
+      return { success: true, data: now };
+    }
+
+    return {
+      success: true,
+      data: new Date(
+        parsed.getFullYear(),
+        parsed.getMonth(),
+        parsed.getDate(),
+        now.getHours(),
+        now.getMinutes(),
+        now.getSeconds(),
+        now.getMilliseconds()
+      ),
     };
   },
 

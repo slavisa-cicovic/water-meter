@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Tabs } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { TouchableOpacity } from "react-native";
+import { AppState, TouchableOpacity } from "react-native";
 import { MobileService } from "@src/services/mobile.service";
 import { useAuthStore } from "@src/state/auth-store";
+import { useNotificationsStore } from "@src/state/notifications-store";
 
 const resolveHandler = <T extends ((...args: any[]) => void) | null | undefined>(
   handler: T
@@ -12,7 +13,9 @@ const resolveHandler = <T extends ((...args: any[]) => void) | null | undefined>
 export default function TabsLayout() {
   const user = useAuthStore((state) => state.user);
   const [sharedMeter, setSharedMeter] = useState<boolean | null>(null);
-  const [hasIssuedInvoice, setHasIssuedInvoice] = useState(false);
+  const hasIssuedInvoice = useNotificationsStore((state) => state.hasIssuedInvoice);
+  const refreshNotifications = useNotificationsStore((state) => state.refreshNotifications);
+  const setHasIssuedInvoice = useNotificationsStore((state) => state.setHasIssuedInvoice);
 
   useEffect(() => {
     let active = true;
@@ -48,21 +51,29 @@ export default function TabsLayout() {
       };
     }
 
-    const loadPayment = async () => {
-      const result = await MobileService.getPayment();
-      if (!active) return;
-      if (result.success && result.data.invoice) {
-        setHasIssuedInvoice(true);
-        return;
-      }
-      setHasIssuedInvoice(false);
+    const refresh = async () => {
+      await refreshNotifications();
     };
 
-    loadPayment();
+    refresh();
+
+    const interval = setInterval(() => {
+      if (active) {
+        refresh();
+      }
+    }, 5 * 60 * 1000);
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        refresh();
+      }
+    });
+
     return () => {
       active = false;
+      clearInterval(interval);
+      subscription.remove();
     };
-  }, [user?.id]);
+  }, [refreshNotifications, setHasIssuedInvoice, user?.id]);
 
   const hideReadings = user?.role === "consumer" && sharedMeter === true;
   const paymentEnabled = user?.role === "consumer" ? hasIssuedInvoice : true;
@@ -132,6 +143,7 @@ export default function TabsLayout() {
               accessibilityState,
               testID,
               style,
+              children,
             } = props;
             return (
               <TouchableOpacity
@@ -146,7 +158,9 @@ export default function TabsLayout() {
                 testID={testID}
                 disabled={!paymentEnabled}
                 style={[style, !paymentEnabled ? { opacity: 0.4 } : null]}
-              />
+              >
+                {children}
+              </TouchableOpacity>
             );
           },
         }}

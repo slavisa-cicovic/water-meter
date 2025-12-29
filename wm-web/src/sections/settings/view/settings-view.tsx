@@ -16,30 +16,17 @@ import {
 import CustomBreadcrumbs from "src/components/custom-breadcrumbs";
 import { useSettingsContext } from "src/components/settings";
 import { SettingsApi, useGetSettings } from "src/api/settings";
-import { CurrentMonthMode, SettingsUpdateInput } from "src/types/settings";
+import { CurrentDateMode, SettingsUpdateInput } from "src/types/settings";
 import { paths } from "src/routes/paths";
 
-const MONTH_OPTIONS = [
-  { value: 1, label: "January" },
-  { value: 2, label: "February" },
-  { value: 3, label: "March" },
-  { value: 4, label: "April" },
-  { value: 5, label: "May" },
-  { value: 6, label: "June" },
-  { value: 7, label: "July" },
-  { value: 8, label: "August" },
-  { value: 9, label: "September" },
-  { value: 10, label: "October" },
-  { value: 11, label: "November" },
-  { value: 12, label: "December" },
-];
+const formatDateLabel = (value: string | null) => value ?? "-";
 
 export function SettingsView() {
   const settings = useSettingsContext();
   const { settings: data, settingsLoading, settingsError, mutate } = useGetSettings();
 
-  const [monthMode, setMonthMode] = useState<CurrentMonthMode>("auto");
-  const [monthValue, setMonthValue] = useState<number | null>(null);
+  const [dateMode, setDateMode] = useState<CurrentDateMode>("auto");
+  const [dateValue, setDateValue] = useState<string | null>(null);
   const [currency, setCurrency] = useState("");
   const [savingMonth, setSavingMonth] = useState(false);
   const [savingCurrency, setSavingCurrency] = useState(false);
@@ -48,46 +35,45 @@ export function SettingsView() {
 
   useEffect(() => {
     if (!data) return;
-    setMonthMode(data.currentMonthMode);
-    setMonthValue(data.currentMonthValue);
+    setDateMode(data.currentDateMode);
+    setDateValue(data.currentDateValue);
     setCurrency(data.currency);
   }, [data]);
 
-  const monthDisplay = useMemo(() => {
-    if (monthMode === "auto") return "Auto (current date)";
-    const match = MONTH_OPTIONS.find((option) => option.value === monthValue);
-    return match ? match.label : "-";
-  }, [monthMode, monthValue]);
+  const dateDisplay = useMemo(() => {
+    if (dateMode === "auto") return "Auto (current date)";
+    return formatDateLabel(dateValue);
+  }, [dateMode, dateValue]);
 
-  const handleSaveMonth = useCallback(async () => {
+  const handleSaveDate = useCallback(async () => {
     setMonthError(null);
-    if (monthMode === "manual" && (!monthValue || monthValue < 1 || monthValue > 12)) {
-      setMonthError("Please select a valid month.");
+    if (dateMode === "manual" && (!dateValue || !dateValue.trim())) {
+      setMonthError("Please select a valid date.");
       return;
     }
 
     setSavingMonth(true);
     try {
       const updates: SettingsUpdateInput[] = [
-        { key: "currentMonth.mode", value: monthMode },
+        { key: "currentDate.mode", value: dateMode },
         {
-          key: "currentMonth.value",
-          value: monthMode === "manual" ? monthValue : null,
+          key: "currentDate.value",
+          value: dateMode === "manual" ? dateValue : null,
         },
       ];
       await Promise.all(updates.map((payload) => SettingsApi.updateSetting(payload)));
       await mutate();
     } catch (error) {
-      setMonthError("Unable to save current month settings.");
+      setMonthError("Unable to save current date settings.");
     } finally {
       setSavingMonth(false);
     }
-  }, [monthMode, monthValue, mutate]);
+  }, [dateMode, dateValue, mutate]);
 
-  const handleCancelMonth = useCallback(() => {
+  const handleCancelDate = useCallback(() => {
     if (!data) return;
-    setMonthMode(data.currentMonthMode);
-    setMonthValue(data.currentMonthValue);
+    setDateMode(data.currentDateMode);
+    setDateValue(data.currentDateValue);
     setMonthError(null);
   }, [data]);
 
@@ -140,46 +126,41 @@ export function SettingsView() {
             <CardContent sx={{ height: "100%" }}>
               <Stack spacing={2} sx={{ height: "100%" }}>
                 <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-                  <Typography variant="h6">Current Month</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Mode: {monthDisplay}
-                  </Typography>
+              <Typography variant="h6">Current Date</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Mode: {dateDisplay}
+              </Typography>
 
-                  <TextField
-                    select
-                    label="Mode"
-                    value={monthMode}
-                    onChange={(event) => setMonthMode(event.target.value as CurrentMonthMode)}
-                    size="small"
-                  >
-                    <MenuItem value="auto">Auto (use new Date())</MenuItem>
-                    <MenuItem value="manual">Manual</MenuItem>
-                  </TextField>
+                <TextField
+                  select
+                  label="Mode"
+                  value={dateMode}
+                  onChange={(event) => setDateMode(event.target.value as CurrentDateMode)}
+                  size="small"
+                >
+                  <MenuItem value="auto">Auto (use new Date())</MenuItem>
+                  <MenuItem value="manual">Manual</MenuItem>
+                </TextField>
 
-                  <TextField
-                    select
-                    label="Month"
-                    value={monthValue ?? ""}
-                    onChange={(event) => setMonthValue(event.target.value === "" ? null : Number(event.target.value))}
-                    size="small"
-                    disabled={monthMode === "auto"}
-                  >
-                    <MenuItem value="">Select month</MenuItem>
-                    {MONTH_OPTIONS.map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                <TextField
+                  label="Date"
+                  type="date"
+                  value={dateValue ?? ""}
+                  onChange={(event) => setDateValue(event.target.value || null)}
+                  size="small"
+                  disabled={dateMode === "auto"}
+                  InputLabelProps={{ shrink: true }}
+                >
+                </TextField>
 
                   {monthError ? <Alert severity="error">{monthError}</Alert> : null}
                 </Box>
 
                 <Stack direction="row" spacing={1} justifyContent="flex-end">
-                  <Button variant="outlined" onClick={handleCancelMonth} disabled={savingMonth}>
+                  <Button variant="outlined" onClick={handleCancelDate} disabled={savingMonth}>
                     Cancel
                   </Button>
-                  <Button variant="contained" onClick={handleSaveMonth} disabled={savingMonth}>
+                  <Button variant="contained" onClick={handleSaveDate} disabled={savingMonth}>
                     Save
                   </Button>
                 </Stack>

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { useAuthStore } from "@src/state/auth-store";
+import { useNotificationsStore } from "@src/state/notifications-store";
 import { MobileService } from "@src/services/mobile.service";
 import { MobileAccountData, MobileBillingData, MobileConsumptionData } from "@src/api/types/mobile";
 import BillingChart from "@src/screens/home/components/ui/billing-chart";
@@ -13,6 +15,7 @@ import ScrollScreen from "@src/components/layout/scroll-screen";
 
 export default function HomeScreen() {
   const user = useAuthStore((state) => state.user);
+  const refreshNotifications = useNotificationsStore((state) => state.refreshNotifications);
   const [meterInfo, setMeterInfo] = useState<MobileAccountData["meter"] | null>(null);
   const [consumption, setConsumption] = useState<MobileConsumptionData | null>(null);
   const [consumptionTab, setConsumptionTab] = useState<"chart" | "table">("chart");
@@ -27,18 +30,11 @@ export default function HomeScreen() {
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [billingYear, setBillingYear] = useState(currentYear);
   const minYear = currentYear - 10;
-  useEffect(() => {
-    let active = true;
-    const loadAccount = async () => {
-      const result = await MobileService.getAccount();
-      if (active && result.success) {
-        setMeterInfo(result.data.meter);
-      }
-    };
-    loadAccount();
-    return () => {
-      active = false;
-    };
+  const loadAccount = useCallback(async () => {
+    const result = await MobileService.getAccount();
+    if (result.success) {
+      setMeterInfo(result.data.meter);
+    }
   }, []);
 
   const loadConsumption = useCallback(
@@ -90,6 +86,27 @@ export default function HomeScreen() {
       active = false;
     };
   }, [loadBilling]);
+
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      if (!active) return;
+      await loadAccount();
+    };
+    load();
+    return () => {
+      active = false;
+    };
+  }, [loadAccount]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadAccount();
+      loadConsumption();
+      loadBilling();
+      refreshNotifications();
+    }, [loadAccount, loadConsumption, loadBilling, refreshNotifications])
+  );
 
   return (
     <ScrollScreen title="Dashboard" contentContainerStyle={styles.content}>

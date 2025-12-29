@@ -1,37 +1,79 @@
-import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Alert, Modal, StyleSheet, Text, View } from "react-native";
 import ScrollScreen from "@src/components/layout/scroll-screen";
+import SubmitButton from "@src/components/ui/submit-button";
 import { MobileService } from "@src/services/mobile.service";
 import { MobilePaymentInvoice } from "@src/api/types/mobile";
+import { useRouter } from "expo-router";
+import { useNotificationsStore } from "@src/state/notifications-store";
 
 export default function PaymentScreen() {
+  const router = useRouter();
+  const refreshNotifications = useNotificationsStore((state) => state.refreshNotifications);
   const [invoice, setInvoice] = useState<MobilePaymentInvoice | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("Payment submitted successfully.");
+  const redirectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const loadPayment = async () => {
+    setLoading(true);
+    const result = await MobileService.getPayment();
+    setLoading(false);
+    if (!result.success) {
+      setError(result.message);
+      return;
+    }
+    setError(null);
+    setInvoice(result.data.invoice);
+  };
 
   useEffect(() => {
     let active = true;
-    const loadPayment = async () => {
-      setLoading(true);
-      const result = await MobileService.getPayment();
-      if (!active) return;
-      setLoading(false);
-      if (!result.success) {
-        setError(result.message);
-        return;
-      }
-      setError(null);
-      setInvoice(result.data.invoice);
-    };
-
-    loadPayment();
+    loadPayment().catch(() => null);
     return () => {
       active = false;
+      if (redirectTimer.current) {
+        clearTimeout(redirectTimer.current);
+        redirectTimer.current = null;
+      }
     };
   }, []);
 
+  const handleSubmitPayment = async () => {
+    if (!invoice) return;
+    setSubmitting(true);
+    const result = await MobileService.payInvoice(invoice.id);
+    setSubmitting(false);
+    if (!result.success) {
+      Alert.alert("Payment failed", result.message);
+      return;
+    }
+    refreshNotifications().catch(() => null);
+    setSuccessMessage("Payment submitted successfully.");
+    setShowSuccess(true);
+    if (redirectTimer.current) {
+      clearTimeout(redirectTimer.current);
+    }
+    redirectTimer.current = setTimeout(() => {
+      setShowSuccess(false);
+      router.replace("/home");
+    }, 4500);
+  };
+
   return (
     <ScrollScreen title="Invoice payment" contentContainerStyle={styles.content}>
+      <Modal transparent animationType="fade" visible={showSuccess}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Success</Text>
+            <Text style={styles.modalMessage}>{successMessage}</Text>
+            <Text style={styles.modalHint}>Returning to Home...</Text>
+          </View>
+        </View>
+      </Modal>
       <View style={styles.card}>
         <Text style={styles.title}>Latest invoice</Text>
         {loading ? <Text style={styles.subtle}>Loading invoice...</Text> : null}
@@ -48,6 +90,14 @@ export default function PaymentScreen() {
             <View style={styles.row}>
               <Text style={styles.label}>Period</Text>
               <Text style={styles.value}>{formatPeriod(invoice.periodStart, invoice.periodEnd)}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Previous reading</Text>
+              <Text style={styles.value}>{formatReading(invoice.previousValue)}</Text>
+            </View>
+            <View style={styles.row}>
+              <Text style={styles.label}>Current reading</Text>
+              <Text style={styles.value}>{formatReading(invoice.currentValue)}</Text>
             </View>
             <View style={styles.row}>
               <Text style={styles.label}>Consumption</Text>
@@ -85,7 +135,7 @@ export default function PaymentScreen() {
                     </View>
                     <View style={styles.lineMeta}>
                       <Text style={styles.lineAmount}>{formatAmount(line.amount)}</Text>
-                      {line.quantity !== null && line.unitPrice !== null ? (
+                      {line.quantity != null && line.unitPrice != null ? (
                         <Text style={styles.lineQuantity}>
                           {line.quantity} x {formatAmount(line.unitPrice)}
                         </Text>
@@ -95,6 +145,15 @@ export default function PaymentScreen() {
                 ))}
               </View>
             ) : null}
+
+            <SubmitButton
+              label="Submit payment"
+              loadingLabel="Submitting..."
+              loading={submitting}
+              disabled={submitting}
+              onPress={handleSubmitPayment}
+              style={styles.submitButton}
+            />
           </>
         ) : null}
       </View>
@@ -112,6 +171,8 @@ const formatPeriod = (start: string | null, end: string | null) => {
 const formatAmount = (value: number) => `${value.toFixed(2)}`;
 
 const formatPercent = (value: number) => `${value.toFixed(2)}%`;
+
+const formatReading = (value: number | null) => (value === null ? "-" : `${value}`);
 
 const formatLineType = (type: MobilePaymentInvoice["lines"][number]["type"]) => {
   if (type === "consumption") return "Consumption";
@@ -162,4 +223,25 @@ const styles = StyleSheet.create({
   lineMeta: { alignItems: "flex-end" },
   lineAmount: { color: "#1f2a44", fontSize: 12, fontWeight: "600" },
   lineQuantity: { color: "#6b7aa6", fontSize: 11, marginTop: 2 },
+  submitButton: { marginTop: 16 },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+  },
+  modalCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 16,
+    padding: 20,
+    width: "100%",
+    maxWidth: 320,
+    borderWidth: 1,
+    borderColor: "#e1e6f3",
+    alignItems: "center",
+  },
+  modalTitle: { color: "#1f2a44", fontSize: 16, fontWeight: "700" },
+  modalMessage: { color: "#3a4c7a", fontSize: 13, marginTop: 8, textAlign: "center" },
+  modalHint: { color: "#6b7aa6", fontSize: 12, marginTop: 10 },
 });

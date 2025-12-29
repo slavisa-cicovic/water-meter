@@ -6,6 +6,7 @@ import {
   MobileProfileUpdateInput,
   MobileReadingContext,
   MobilePaymentInvoice,
+  MobileNotificationsData,
 } from "src/types/mobile";
 import { validateMobileProfileUpdate } from "src/validation/mobile";
 import { Prisma } from "@prisma/client";
@@ -115,6 +116,8 @@ export const MobileService = {
           periodStart: invoice.periodStart ? invoice.periodStart.toISOString() : null,
           periodEnd: invoice.periodEnd ? invoice.periodEnd.toISOString() : null,
           consumption: invoice.consumption,
+          previousValue: invoice.previousValue,
+          currentValue: invoice.currentValue,
           unitPrice: invoice.unitPrice,
           subtotal: invoice.subtotal,
           vatRate: invoice.vatRate,
@@ -131,6 +134,11 @@ export const MobileService = {
         },
       },
     };
+  },
+
+  async getNotifications(accountId: string): Promise<ServiceResult<MobileNotificationsData>> {
+    const hasIssuedInvoice = await MobileRepository.hasIssuedInvoice(accountId);
+    return { success: true, data: { hasIssuedInvoice } };
   },
 
   async getReadingContext(accountId: string): Promise<ServiceResult<MobileReadingContext>> {
@@ -209,13 +217,14 @@ const buildYearlyRows = (
 };
 
 const buildBillingRows = (
-  invoices: Array<{ updatedAt: string; totalAmount: number; status: string }>,
+  invoices: Array<{ periodEnd: string | null; totalAmount: number; status: string }>,
   year: number
 ): Array<{ month: number; amount: number; status: MobileBillingData["rows"][number]["status"] }> =>
   Array.from({ length: 12 }, (_, index) => {
     const month = index + 1;
     const monthInvoices = invoices.filter((invoice) => {
-      const date = new Date(invoice.updatedAt);
+      if (!invoice.periodEnd) return false;
+      const date = new Date(invoice.periodEnd);
       return date.getUTCFullYear() === year && date.getUTCMonth() + 1 === month;
     });
 

@@ -1,6 +1,7 @@
 import { AccountRepository } from 'src/repositories/accountRepository';
 import { ReadingRepository } from 'src/repositories/readingRepository';
 import { Reading, ReadingCreateInput, ReadingListParams, ReadingUpdateInput } from 'src/types/readings';
+import { SettingsService } from 'src/services/settingsService';
 import { validateReadingCreate, validateReadingUpdate } from 'src/validation/readings';
 
 const toReading = (row: any): Reading => ({
@@ -57,6 +58,13 @@ export const ReadingsService = {
   },
 
   async update(input: ReadingUpdateInput) {
+    if (input.readAt !== undefined) {
+      const effectiveDateResult = await SettingsService.getEffectiveDate();
+      if (effectiveDateResult.success) {
+        input.readAt = effectiveDateResult.data.toISOString();
+      }
+    }
+
     const validation = validateReadingUpdate(input);
     if (!validation.valid) {
       return { success: false, error: 'VALIDATION_FAILED', details: validation.errors };

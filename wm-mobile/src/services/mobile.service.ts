@@ -8,6 +8,7 @@ import {
   MobileReadingCreateInput,
   MobileReadingResult,
   MobilePaymentData,
+  MobileNotificationsData,
 } from "@src/api/types/mobile";
 import { useAuthStore } from "@src/state/auth-store";
 
@@ -192,6 +193,54 @@ export const MobileService = {
       const message = code
         ? ERROR_MESSAGES[code] || "Unable to load payment details."
         : "Unable to load payment details.";
+      return { success: false, message };
+    }
+  },
+
+  async payInvoice(invoiceId: string): Promise<ServiceResult<{ updated: number }>> {
+    try {
+      const res = await MobileApi.payInvoice(invoiceId);
+      if (!res.success) {
+        const message = (res.error && ERROR_MESSAGES[res.error]) || "Unable to submit payment.";
+        return { success: false, message, details: res.details };
+      }
+
+      const data = res.data as { updated: number } | undefined;
+      if (!data) {
+        return { success: false, message: "Invalid payment response." };
+      }
+
+      return { success: true, data };
+    } catch (error: unknown) {
+      const apiError = error as { response?: { data?: { error?: string } } };
+      const code = apiError.response?.data?.error;
+      const message = code
+        ? ERROR_MESSAGES[code] || "Unable to submit payment."
+        : "Unable to submit payment.";
+      return { success: false, message };
+    }
+  },
+
+  async getNotifications(): Promise<ServiceResult<MobileNotificationsData>> {
+    try {
+      const res = await MobileApi.getNotifications();
+      if (!res.success) {
+        const message = (res.error && ERROR_MESSAGES[res.error]) || "Unable to load notifications.";
+        return { success: false, message, details: res.details };
+      }
+
+      const data = res.data as MobileNotificationsData | undefined;
+      if (!data) {
+        return { success: false, message: "Invalid notifications response." };
+      }
+
+      return { success: true, data };
+    } catch (error: unknown) {
+      const apiError = error as { response?: { data?: { error?: string } } };
+      const code = apiError.response?.data?.error;
+      const message = code
+        ? ERROR_MESSAGES[code] || "Unable to load notifications."
+        : "Unable to load notifications.";
       return { success: false, message };
     }
   },

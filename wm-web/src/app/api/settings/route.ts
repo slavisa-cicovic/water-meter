@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { SettingsService } from "src/services/settingsService";
 import { TokenService } from "src/services/tokenService";
 
-const getAdminPayload = (req: NextRequest) => {
+const getSettingsPayload = (req: NextRequest, options?: { allowStaff?: boolean }) => {
   const authHeader = req.headers.get("authorization");
   if (!authHeader) {
     return { error: "UNAUTHORIZED" as const };
@@ -14,7 +14,7 @@ const getAdminPayload = (req: NextRequest) => {
     return { error: "INVALID_TOKEN" as const };
   }
 
-  if (payload.role !== "admin") {
+  if (payload.role !== "admin" && !(options?.allowStaff && payload.role === "staff_backoffice")) {
     return { error: "FORBIDDEN" as const };
   }
 
@@ -22,7 +22,7 @@ const getAdminPayload = (req: NextRequest) => {
 };
 
 export const GET = async (req: NextRequest) => {
-  const auth = getAdminPayload(req);
+  const auth = getSettingsPayload(req, { allowStaff: true });
   if ("error" in auth) {
     const status = auth.error === "FORBIDDEN" ? 403 : 401;
     return NextResponse.json({ success: false, error: auth.error }, { status });
@@ -33,7 +33,7 @@ export const GET = async (req: NextRequest) => {
 };
 
 export const PUT = async (req: NextRequest) => {
-  const auth = getAdminPayload(req);
+  const auth = getSettingsPayload(req);
   if ("error" in auth) {
     const status = auth.error === "FORBIDDEN" ? 403 : 401;
     return NextResponse.json({ success: false, error: auth.error }, { status });

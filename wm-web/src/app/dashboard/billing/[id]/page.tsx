@@ -1,14 +1,14 @@
 import { InvoiceDetailView } from 'src/sections/billing/view';
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export const metadata = {
   title: 'Invoice',
 };
 
-export default function Page({ params }: Props) {
-  return <InvoiceDetailView id={params.id} />;
+export default async function Page({ params }: Props) {
+  const { id } = await params;
+  return <InvoiceDetailView id={id} />;
 }
-

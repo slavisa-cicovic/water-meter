@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { BillingService } from "src/services/billingService";
 import { MobileService } from "src/services/mobileService";
+import { SettingsService } from "src/services/settingsService";
 import { TokenService } from "src/services/tokenService";
 import { ReadingCreateInput } from "src/types/readings";
 
@@ -45,9 +47,12 @@ export const POST = async (req: NextRequest) => {
     return NextResponse.json({ success: false, error: "ACCOUNT_MISMATCH" }, { status: 403 });
   }
 
+  const effectiveDateResult = await SettingsService.getEffectiveDate();
+  const effectiveDate = effectiveDateResult.success ? effectiveDateResult.data : new Date();
+
   const input: Omit<ReadingCreateInput, "readerAccountId"> = {
     meterId: body.meterId ?? "",
-    readAt: body.readAt ?? new Date().toISOString(),
+    readAt: effectiveDate.toISOString(),
     method: body.method as ReadingCreateInput["method"],
     value: body.value as number,
     originalValue: body.originalValue,
@@ -69,6 +74,12 @@ export const POST = async (req: NextRequest) => {
       { success: false, error: result.error, details: result.details },
       { status }
     );
+  }
+
+  try {
+    await BillingService.generateDraftForMeter(input.meterId, effectiveDate);
+  } catch (error) {
+    console.error("[MobileReadings] Failed to generate draft invoice", error);
   }
 
   return NextResponse.json({ success: true, data: result.data }, { status: 201 });

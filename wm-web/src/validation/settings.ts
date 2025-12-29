@@ -18,18 +18,18 @@ export const validateSettingsUpdate = (input: SettingsUpdateInput): ValidationRe
     return { valid: false, errors };
   }
 
-  if (input.key === "currentMonth.mode") {
+  if (input.key === "currentDate.mode") {
     if (input.value !== "auto" && input.value !== "manual") {
       pushError(errors, "value", "Must be auto or manual");
     }
-  } else if (input.key === "currentMonth.value") {
+  } else if (input.key === "currentDate.value") {
     if (input.value === null) {
       return { valid: true, errors };
     }
-    if (typeof input.value !== "number" || !Number.isInteger(input.value)) {
-      pushError(errors, "value", "Must be an integer month");
-    } else if (input.value < 1 || input.value > 12) {
-      pushError(errors, "value", "Month must be between 1 and 12");
+    if (typeof input.value !== "string") {
+      pushError(errors, "value", "Must be a date string");
+    } else if (!isValidDate(input.value)) {
+      pushError(errors, "value", "Must be a valid ISO date (YYYY-MM-DD)");
     }
   } else if (input.key === "currency") {
     if (typeof input.value !== "string" || input.value.trim().length === 0) {
@@ -38,4 +38,11 @@ export const validateSettingsUpdate = (input: SettingsUpdateInput): ValidationRe
   }
 
   return { valid: Object.keys(errors).length === 0, errors };
+};
+
+const isValidDate = (value: string) => {
+  const match = /^\d{4}-\d{2}-\d{2}$/.test(value);
+  if (!match) return false;
+  const parsed = new Date(`${value}T00:00:00`);
+  return !Number.isNaN(parsed.getTime());
 };

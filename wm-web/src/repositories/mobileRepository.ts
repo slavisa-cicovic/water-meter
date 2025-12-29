@@ -73,23 +73,23 @@ export const MobileRepository = {
   async listInvoicesForYear(
     accountId: string,
     year: number
-  ): Promise<Array<{ id: string; updatedAt: string; totalAmount: number; status: string }>> {
+  ): Promise<Array<{ id: string; periodEnd: string | null; totalAmount: number; status: string }>> {
     const start = new Date(Date.UTC(year, 0, 1));
     const end = new Date(Date.UTC(year + 1, 0, 1));
 
     const invoices = await prisma.invoice.findMany({
       where: {
         accountId,
-        status: "issued",
-        updatedAt: { gte: start, lt: end },
+        status: "paid",
+        periodEnd: { gte: start, lt: end },
       },
-      orderBy: { updatedAt: "asc" },
-      select: { id: true, updatedAt: true, totalAmount: true, status: true },
+      orderBy: { periodEnd: "asc" },
+      select: { id: true, updatedAt: true, totalAmount: true, status: true, periodEnd: true },
     });
 
     return invoices.map((invoice) => ({
       id: invoice.id,
-      updatedAt: invoice.updatedAt.toISOString(),
+      periodEnd: invoice.periodEnd ? invoice.periodEnd.toISOString() : null,
       totalAmount: Number(invoice.totalAmount),
       status: invoice.status,
     }));
@@ -160,6 +160,8 @@ export const MobileRepository = {
     periodStart: Date | null;
     periodEnd: Date | null;
     consumption: number;
+    previousValue: number | null;
+    currentValue: number | null;
     unitPrice: number;
     subtotal: number;
     vatRate: number;
@@ -177,10 +179,13 @@ export const MobileRepository = {
     const invoice = await prisma.invoice.findFirst({
       where: { accountId, status: "issued" },
       orderBy: { updatedAt: "desc" },
-      include: { lines: true, meter: true },
+      include: { lines: true, meter: true, readings: { include: { reading: true } } },
     });
 
     if (!invoice) return null;
+
+    const startReading = invoice.readings.find((link) => link.role === "start")?.reading ?? null;
+    const endReading = invoice.readings.find((link) => link.role === "end")?.reading ?? null;
 
     return {
       id: invoice.id,
@@ -189,6 +194,8 @@ export const MobileRepository = {
       periodStart: invoice.periodStart,
       periodEnd: invoice.periodEnd,
       consumption: invoice.consumption,
+      previousValue: startReading?.value ?? null,
+      currentValue: endReading?.value ?? null,
       unitPrice: Number(invoice.unitPrice),
       subtotal: Number(invoice.subtotal),
       vatRate: Number(invoice.vatRate),
@@ -203,6 +210,14 @@ export const MobileRepository = {
         amount: Number(line.amount),
       })),
     };
+  },
+
+  async hasIssuedInvoice(accountId: string): Promise<boolean> {
+    const invoice = await prisma.invoice.findFirst({
+      where: { accountId, status: "issued" },
+      select: { id: true },
+    });
+    return Boolean(invoice);
   },
 
   async findMobileAccount(accountId: string): Promise<(AccountBase & { meter: MobileAccountMeter | null }) | null> {
@@ -224,7 +239,7 @@ export const MobileRepository = {
           lastName: input.lastName,
           email: input.email,
         },
-        select: { id: true, firstName: true, lastName: true, email: true, role: true },
+        select: { id: true, firstName: true, lastName: true, email: true, address: true, role: true },
       });
     } catch (error: unknown) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {

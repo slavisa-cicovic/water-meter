@@ -41,6 +41,7 @@ import { useResponsive } from 'src/hooks/use-responsive';
 import { BillingApi, useGetInvoices, useGetTariffs } from 'src/api/billing';
 import { ReadingsApi, useGetReadings } from 'src/api/readings';
 import { AccountsApi } from 'src/api/accounts';
+import { useGetSettings } from 'src/api/settings';
 // auth
 import { useAuthContext } from 'src/auth/hooks';
 // components
@@ -394,7 +395,23 @@ export default function AccountEditForm({ currentAccount }: Props) {
     return 'warning';
   };
 
-  const currentMonthKey = `${new Date().getFullYear()}-${new Date().getMonth()}`;
+  const { settings: appSettings } = useGetSettings();
+  const effectiveDate = useMemo(() => {
+    const now = new Date();
+    if (appSettings?.currentDateMode !== 'manual' || !appSettings.currentDateValue) return now;
+    const parsed = new Date(`${appSettings.currentDateValue}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) return now;
+    return new Date(
+      parsed.getFullYear(),
+      parsed.getMonth(),
+      parsed.getDate(),
+      now.getHours(),
+      now.getMinutes(),
+      now.getSeconds(),
+      now.getMilliseconds()
+    );
+  }, [appSettings?.currentDateMode, appSettings?.currentDateValue]);
+  const currentMonthKey = `${effectiveDate.getFullYear()}-${effectiveDate.getMonth()}`;
 
   const handleOpenReviewDialog = (invoice: Invoice) => {
     setReviewInvoice(invoice);

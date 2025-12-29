@@ -1,5 +1,6 @@
 import { JobDefinition } from 'src/types/jobs';
 import { BillingService } from 'src/services/billingService';
+import { SettingsService } from 'src/services/settingsService';
 
 export type JobHandlerContext = {
   job: JobDefinition;
@@ -25,7 +26,9 @@ export const jobHandlers: Record<string, JobHandler> = {
   async billing_generate({ job, runId, attempt, initiatorId, payload }) {
     console.info('[JobHandler] billing_generate', { jobId: job.id, runId, attempt });
     const mode = payload?.mode === 'manual' ? 'manual' : 'auto';
-    const result = await BillingService.generateDraftsFromReadings(new Date(), {
+    const effectiveDateResult = await SettingsService.getEffectiveDate();
+    const effectiveDate = effectiveDateResult.success ? effectiveDateResult.data : new Date();
+    const result = await BillingService.generateDraftsFromReadings(effectiveDate, {
       mode,
       overrideIssued: Boolean(payload?.overrideIssued),
       overridePaid: Boolean(payload?.overridePaid),
