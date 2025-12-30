@@ -1,5 +1,12 @@
 import { ReactNode } from "react";
-import { ScrollView, StyleSheet, StyleProp, ViewStyle } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleProp,
+  StyleSheet,
+  ViewStyle,
+} from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
@@ -9,24 +16,47 @@ type ScrollScreenProps = {
   title: string;
   children: ReactNode;
   contentContainerStyle?: StyleProp<ViewStyle>;
+  keyboardAvoiding?: boolean;
+  keyboardOffset?: number;
 };
 
 const CONTENT_PADDING_BOTTOM = 32;
 
-export default function ScrollScreen({ title, children, contentContainerStyle }: ScrollScreenProps) {
+export default function ScrollScreen({
+  title,
+  children,
+  contentContainerStyle,
+  keyboardAvoiding = false,
+  keyboardOffset = 0,
+}: ScrollScreenProps) {
   const tabBarHeight = useBottomTabBarHeight();
   const insets = useSafeAreaInsets();
   const bottomPadding = CONTENT_PADDING_BOTTOM + tabBarHeight + insets.bottom;
 
+  const scrollContent = (
+    <ScrollView
+      contentContainerStyle={[styles.content, contentContainerStyle, { paddingBottom: bottomPadding }]}
+      scrollIndicatorInsets={{ bottom: bottomPadding }}
+      keyboardShouldPersistTaps="handled"
+    >
+      {children}
+    </ScrollView>
+  );
+
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
       <AppBar title={title} />
-      <ScrollView
-        contentContainerStyle={[styles.content, contentContainerStyle, { paddingBottom: bottomPadding }]}
-        scrollIndicatorInsets={{ bottom: bottomPadding }}
-      >
-        {children}
-      </ScrollView>
+      {keyboardAvoiding ? (
+        <KeyboardAvoidingView
+          style={styles.keyboardContainer}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={keyboardOffset}
+        >
+          {scrollContent}
+        </KeyboardAvoidingView>
+      ) : (
+        scrollContent
+      )}
     </SafeAreaView>
   );
 }
@@ -34,4 +64,5 @@ export default function ScrollScreen({ title, children, contentContainerStyle }:
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f7ff" },
   content: { padding: 20, paddingBottom: CONTENT_PADDING_BOTTOM },
+  keyboardContainer: { flex: 1 },
 });

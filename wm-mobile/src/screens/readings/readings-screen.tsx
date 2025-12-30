@@ -131,7 +131,7 @@ export default function ReadingsScreen() {
   };
 
   return (
-    <ScrollScreen title="Read meter" contentContainerStyle={styles.content}>
+    <ScrollScreen title="Read meter" contentContainerStyle={styles.content} keyboardAvoiding>
       <Modal transparent animationType="fade" visible={showSuccess}>
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
