@@ -11,16 +11,18 @@ export default function BillingTable({ rows }: BillingTableProps) {
     <View>
       <View style={styles.tableHeader}>
         <Text style={[styles.tableCell, styles.tableCellMonth, styles.tableHeaderText]}>Mo</Text>
-        <Text style={[styles.tableCell, styles.tableCellNumber, styles.tableHeaderText]}>Amt</Text>
-        <Text style={[styles.tableCell, styles.tableHeaderText]}>Status</Text>
+        <Text style={[styles.tableCell, styles.tableCellAmount, styles.tableHeaderText]}>Amt</Text>
+        <Text style={[styles.tableCell, styles.tableCellStatus, styles.tableHeaderText]}>
+          Status
+        </Text>
       </View>
       {rows.map((row) => (
         <View key={row.month} style={styles.tableRow}>
           <Text style={[styles.tableCell, styles.tableCellMonth]}>{monthLabels[row.month - 1]}</Text>
-          <Text style={[styles.tableCell, styles.tableCellNumber]}>
+          <Text style={[styles.tableCell, styles.tableCellAmount]}>
             {row.status ? row.amount : "-"}
           </Text>
-          <Text style={styles.tableCell}>{row.status ?? "-"}</Text>
+          <Text style={[styles.tableCell, styles.tableCellStatus]}>{row.status ?? "-"}</Text>
         </View>
       ))}
     </View>
@@ -43,6 +45,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   tableCell: { flex: 1, color: "#1f2a44", fontSize: 12 },
-  tableCellMonth: { flex: 0, width: 40 },
-  tableCellNumber: { textAlign: "right" },
+  tableCellMonth: { flex: 0, width: 60 },
+  tableCellAmount: { flex: 0, width: 120, textAlign: "right" },
+  tableCellStatus: { textAlign: "center" },
 });
