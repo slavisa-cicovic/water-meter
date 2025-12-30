@@ -178,7 +178,7 @@ export const MobileRepository = {
   } | null> {
     const invoice = await prisma.invoice.findFirst({
       where: { accountId, status: "issued" },
-      orderBy: { updatedAt: "desc" },
+      orderBy: { periodEnd: "desc" },
       include: { lines: true, meter: true, readings: { include: { reading: true } } },
     });
 
