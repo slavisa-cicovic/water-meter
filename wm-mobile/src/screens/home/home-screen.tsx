@@ -1,19 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useAuthStore } from "@src/state/auth-store";
 import { useNotificationsStore } from "@src/state/notifications-store";
 import { MobileService } from "@src/services/mobile.service";
-import { MobileAccountData, MobileBillingData, MobileConsumptionData } from "@src/api/types/mobile";
-import BillingChart from "@src/screens/home/components/ui/billing-chart";
-import BillingTable from "@src/screens/home/components/ui/billing-table";
-import ConsumptionChart from "@src/screens/home/components/ui/consumption-chart";
-import ConsumptionTable from "@src/screens/home/components/ui/consumption-table";
-import YearPicker from "@src/screens/home/components/ui/year-picker";
-import { TABLE_BODY_HEIGHT } from "@src/screens/home/utils/layout";
+import {
+  MobileAccountData,
+  MobileBillingData,
+  MobileConsumptionData,
+  MobileStaffMeter,
+} from "@src/api/types/mobile";
+import ConsumptionSection from "@src/screens/home/components/ui/consumption-section";
+import BillingSection from "@src/screens/home/components/ui/billing-section";
+import StaffMetersSection from "@src/screens/home/components/ui/staff-meters-section";
 import ScrollScreen from "@src/components/layout/scroll-screen";
+import { useRouter } from "expo-router";
 
 export default function HomeScreen() {
+  const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const refreshNotifications = useNotificationsStore((state) => state.refreshNotifications);
   const [meterInfo, setMeterInfo] = useState<MobileAccountData["meter"] | null>(null);
@@ -21,11 +25,14 @@ export default function HomeScreen() {
   const [consumptionTab, setConsumptionTab] = useState<"chart" | "table">("chart");
   const [billing, setBilling] = useState<MobileBillingData | null>(null);
   const [billingTab, setBillingTab] = useState<"chart" | "table">("chart");
-  const [showNotifications, setShowNotifications] = useState(false);
   const [refreshingConsumption, setRefreshingConsumption] = useState(false);
   const [refreshingBilling, setRefreshingBilling] = useState(false);
+  const [staffMeters, setStaffMeters] = useState<MobileStaffMeter[]>([]);
+  const [staffLoading, setStaffLoading] = useState(false);
+  const [staffError, setStaffError] = useState<string | null>(null);
   const displayName = user ? `${user.firstName} ${user.lastName}`.trim() : "Field operator";
   const isConsumer = user?.role === "consumer";
+  const isStaffField = user?.role === "staff_field";
   const currentYear = useMemo(() => new Date().getFullYear(), []);
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [billingYear, setBillingYear] = useState(currentYear);
@@ -99,13 +106,29 @@ export default function HomeScreen() {
     };
   }, [loadAccount]);
 
+  const loadStaffMeters = useCallback(async (setLoading?: (value: boolean) => void) => {
+    if (!isStaffField) return;
+    setLoading?.(true);
+    setStaffLoading(true);
+    const result = await MobileService.getStaffMeters();
+    if (result.success) {
+      setStaffMeters(result.data.meters);
+      setStaffError(null);
+    } else {
+      setStaffError(result.message);
+    }
+    setStaffLoading(false);
+    setLoading?.(false);
+  }, [isStaffField]);
+
   useFocusEffect(
     useCallback(() => {
       loadAccount();
       loadConsumption();
       loadBilling();
       refreshNotifications();
-    }, [loadAccount, loadConsumption, loadBilling, refreshNotifications])
+      loadStaffMeters();
+    }, [loadAccount, loadBilling, loadConsumption, loadStaffMeters, refreshNotifications])
   );
 
   return (
@@ -150,119 +173,43 @@ export default function HomeScreen() {
         ) : null}
 
         {isConsumer ? (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Consumption</Text>
-              <View style={styles.sectionActions}>
-                <YearPicker value={selectedYear} minYear={minYear} maxYear={currentYear} onChange={setSelectedYear} />
-                <TouchableOpacity
-                  style={styles.refreshButton}
-                  onPress={() => loadConsumption(setRefreshingConsumption)}
-                  disabled={refreshingConsumption}
-                >
-                  <Text style={styles.refreshText}>
-                    {refreshingConsumption ? "Refreshing..." : "Refresh"}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-            <View style={styles.tabs}>
-              <TouchableOpacity
-                style={[styles.tabButton, consumptionTab === "chart" ? styles.tabButtonActive : null]}
-                onPress={() => setConsumptionTab("chart")}
-              >
-                <Text
-                  style={[
-                    styles.tabText,
-                    consumptionTab === "chart" ? styles.tabTextActive : null,
-                  ]}
-                >
-                  Chart
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.tabButton, consumptionTab === "table" ? styles.tabButtonActive : null]}
-                onPress={() => setConsumptionTab("table")}
-              >
-                <Text
-                  style={[
-                    styles.tabText,
-                    consumptionTab === "table" ? styles.tabTextActive : null,
-                  ]}
-                >
-                  Table
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {consumptionTab === "chart" ? (
-              <View style={styles.chartCard}>
-                <ConsumptionChart data={consumption?.chart ?? []} />
-              </View>
-            ) : (
-              <View style={styles.tableCard}>
-                <ConsumptionTable rows={consumption?.rows ?? []} />
-              </View>
-            )}
-          </View>
+          <ConsumptionSection
+            data={consumption}
+            tab={consumptionTab}
+            selectedYear={selectedYear}
+            minYear={minYear}
+            maxYear={currentYear}
+            refreshing={refreshingConsumption}
+            onTabChange={setConsumptionTab}
+            onYearChange={setSelectedYear}
+            onRefresh={() => loadConsumption(setRefreshingConsumption)}
+          />
         ) : null}
 
         {isConsumer ? (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Billing</Text>
-              <View style={styles.sectionActions}>
-                <YearPicker value={billingYear} minYear={minYear} maxYear={currentYear} onChange={setBillingYear} />
-                <TouchableOpacity
-                  style={styles.refreshButton}
-                  onPress={() => loadBilling(setRefreshingBilling)}
-                  disabled={refreshingBilling}
-                >
-                  <Text style={styles.refreshText}>
-                    {refreshingBilling ? "Refreshing..." : "Refresh"}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-            <View style={styles.tabs}>
-              <TouchableOpacity
-                style={[styles.tabButton, billingTab === "chart" ? styles.tabButtonActive : null]}
-                onPress={() => setBillingTab("chart")}
-              >
-                <Text
-                  style={[
-                    styles.tabText,
-                    billingTab === "chart" ? styles.tabTextActive : null,
-                  ]}
-                >
-                  Chart
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.tabButton, billingTab === "table" ? styles.tabButtonActive : null]}
-                onPress={() => setBillingTab("table")}
-              >
-                <Text
-                  style={[
-                    styles.tabText,
-                    billingTab === "table" ? styles.tabTextActive : null,
-                  ]}
-                >
-                  Table
-                </Text>
-              </TouchableOpacity>
-            </View>
+          <BillingSection
+            data={billing}
+            tab={billingTab}
+            selectedYear={billingYear}
+            minYear={minYear}
+            maxYear={currentYear}
+            refreshing={refreshingBilling}
+            onTabChange={setBillingTab}
+            onYearChange={setBillingYear}
+            onRefresh={() => loadBilling(setRefreshingBilling)}
+          />
+        ) : null}
 
-            {billingTab === "chart" ? (
-              <View style={styles.chartCard}>
-                <BillingChart data={billing?.chart ?? []} />
-              </View>
-            ) : (
-              <View style={styles.tableCard}>
-                <BillingTable rows={billing?.rows ?? []} />
-              </View>
-            )}
-          </View>
+        {isStaffField ? (
+          <StaffMetersSection
+            meters={staffMeters}
+            loading={staffLoading}
+            error={staffError}
+            onRefresh={() => loadStaffMeters()}
+            onSelectMeter={(meterId) => {
+              router.push({ pathname: "/readings", params: { meterId } });
+            }}
+          />
         ) : null}
 
     </ScrollScreen>
@@ -280,40 +227,6 @@ const styles = StyleSheet.create({
   content: { padding: 20, paddingBottom: 32 },
   section: { marginBottom: 22 },
   sectionTitle: { color: "#2b3a67", fontSize: 16, fontWeight: "700", marginBottom: 12 },
-  sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  sectionActions: { flexDirection: "row", alignItems: "center", gap: 8 },
-  refreshButton: {
-    backgroundColor: "#e9edfb",
-    borderRadius: 10,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-  },
-  refreshText: { color: "#3a4c7a", fontSize: 11, fontWeight: "600" },
-  tabs: { flexDirection: "row", gap: 8, marginTop: 10 },
-  tabButton: {
-    backgroundColor: "#e9edfb",
-    borderRadius: 12,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-  },
-  tabButtonActive: { backgroundColor: "#3a4c7a" },
-  tabText: { color: "#3a4c7a", fontSize: 12, fontWeight: "600" },
-  tabTextActive: { color: "#ffffff" },
-  chartCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#e1e6f3",
-    minHeight: TABLE_BODY_HEIGHT,
-  },
-  tableCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#e1e6f3",
-  },
   emptyText: { color: "#6b7aa6", fontSize: 12, marginTop: 8 },
   infoCard: {
     backgroundColor: "#ffffff",

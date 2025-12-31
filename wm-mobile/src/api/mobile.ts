@@ -10,6 +10,7 @@ import {
   MobileReadingResult,
   MobilePaymentData,
   MobileNotificationsData,
+  MobileStaffMetersData,
 } from "@src/api/types/mobile";
 
 export const MobileApi = {
@@ -35,8 +36,10 @@ export const MobileApi = {
     });
     return res.data;
   },
-  getReadingContext: async (): Promise<ApiResponse<MobileReadingContext>> => {
-    const res = await apiClient.get<ApiResponse<MobileReadingContext>>("/api/mobile/readings");
+  getReadingContext: async (meterId?: string): Promise<ApiResponse<MobileReadingContext>> => {
+    const res = await apiClient.get<ApiResponse<MobileReadingContext>>("/api/mobile/readings", {
+      params: meterId ? { meterId } : undefined,
+    });
     return res.data;
   },
   createReading: async (
@@ -57,6 +60,10 @@ export const MobileApi = {
   },
   getNotifications: async (): Promise<ApiResponse<MobileNotificationsData>> => {
     const res = await apiClient.get<ApiResponse<MobileNotificationsData>>("/api/mobile/notifications");
+    return res.data;
+  },
+  getStaffMeters: async (): Promise<ApiResponse<MobileStaffMetersData>> => {
+    const res = await apiClient.get<ApiResponse<MobileStaffMetersData>>("/api/mobile/meters");
     return res.data;
   },
 };

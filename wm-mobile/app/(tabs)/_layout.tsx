@@ -76,7 +76,7 @@ export default function TabsLayout() {
   }, [refreshNotifications, setHasIssuedInvoice, user?.id]);
 
   const hideReadings = user?.role === "consumer" && sharedMeter === true;
-  const paymentEnabled = user?.role === "consumer" ? hasIssuedInvoice : true;
+  const paymentEnabled = user?.role === "consumer" ? hasIssuedInvoice : false;
 
   return (
     <Tabs

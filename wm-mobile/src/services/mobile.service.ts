@@ -9,6 +9,7 @@ import {
   MobileReadingResult,
   MobilePaymentData,
   MobileNotificationsData,
+  MobileStaffMetersData,
 } from "@src/api/types/mobile";
 import { useAuthStore } from "@src/state/auth-store";
 
@@ -129,9 +130,9 @@ export const MobileService = {
     }
   },
 
-  async getReadingContext(): Promise<ServiceResult<MobileReadingContext>> {
+  async getReadingContext(meterId?: string): Promise<ServiceResult<MobileReadingContext>> {
     try {
-      const res = await MobileApi.getReadingContext();
+      const res = await MobileApi.getReadingContext(meterId);
       if (!res.success) {
         const message = (res.error && ERROR_MESSAGES[res.error]) || "Unable to load reading data.";
         return { success: false, message, details: res.details };
@@ -241,6 +242,28 @@ export const MobileService = {
       const message = code
         ? ERROR_MESSAGES[code] || "Unable to load notifications."
         : "Unable to load notifications.";
+      return { success: false, message };
+    }
+  },
+
+  async getStaffMeters(): Promise<ServiceResult<MobileStaffMetersData>> {
+    try {
+      const res = await MobileApi.getStaffMeters();
+      if (!res.success) {
+        const message = (res.error && ERROR_MESSAGES[res.error]) || "Unable to load meters.";
+        return { success: false, message, details: res.details };
+      }
+
+      const data = res.data as MobileStaffMetersData | undefined;
+      if (!data) {
+        return { success: false, message: "Invalid meters response." };
+      }
+
+      return { success: true, data };
+    } catch (error: unknown) {
+      const apiError = error as { response?: { data?: { error?: string } } };
+      const code = apiError.response?.data?.error;
+      const message = code ? ERROR_MESSAGES[code] || "Unable to load meters." : "Unable to load meters.";
       return { success: false, message };
     }
   },

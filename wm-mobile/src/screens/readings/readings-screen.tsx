@@ -12,12 +12,13 @@ import * as ImagePicker from "expo-image-picker";
 import ScrollScreen from "@src/components/layout/scroll-screen";
 import SubmitButton from "@src/components/ui/submit-button";
 import { MobileService } from "@src/services/mobile.service";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAuthStore } from "@src/state/auth-store";
 import { MobileReadingContext } from "@src/api/types/mobile";
 
 export default function ReadingsScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const user = useAuthStore((state) => state.user);
   const [context, setContext] = useState<MobileReadingContext | null>(null);
   const [contextError, setContextError] = useState<string | null>(null);
@@ -26,31 +27,56 @@ export default function ReadingsScreen() {
   const [imageFilename, setImageFilename] = useState<string | null>(null);
   const [recognizedValue, setRecognizedValue] = useState<number | null>(null);
   const [inputValue, setInputValue] = useState("");
+  const [availableMeters, setAvailableMeters] = useState<
+    NonNullable<MobileReadingContext["meters"]>
+  >([]);
+  const [selectedMeterId, setSelectedMeterId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const routeMeterId = typeof params.meterId === "string" ? params.meterId : null;
+
+  const loadContext = async (meterId?: string | null) => {
+    setLoadingContext(true);
+    const result = await MobileService.getReadingContext(meterId ?? undefined);
+    setLoadingContext(false);
+    if (!result.success) {
+      setContextError(result.message);
+      return;
+    }
+    setContextError(null);
+    setContext(result.data);
+    setAvailableMeters(result.data.meters ?? []);
+  };
 
   useEffect(() => {
     let mounted = true;
-    const loadContext = async () => {
-      setLoadingContext(true);
-      const result = await MobileService.getReadingContext();
+    const load = async () => {
       if (!mounted) return;
-      setLoadingContext(false);
-      if (!result.success) {
-        setContextError(result.message);
-        return;
-      }
-      setContextError(null);
-      setContext(result.data);
+      await loadContext(routeMeterId);
     };
 
-    loadContext();
+    load();
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [routeMeterId]);
 
   const previousPaidValue = context?.previousPaidValue ?? 0;
   const meter = context?.meter ?? null;
+  const isStaffField = user?.role === "staff_field";
+
+  const resetReadingInput = () => {
+    setPhotoUri(null);
+    setImageFilename(null);
+    setRecognizedValue(null);
+    setInputValue("");
+  };
+
+  const handleSelectMeter = (meterId: string) => {
+    setSelectedMeterId(meterId);
+    resetReadingInput();
+    loadContext(meterId).catch(() => null);
+  };
 
   const handleTakePhoto = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -122,7 +148,33 @@ export default function ReadingsScreen() {
 
   return (
     <ScrollScreen title="Read meter" contentContainerStyle={styles.content} keyboardAvoiding>
-      <View style={styles.card}>
+      {isStaffField && !meter && !routeMeterId ? (
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Select meter</Text>
+          {loadingContext ? <Text style={styles.helperText}>Loading meters...</Text> : null}
+          {contextError ? <Text style={styles.errorText}>{contextError}</Text> : null}
+          {availableMeters.length === 0 && !loadingContext ? (
+            <Text style={styles.helperText}>No meters available.</Text>
+          ) : null}
+          {availableMeters.map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              style={[
+                styles.meterOption,
+                selectedMeterId === item.id ? styles.meterOptionActive : null,
+              ]}
+              onPress={() => handleSelectMeter(item.id)}
+            >
+              <View style={styles.meterOptionHeader}>
+                <Text style={styles.meterOptionSerial}>{item.serialNumber}</Text>
+                {item.shared ? <Text style={styles.meterOptionBadge}>Shared</Text> : null}
+              </View>
+              <Text style={styles.meterOptionAddress}>{item.address ?? "Address not set"}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      ) : (
+        <View style={styles.card}>
           <Text style={styles.sectionTitle}>Meter capture</Text>
           <Text style={styles.meterMeta}>
             {meter ? `Meter ${meter.serialNumber}` : "Meter not linked"}
@@ -171,6 +223,7 @@ export default function ReadingsScreen() {
             onPress={handleSubmit}
           />
         </View>
+      )}
     </ScrollScreen>
   );
 }
@@ -222,4 +275,32 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   inputReadOnly: { backgroundColor: "#f3f5fb" },
+  meterOption: {
+    marginTop: 12,
+    backgroundColor: "#f8f9ff",
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#e1e6f3",
+  },
+  meterOptionActive: {
+    borderColor: "#3a4c7a",
+    backgroundColor: "#eef1fb",
+  },
+  meterOptionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  meterOptionSerial: { color: "#1f2a44", fontSize: 14, fontWeight: "700" },
+  meterOptionBadge: {
+    color: "#3a4c7a",
+    fontSize: 11,
+    fontWeight: "600",
+    backgroundColor: "#e9edfb",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 999,
+  },
+  meterOptionAddress: { color: "#6b7aa6", fontSize: 12, marginTop: 6 },
 });

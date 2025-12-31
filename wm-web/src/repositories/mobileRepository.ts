@@ -50,6 +50,72 @@ export const MobileRepository = {
     return { meterId: link.meterId, serialNumber: link.meter.serialNumber };
   },
 
+  async listMetersForField(): Promise<
+    Array<{ id: string; serialNumber: string; address: string | null; shared: boolean }>
+  > {
+    const meters = await this.listMetersWithConsumersForField();
+    return meters.map((meter) => ({
+      id: meter.id,
+      serialNumber: meter.serialNumber,
+      address: meter.address,
+      shared: meter.shared,
+    }));
+  },
+
+  async findMeterSummary(
+    meterId: string
+  ): Promise<{ id: string; serialNumber: string } | null> {
+    const meter = await prisma.meter.findUnique({
+      where: { id: meterId },
+      select: { id: true, serialNumber: true, status: true },
+    });
+
+    if (!meter || meter.status !== "active") {
+      return null;
+    }
+
+    return { id: meter.id, serialNumber: meter.serialNumber };
+  },
+
+  async listMetersWithConsumersForField(): Promise<
+    Array<{
+      id: string;
+      serialNumber: string;
+      address: string | null;
+      shared: boolean;
+      consumerCount: number;
+      consumers: Array<{ id: string; firstName: string; lastName: string; householdSize: number | null }>;
+    }>
+  > {
+    const meters = await prisma.meter.findMany({
+      where: { status: "active" },
+      orderBy: { serialNumber: "asc" },
+      include: {
+        consumers: {
+          include: { account: { include: { consumerProfile: true } } },
+          orderBy: { accountId: "asc" },
+        },
+      },
+    });
+
+    return meters.map((meter) => {
+      const consumers = meter.consumers.map((entry) => ({
+        id: entry.accountId,
+        firstName: entry.account.firstName,
+        lastName: entry.account.lastName,
+        householdSize: entry.account.consumerProfile?.householdSize ?? null,
+      }));
+      return {
+        id: meter.id,
+        serialNumber: meter.serialNumber,
+        address: meter.address,
+        shared: consumers.length > 1,
+        consumerCount: consumers.length,
+        consumers,
+      };
+    });
+  },
+
   async listMeterReadingsForYear(
     meterId: string,
     year: number
@@ -132,6 +198,25 @@ export const MobileRepository = {
     if (!resolved) return null;
 
     return { value: resolved.value, readAt: resolved.readAt.toISOString() };
+  },
+
+  async findLatestPaidReadingForMeter(meterId: string): Promise<{ value: number; readAt: string } | null> {
+    const reading = await prisma.reading.findFirst({
+      where: {
+        meterId,
+        invoiceLinks: {
+          some: {
+            invoice: { status: "paid" },
+          },
+        },
+      },
+      orderBy: { readAt: "desc" },
+      select: { value: true, readAt: true },
+    });
+
+    if (!reading) return null;
+
+    return { value: reading.value, readAt: reading.readAt.toISOString() };
   },
 
   async findLatestReadingBefore(

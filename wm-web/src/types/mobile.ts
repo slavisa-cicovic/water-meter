@@ -60,6 +60,32 @@ export type MobileBillingData = {
 export type MobileReadingContext = {
   meter: { id: string; serialNumber: string } | null;
   previousPaidValue: number;
+  meters?: Array<{
+    id: string;
+    serialNumber: string;
+    address: string | null;
+    shared: boolean;
+  }>;
+};
+
+export type MobileStaffMeterConsumer = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  householdSize: number | null;
+};
+
+export type MobileStaffMeter = {
+  id: string;
+  serialNumber: string;
+  address: string | null;
+  shared: boolean;
+  consumerCount: number;
+  consumers: MobileStaffMeterConsumer[];
+};
+
+export type MobileStaffMetersData = {
+  meters: MobileStaffMeter[];
 };
 
 export type MobilePaymentInvoiceLine = {

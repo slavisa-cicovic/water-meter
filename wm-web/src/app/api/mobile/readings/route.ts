@@ -28,7 +28,12 @@ export const GET = async (req: NextRequest) => {
     return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
   }
 
-  const result = await MobileService.getReadingContext(auth.payload.accountId);
+  const meterId = req.nextUrl.searchParams.get("meterId") ?? undefined;
+  const result = await MobileService.getReadingContext(
+    auth.payload.accountId,
+    auth.payload.role,
+    meterId
+  );
   if (!result.success) {
     return NextResponse.json({ success: false, error: result.error }, { status: 500 });
   }

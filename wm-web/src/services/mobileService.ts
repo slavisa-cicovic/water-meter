@@ -7,9 +7,10 @@ import {
   MobileReadingContext,
   MobilePaymentInvoice,
   MobileNotificationsData,
+  MobileStaffMetersData,
 } from "src/types/mobile";
 import { validateMobileProfileUpdate } from "src/validation/mobile";
-import { Prisma } from "@prisma/client";
+import { AccountRole, Prisma } from "@prisma/client";
 import { ReadingsService } from "src/services/readingsService";
 import { Reading, ReadingCreateInput } from "src/types/readings";
 
@@ -141,7 +142,40 @@ export const MobileService = {
     return { success: true, data: { hasIssuedInvoice } };
   },
 
-  async getReadingContext(accountId: string): Promise<ServiceResult<MobileReadingContext>> {
+  async getStaffMeters(role: AccountRole): Promise<ServiceResult<MobileStaffMetersData>> {
+    if (role !== "staff_field") {
+      return { success: false, error: "FORBIDDEN" };
+    }
+    const meters = await MobileRepository.listMetersWithConsumersForField();
+    return { success: true, data: { meters } };
+  },
+
+  async getReadingContext(
+    accountId: string,
+    role: AccountRole,
+    meterId?: string
+  ): Promise<ServiceResult<MobileReadingContext>> {
+    if (role === "staff_field") {
+      if (!meterId) {
+        const meters = await MobileRepository.listMetersForField();
+        return { success: true, data: { meter: null, previousPaidValue: 0, meters } };
+      }
+
+      const meter = await MobileRepository.findMeterSummary(meterId);
+      if (!meter) {
+        return { success: true, data: { meter: null, previousPaidValue: 0 } };
+      }
+
+      const latestPaid = await MobileRepository.findLatestPaidReadingForMeter(meter.id);
+      return {
+        success: true,
+        data: {
+          meter: { id: meter.id, serialNumber: meter.serialNumber },
+          previousPaidValue: latestPaid?.value ?? 0,
+        },
+      };
+    }
+
     const meter = await MobileRepository.findConsumerMeterLink(accountId);
     if (!meter) {
       return { success: true, data: { meter: null, previousPaidValue: 0 } };
