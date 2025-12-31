@@ -1,3 +1,4 @@
+import { Prisma, PrismaClient } from '@prisma/client';
 import { AccountRepository } from 'src/repositories/accountRepository';
 import { BillingRepository } from 'src/repositories/billingRepository';
 import { MeterRepository } from 'src/repositories/meterRepository';
@@ -48,7 +49,7 @@ const resolveConsumerTariff = async (options: {
   periodStart: Date;
   periodEnd: Date;
   cache: Map<string, any | null>;
-  client?: typeof prisma;
+  client?: Prisma.TransactionClient | PrismaClient;
 }) => {
   const { tariffId, fallback, periodStart, periodEnd, cache, client = prisma } = options;
   if (!tariffId) return fallback;
@@ -182,38 +183,57 @@ export const BillingService = {
         const vatAmount = toMoney(subtotal * vatRate);
         const totalAmount = toMoney(subtotal + vatAmount);
 
-        const invoice = await BillingRepository.createInvoice({
-          accountId,
-          meterId: meter.id,
-          periodStart,
-          periodEnd,
-          status: 'draft',
-          consumption: consumptionTotal,
-          unitPrice,
-          subtotal,
-          vatRate,
-          vatAmount,
-          totalAmount,
-          tariffId: tariff.id,
-          tariffSnapshot,
-        });
+        const invoice = await prisma.$transaction(async (tx) => {
+          const createdInvoice = await BillingRepository.createInvoice(
+            {
+              accountId,
+              meterId: meter.id,
+              periodStart,
+              periodEnd,
+              status: 'draft',
+              consumption: consumptionTotal,
+              unitPrice,
+              subtotal,
+              vatRate,
+              vatAmount,
+              totalAmount,
+              tariffId: tariff.id,
+              tariffSnapshot,
+            },
+            tx
+          );
 
-        await BillingRepository.addInvoiceLine({
-          invoiceId: invoice.id,
-          type: 'consumption',
-          description: 'Water consumption',
-          quantity: toQuantity(consumptionTotal),
-          unitPrice,
-          amount: subtotal,
+          await BillingRepository.addInvoiceLine(
+            {
+              invoiceId: createdInvoice.id,
+              type: 'consumption',
+              description: 'Water consumption',
+              quantity: toQuantity(consumptionTotal),
+              unitPrice,
+              amount: subtotal,
+            },
+            tx
+          );
+          await BillingRepository.addInvoiceLine(
+            {
+              invoiceId: createdInvoice.id,
+              type: 'vat',
+              description: `VAT ${toMoney(vatRate * 100)}%`,
+              amount: vatAmount,
+            },
+            tx
+          );
+          await BillingRepository.addReadingLink(
+            { invoiceId: createdInvoice.id, readingId: startReading.id, role: 'start' },
+            tx
+          );
+          await BillingRepository.addReadingLink(
+            { invoiceId: createdInvoice.id, readingId: endReading.id, role: 'end' },
+            tx
+          );
+
+          return createdInvoice;
         });
-        await BillingRepository.addInvoiceLine({
-          invoiceId: invoice.id,
-          type: 'vat',
-          description: `VAT ${toMoney(vatRate * 100)}%`,
-          amount: vatAmount,
-        });
-        await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: startReading.id, role: 'start' });
-        await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: endReading.id, role: 'end' });
 
         created.push(invoice);
         continue;
@@ -254,38 +274,57 @@ export const BillingService = {
         const vatAmount = toMoney(subtotal * vatRate);
         const totalAmount = toMoney(subtotal + vatAmount);
 
-        const invoice = await BillingRepository.createInvoice({
-          accountId: consumer.accountId,
-          meterId: meter.id,
-          periodStart,
-          periodEnd,
-          status: 'draft',
-          consumption: Math.round(consumptionShare),
-          unitPrice,
-          subtotal,
-          vatRate,
-          vatAmount,
-          totalAmount,
-          tariffId: tariff.id,
-          tariffSnapshot,
-        });
+        const invoice = await prisma.$transaction(async (tx) => {
+          const createdInvoice = await BillingRepository.createInvoice(
+            {
+              accountId: consumer.accountId,
+              meterId: meter.id,
+              periodStart,
+              periodEnd,
+              status: 'draft',
+              consumption: Math.round(consumptionShare),
+              unitPrice,
+              subtotal,
+              vatRate,
+              vatAmount,
+              totalAmount,
+              tariffId: tariff.id,
+              tariffSnapshot,
+            },
+            tx
+          );
 
-        await BillingRepository.addInvoiceLine({
-          invoiceId: invoice.id,
-          type: 'consumption',
-          description: 'Water consumption (shared)',
-          quantity: consumptionShare,
-          unitPrice,
-          amount: subtotal,
+          await BillingRepository.addInvoiceLine(
+            {
+              invoiceId: createdInvoice.id,
+              type: 'consumption',
+              description: 'Water consumption (shared)',
+              quantity: consumptionShare,
+              unitPrice,
+              amount: subtotal,
+            },
+            tx
+          );
+          await BillingRepository.addInvoiceLine(
+            {
+              invoiceId: createdInvoice.id,
+              type: 'vat',
+              description: `VAT ${toMoney(vatRate * 100)}%`,
+              amount: vatAmount,
+            },
+            tx
+          );
+          await BillingRepository.addReadingLink(
+            { invoiceId: createdInvoice.id, readingId: startReading.id, role: 'start' },
+            tx
+          );
+          await BillingRepository.addReadingLink(
+            { invoiceId: createdInvoice.id, readingId: endReading.id, role: 'end' },
+            tx
+          );
+
+          return createdInvoice;
         });
-        await BillingRepository.addInvoiceLine({
-          invoiceId: invoice.id,
-          type: 'vat',
-          description: `VAT ${toMoney(vatRate * 100)}%`,
-          amount: vatAmount,
-        });
-        await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: startReading.id, role: 'start' });
-        await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: endReading.id, role: 'end' });
 
         created.push(invoice);
       }
@@ -347,24 +386,34 @@ export const BillingService = {
 
         for (const invoice of issuedInvoices) {
           if (options?.overrideIssued) {
-            await BillingRepository.voidInvoice({
-              invoiceId: invoice.id,
-              adminId: options.adminId as string,
-              prevStatus: 'issued',
-              reason: 'manual_override',
-              jobRunId: options.jobRunId ?? null,
+            await prisma.$transaction(async (tx) => {
+              await BillingRepository.voidInvoice(
+                {
+                  invoiceId: invoice.id,
+                  adminId: options.adminId as string,
+                  prevStatus: 'issued',
+                  reason: 'manual_override',
+                  jobRunId: options.jobRunId ?? null,
+                },
+                tx
+              );
             });
           }
         }
 
         for (const invoice of paidInvoices) {
           if (options?.overridePaid) {
-            await BillingRepository.voidInvoice({
-              invoiceId: invoice.id,
-              adminId: options.adminId as string,
-              prevStatus: 'paid',
-              reason: 'manual_override',
-              jobRunId: options.jobRunId ?? null,
+            await prisma.$transaction(async (tx) => {
+              await BillingRepository.voidInvoice(
+                {
+                  invoiceId: invoice.id,
+                  adminId: options.adminId as string,
+                  prevStatus: 'paid',
+                  reason: 'manual_override',
+                  jobRunId: options.jobRunId ?? null,
+                },
+                tx
+              );
             });
           }
         }
@@ -433,44 +482,63 @@ export const BillingService = {
         const vatAmount = toMoney(subtotal * vatRate);
         const totalAmount = toMoney(subtotal + vatAmount);
 
-        const invoice = await BillingRepository.createInvoice({
-          accountId,
-          meterId: meter.id,
-          periodStart,
-          periodEnd,
-          status: 'draft',
-          consumption: consumptionTotal,
-          unitPrice,
-          subtotal,
-          vatRate,
-          vatAmount,
-          totalAmount,
-          tariffId: tariff.id,
-          tariffSnapshot,
-          reviewFlags: flags.length ? flags : undefined,
-        });
+        const invoice = await prisma.$transaction(async (tx) => {
+          const createdInvoice = await BillingRepository.createInvoice(
+            {
+              accountId,
+              meterId: meter.id,
+              periodStart,
+              periodEnd,
+              status: 'draft',
+              consumption: consumptionTotal,
+              unitPrice,
+              subtotal,
+              vatRate,
+              vatAmount,
+              totalAmount,
+              tariffId: tariff.id,
+              tariffSnapshot,
+              reviewFlags: flags.length ? flags : undefined,
+            },
+            tx
+          );
 
-        await BillingRepository.addInvoiceLine({
-          invoiceId: invoice.id,
-          type: 'consumption',
-          description: 'Water consumption',
-          quantity: toQuantity(consumptionTotal),
-          unitPrice,
-          amount: subtotal,
-        });
-        await BillingRepository.addInvoiceLine({
-          invoiceId: invoice.id,
-          type: 'vat',
-          description: `VAT ${toMoney(vatRate * 100)}%`,
-          amount: vatAmount,
-        });
+          await BillingRepository.addInvoiceLine(
+            {
+              invoiceId: createdInvoice.id,
+              type: 'consumption',
+              description: 'Water consumption',
+              quantity: toQuantity(consumptionTotal),
+              unitPrice,
+              amount: subtotal,
+            },
+            tx
+          );
+          await BillingRepository.addInvoiceLine(
+            {
+              invoiceId: createdInvoice.id,
+              type: 'vat',
+              description: `VAT ${toMoney(vatRate * 100)}%`,
+              amount: vatAmount,
+            },
+            tx
+          );
 
-        if (endReading && periodEnd) {
-          await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: endReading.id, role: 'end' });
-        }
-        if (startReading) {
-          await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: startReading.id, role: 'start' });
-        }
+          if (endReading && periodEnd) {
+            await BillingRepository.addReadingLink(
+              { invoiceId: createdInvoice.id, readingId: endReading.id, role: 'end' },
+              tx
+            );
+          }
+          if (startReading) {
+            await BillingRepository.addReadingLink(
+              { invoiceId: createdInvoice.id, readingId: startReading.id, role: 'start' },
+              tx
+            );
+          }
+
+          return createdInvoice;
+        });
 
         created.push(invoice);
         continue;
@@ -525,44 +593,63 @@ export const BillingService = {
         const invoiceFlags = [...flags];
         if (sizeEntry?.invalid) invoiceFlags.push('invalid_household_size');
 
-        const invoice = await BillingRepository.createInvoice({
-          accountId: consumer.accountId,
-          meterId: meter.id,
-          periodStart,
-          periodEnd,
-          status: 'draft',
-          consumption: Math.round(consumptionShare),
-          unitPrice,
-          subtotal,
-          vatRate,
-          vatAmount,
-          totalAmount,
-          tariffId: tariff.id,
-          tariffSnapshot,
-          reviewFlags: invoiceFlags.length ? invoiceFlags : undefined,
-        });
+        const invoice = await prisma.$transaction(async (tx) => {
+          const createdInvoice = await BillingRepository.createInvoice(
+            {
+              accountId: consumer.accountId,
+              meterId: meter.id,
+              periodStart,
+              periodEnd,
+              status: 'draft',
+              consumption: Math.round(consumptionShare),
+              unitPrice,
+              subtotal,
+              vatRate,
+              vatAmount,
+              totalAmount,
+              tariffId: tariff.id,
+              tariffSnapshot,
+              reviewFlags: invoiceFlags.length ? invoiceFlags : undefined,
+            },
+            tx
+          );
 
-        await BillingRepository.addInvoiceLine({
-          invoiceId: invoice.id,
-          type: 'consumption',
-          description: 'Water consumption (shared)',
-          quantity: consumptionShare,
-          unitPrice,
-          amount: subtotal,
-        });
-        await BillingRepository.addInvoiceLine({
-          invoiceId: invoice.id,
-          type: 'vat',
-          description: `VAT ${toMoney(vatRate * 100)}%`,
-          amount: vatAmount,
-        });
+          await BillingRepository.addInvoiceLine(
+            {
+              invoiceId: createdInvoice.id,
+              type: 'consumption',
+              description: 'Water consumption (shared)',
+              quantity: consumptionShare,
+              unitPrice,
+              amount: subtotal,
+            },
+            tx
+          );
+          await BillingRepository.addInvoiceLine(
+            {
+              invoiceId: createdInvoice.id,
+              type: 'vat',
+              description: `VAT ${toMoney(vatRate * 100)}%`,
+              amount: vatAmount,
+            },
+            tx
+          );
 
-        if (endReading && periodEnd) {
-          await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: endReading.id, role: 'end' });
-        }
-        if (startReading) {
-          await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: startReading.id, role: 'start' });
-        }
+          if (endReading && periodEnd) {
+            await BillingRepository.addReadingLink(
+              { invoiceId: createdInvoice.id, readingId: endReading.id, role: 'end' },
+              tx
+            );
+          }
+          if (startReading) {
+            await BillingRepository.addReadingLink(
+              { invoiceId: createdInvoice.id, readingId: startReading.id, role: 'start' },
+              tx
+            );
+          }
+
+          return createdInvoice;
+        });
 
         created.push(invoice);
       }
@@ -831,47 +918,59 @@ export const BillingService = {
 
   async confirmInvoices(ids: string[]) {
     if (!ids.length) return { success: false, error: 'NO_IDS' };
-    const invoices = await BillingRepository.findInvoicesByIds(ids);
-    if (invoices.length !== ids.length) return { success: false, error: 'NOT_FOUND' };
+    return prisma.$transaction(async (tx) => {
+      const invoices = await BillingRepository.findInvoicesByIds(ids, tx);
+      if (invoices.length !== ids.length) return { success: false, error: 'NOT_FOUND' };
 
-    const flagged = invoices.filter((invoice) =>
-      Array.isArray(invoice.reviewFlags) ? invoice.reviewFlags.length > 0 : Boolean(invoice.reviewFlags)
-    );
-    if (flagged.length) return { success: false, error: 'REVIEW_FLAGS_PRESENT' };
+      const flagged = invoices.filter((invoice) =>
+        Array.isArray(invoice.reviewFlags) ? invoice.reviewFlags.length > 0 : Boolean(invoice.reviewFlags)
+      );
+      if (flagged.length) return { success: false, error: 'REVIEW_FLAGS_PRESENT' };
 
-    const notDraft = invoices.filter((invoice) => invoice.status !== 'draft');
-    if (notDraft.length) return { success: false, error: 'INVALID_STATUS' };
+      const notDraft = invoices.filter((invoice) => invoice.status !== 'draft');
+      if (notDraft.length) return { success: false, error: 'INVALID_STATUS' };
 
-    const updated = await BillingRepository.bulkUpdateStatus({
-      ids,
-      status: 'confirmed',
-      onlyFromStatus: 'draft',
+      const updated = await BillingRepository.bulkUpdateStatus(
+        {
+          ids,
+          status: 'confirmed',
+          onlyFromStatus: 'draft',
+        },
+        tx
+      );
+      return { success: true, data: { updated } };
     });
-    return { success: true, data: { updated } };
   },
 
   async issueConfirmedInvoices() {
-    const eligible = await BillingRepository.countIssueEligible();
-    const updated = await BillingRepository.bulkIssueConfirmed();
-    return { success: true, data: { updated, eligible } };
+    return prisma.$transaction(async (tx) => {
+      const eligible = await BillingRepository.countIssueEligible(tx);
+      const updated = await BillingRepository.bulkIssueConfirmed(tx);
+      return { success: true, data: { updated, eligible } };
+    });
   },
 
   async markInvoicePaid(params: { invoiceId: string; accountId: string }) {
     const { invoiceId, accountId } = params;
     if (!invoiceId) return { success: false, error: 'VALIDATION_FAILED' };
 
-    const invoice = await BillingRepository.findInvoiceById(invoiceId);
-    if (!invoice) return { success: false, error: 'NOT_FOUND' };
-    if (invoice.accountId !== accountId) return { success: false, error: 'FORBIDDEN' };
-    if (invoice.status !== 'issued') return { success: false, error: 'INVALID_STATUS' };
+    return prisma.$transaction(async (tx) => {
+      const invoice = await BillingRepository.findInvoiceById(invoiceId, tx);
+      if (!invoice) return { success: false, error: 'NOT_FOUND' };
+      if (invoice.accountId !== accountId) return { success: false, error: 'FORBIDDEN' };
+      if (invoice.status !== 'issued') return { success: false, error: 'INVALID_STATUS' };
 
-    await BillingRepository.bulkUpdateStatus({
-      ids: [invoiceId],
-      status: 'paid',
-      onlyFromStatus: 'issued',
+      await BillingRepository.bulkUpdateStatus(
+        {
+          ids: [invoiceId],
+          status: 'paid',
+          onlyFromStatus: 'issued',
+        },
+        tx
+      );
+
+      return { success: true, data: { updated: 1 } };
     });
-
-    return { success: true, data: { updated: 1 } };
   },
 
   async reviewInvoiceReadings(input: {
@@ -929,174 +1028,209 @@ export const BillingService = {
     const editor = await AccountRepository.findById(input.editorAccountId);
     if (!editor) return { success: false, error: 'ACCOUNT_NOT_FOUND' };
 
-    const invoice = await BillingRepository.findInvoiceById(input.invoiceId);
-    if (!invoice) return { success: false, error: 'NOT_FOUND' };
-    const meterId = invoice.meterId;
-    if (!meterId) return { success: false, error: 'METER_MISSING' };
+    return prisma.$transaction(async (tx) => {
+      const invoice = await BillingRepository.findInvoiceById(input.invoiceId, tx);
+      if (!invoice) return { success: false, error: 'NOT_FOUND' };
+      const meterId = invoice.meterId;
+      if (!meterId) return { success: false, error: 'METER_MISSING' };
 
-    const consumers = await MeterRepository.listConsumersForMeter(meterId);
-    const isShared = consumers.length > 1;
+      const consumers = await MeterRepository.listConsumersForMeter(meterId, tx);
+      const isShared = consumers.length > 1;
 
-    if (isShared && input.householdSize !== undefined) {
-      await AccountRepository.updateConsumerHouseholdSize(invoice.accountId, input.householdSize);
-    }
-
-    const consumersWithSizes = isShared
-      ? await MeterRepository.listConsumersForMeter(meterId)
-      : consumers;
-
-    if (isShared) {
-      const invalid = consumersWithSizes.filter((consumer) => (consumer.account.consumerProfile?.householdSize || 0) <= 0);
-      if (invalid.length > 0) {
-        return { success: false, error: 'HOUSEHOLD_SIZE_REQUIRED' };
-      }
-    }
-
-    const updateOrCreate = async (role: 'start' | 'end', payload: { value: number; readAt: string }) => {
-      const existingLink = invoice.readings?.find((link: any) => link.role === role);
-      if (existingLink?.readingId) {
-        await ReadingRepository.update({
-          id: existingLink.readingId,
-          value: payload.value,
-          readAt: payload.readAt,
-        });
-        await ReadingRepository.addEdit({
-          readingId: existingLink.readingId,
-          accountId: input.editorAccountId,
-          editorRole: input.editorRole,
-          value: payload.value,
-          reason: input.reason,
-        });
-        return existingLink.readingId;
+      if (isShared && input.householdSize !== undefined) {
+        await AccountRepository.updateConsumerHouseholdSize(invoice.accountId, input.householdSize, tx);
       }
 
-      const created = await ReadingRepository.create({
-        meterId,
-        readerAccountId: input.editorAccountId,
-        readAt: payload.readAt,
-        method: 'manual',
-        value: payload.value,
-        originalValue: payload.value,
-      });
+      const consumersWithSizes = isShared
+        ? await MeterRepository.listConsumersForMeter(meterId, tx)
+        : consumers;
 
-      await ReadingRepository.addEdit({
-        readingId: created.id,
-        accountId: input.editorAccountId,
-        editorRole: input.editorRole,
-        value: payload.value,
-        reason: input.reason,
-      });
-
-      await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: created.id, role });
-      return created.id;
-    };
-
-    const previousId = await updateOrCreate('start', { value: prevValue, readAt: input.previous.readAt });
-    const currentId = await updateOrCreate('end', { value: currentValue, readAt: input.current.readAt });
-
-    const consumptionLine = invoice.lines?.find((line: any) => line.type === 'consumption');
-    const oldStart = invoice.readings?.find((link: any) => link.role === 'start')?.reading?.value;
-    const oldEnd = invoice.readings?.find((link: any) => link.role === 'end')?.reading?.value;
-    const oldTotal =
-      Number.isFinite(Number(oldStart)) && Number.isFinite(Number(oldEnd))
-        ? Number(oldEnd) - Number(oldStart)
-        : null;
-    const newTotal = currentValue - prevValue;
-    const periodStart = prevReadAt;
-    const periodEnd = currentReadAt;
-
-    const applyInvoiceTotals = async (target: any, shareRatio: number) => {
-      const unitPrice = toNumber(target.unitPrice);
-      const vatRate = toNumber(target.vatRate);
-      const consumptionQuantity = toQuantity(newTotal * shareRatio);
-      const consumptionInt = Math.round(newTotal * shareRatio);
-      const subtotal = toMoney(consumptionQuantity * unitPrice);
-      const vatAmount = toMoney(subtotal * vatRate);
-      const feesTotal = (target.lines || [])
-        .filter((line: any) => line.type === 'fee')
-        .reduce((sum: number, line: any) => sum + toNumber(line.amount), 0);
-      const totalAmount = toMoney(subtotal + vatAmount + feesTotal);
-
-      await BillingRepository.updateInvoice(target.id, {
-        consumption: consumptionInt,
-        unitPrice,
-        subtotal,
-        vatRate,
-        vatAmount,
-        totalAmount,
-        periodStart,
-        periodEnd,
-        reviewFlags: null,
-      });
-
-      const consumptionUpdate = await BillingRepository.updateInvoiceLineByType({
-        invoiceId: target.id,
-        type: 'consumption',
-        data: {
-          quantity: consumptionQuantity,
-          unitPrice,
-          amount: subtotal,
-        },
-      });
-      if (consumptionUpdate.count === 0) {
-        await BillingRepository.addInvoiceLine({
-          invoiceId: target.id,
-          type: 'consumption',
-          description: 'Water consumption',
-          quantity: consumptionQuantity,
-          unitPrice,
-          amount: subtotal,
-        });
+      if (isShared) {
+        const invalid = consumersWithSizes.filter(
+          (consumer) => (consumer.account.consumerProfile?.householdSize || 0) <= 0
+        );
+        if (invalid.length > 0) {
+          return { success: false, error: 'HOUSEHOLD_SIZE_REQUIRED' };
+        }
       }
 
-      const vatUpdate = await BillingRepository.updateInvoiceLineByType({
-        invoiceId: target.id,
-        type: 'vat',
-        data: {
-          amount: vatAmount,
-          description: `VAT ${toMoney(vatRate * 100)}%`,
-        },
-      });
-      if (vatUpdate.count === 0) {
-        await BillingRepository.addInvoiceLine({
-          invoiceId: target.id,
-          type: 'vat',
-          description: `VAT ${toMoney(vatRate * 100)}%`,
-          amount: vatAmount,
-        });
-      }
-    };
+      const updateOrCreate = async (role: 'start' | 'end', payload: { value: number; readAt: string }) => {
+        const existingLink = invoice.readings?.find((link: any) => link.role === role);
+        if (existingLink?.readingId) {
+          await ReadingRepository.update(
+            {
+              id: existingLink.readingId,
+              value: payload.value,
+              readAt: payload.readAt,
+            },
+            tx
+          );
+          await ReadingRepository.addEdit(
+            {
+              readingId: existingLink.readingId,
+              accountId: input.editorAccountId,
+              editorRole: input.editorRole,
+              value: payload.value,
+              reason: input.reason,
+            },
+            tx
+          );
+          return existingLink.readingId;
+        }
 
-    if (isShared) {
-      const householdSizes = consumersWithSizes.map((consumer) => ({
-        accountId: consumer.accountId,
-        size: consumer.account.consumerProfile?.householdSize || 0,
-      }));
-      const householdTotal = householdSizes.reduce((sum, entry) => sum + entry.size, 0);
-      const meterInvoices = await BillingRepository.listInvoicesForMeterPeriod({
-        meterId,
-        periodStart: invoice.periodStart ?? null,
-        periodEnd: invoice.periodEnd ?? null,
-      });
+        const created = await ReadingRepository.create(
+          {
+            meterId,
+            readerAccountId: input.editorAccountId,
+            readAt: payload.readAt,
+            method: 'manual',
+            value: payload.value,
+            originalValue: payload.value,
+          },
+          tx
+        );
 
-      for (const meterInvoice of meterInvoices) {
-        const sizeEntry = householdSizes.find((entry) => entry.accountId === meterInvoice.accountId);
-        if (!sizeEntry || sizeEntry.size <= 0) continue;
-        const shareRatio = householdTotal > 0 ? sizeEntry.size / householdTotal : 1;
-        await applyInvoiceTotals(meterInvoice, shareRatio);
-      }
-    } else {
-      let shareRatio = 1;
-      if (oldTotal && oldTotal > 0) {
-        shareRatio =
-          (consumptionLine?.quantity !== undefined
-            ? toNumber(consumptionLine.quantity)
-            : Number(invoice.consumption)) / oldTotal;
-      }
-      await applyInvoiceTotals(invoice, shareRatio);
-    }
+        await ReadingRepository.addEdit(
+          {
+            readingId: created.id,
+            accountId: input.editorAccountId,
+            editorRole: input.editorRole,
+            value: payload.value,
+            reason: input.reason,
+          },
+          tx
+        );
 
-    return { success: true, data: { previousId, currentId } };
+        await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: created.id, role }, tx);
+        return created.id;
+      };
+
+      const previousId = await updateOrCreate('start', { value: prevValue, readAt: input.previous.readAt });
+      const currentId = await updateOrCreate('end', { value: currentValue, readAt: input.current.readAt });
+
+      const consumptionLine = invoice.lines?.find((line: any) => line.type === 'consumption');
+      const oldStart = invoice.readings?.find((link: any) => link.role === 'start')?.reading?.value;
+      const oldEnd = invoice.readings?.find((link: any) => link.role === 'end')?.reading?.value;
+      const oldTotal =
+        Number.isFinite(Number(oldStart)) && Number.isFinite(Number(oldEnd))
+          ? Number(oldEnd) - Number(oldStart)
+          : null;
+      const newTotal = currentValue - prevValue;
+      const periodStart = prevReadAt;
+      const periodEnd = currentReadAt;
+
+      const applyInvoiceTotals = async (target: any, shareRatio: number) => {
+        const unitPrice = toNumber(target.unitPrice);
+        const vatRate = toNumber(target.vatRate);
+        const consumptionQuantity = toQuantity(newTotal * shareRatio);
+        const consumptionInt = Math.round(newTotal * shareRatio);
+        const subtotal = toMoney(consumptionQuantity * unitPrice);
+        const vatAmount = toMoney(subtotal * vatRate);
+        const feesTotal = (target.lines || [])
+          .filter((line: any) => line.type === 'fee')
+          .reduce((sum: number, line: any) => sum + toNumber(line.amount), 0);
+        const totalAmount = toMoney(subtotal + vatAmount + feesTotal);
+
+        await BillingRepository.updateInvoice(
+          target.id,
+          {
+            consumption: consumptionInt,
+            unitPrice,
+            subtotal,
+            vatRate,
+            vatAmount,
+            totalAmount,
+            periodStart,
+            periodEnd,
+            reviewFlags: null,
+          },
+          tx
+        );
+
+        const consumptionUpdate = await BillingRepository.updateInvoiceLineByType(
+          {
+            invoiceId: target.id,
+            type: 'consumption',
+            data: {
+              quantity: consumptionQuantity,
+              unitPrice,
+              amount: subtotal,
+            },
+          },
+          tx
+        );
+        if (consumptionUpdate.count === 0) {
+          await BillingRepository.addInvoiceLine(
+            {
+              invoiceId: target.id,
+              type: 'consumption',
+              description: 'Water consumption',
+              quantity: consumptionQuantity,
+              unitPrice,
+              amount: subtotal,
+            },
+            tx
+          );
+        }
+
+        const vatUpdate = await BillingRepository.updateInvoiceLineByType(
+          {
+            invoiceId: target.id,
+            type: 'vat',
+            data: {
+              amount: vatAmount,
+              description: `VAT ${toMoney(vatRate * 100)}%`,
+            },
+          },
+          tx
+        );
+        if (vatUpdate.count === 0) {
+          await BillingRepository.addInvoiceLine(
+            {
+              invoiceId: target.id,
+              type: 'vat',
+              description: `VAT ${toMoney(vatRate * 100)}%`,
+              amount: vatAmount,
+            },
+            tx
+          );
+        }
+      };
+
+      if (isShared) {
+        const householdSizes = consumersWithSizes.map((consumer) => ({
+          accountId: consumer.accountId,
+          size: consumer.account.consumerProfile?.householdSize || 0,
+        }));
+        const householdTotal = householdSizes.reduce((sum, entry) => sum + entry.size, 0);
+        const meterInvoices = await BillingRepository.listInvoicesForMeterPeriod(
+          {
+            meterId,
+            periodStart: invoice.periodStart ?? null,
+            periodEnd: invoice.periodEnd ?? null,
+          },
+          tx
+        );
+
+        for (const meterInvoice of meterInvoices) {
+          const sizeEntry = householdSizes.find((entry) => entry.accountId === meterInvoice.accountId);
+          if (!sizeEntry || sizeEntry.size <= 0) continue;
+          const shareRatio = householdTotal > 0 ? sizeEntry.size / householdTotal : 1;
+          await applyInvoiceTotals(meterInvoice, shareRatio);
+        }
+      } else {
+        let shareRatio = 1;
+        if (oldTotal && oldTotal > 0) {
+          shareRatio =
+            (consumptionLine?.quantity !== undefined
+              ? toNumber(consumptionLine.quantity)
+              : Number(invoice.consumption)) / oldTotal;
+        }
+        await applyInvoiceTotals(invoice, shareRatio);
+      }
+
+      return { success: true, data: { previousId, currentId } };
+    });
   },
 
   async previewMonthlyOverrides(referenceDate = new Date()) {

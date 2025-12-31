@@ -1,3 +1,4 @@
+import { Prisma, PrismaClient } from '@prisma/client';
 import prisma from 'src/utils/prisma';
 import { ReadingCreateInput, ReadingListParams, ReadingUpdateInput } from 'src/types/readings';
 
@@ -9,8 +10,8 @@ const toNextDayStart = (value: string) => {
 };
 
 export const ReadingRepository = {
-  async create(input: ReadingCreateInput) {
-    return prisma.reading.create({
+  async create(input: ReadingCreateInput, client: Prisma.TransactionClient | PrismaClient = prisma) {
+    return client.reading.create({
       data: {
         meterId: input.meterId,
         readerAccountId: input.readerAccountId,
@@ -24,8 +25,8 @@ export const ReadingRepository = {
     });
   },
 
-  async update(input: ReadingUpdateInput) {
-    return prisma.reading.update({
+  async update(input: ReadingUpdateInput, client: Prisma.TransactionClient | PrismaClient = prisma) {
+    return client.reading.update({
       where: { id: input.id },
       data: {
         ...(input.readAt !== undefined ? { readAt: toDate(input.readAt) } : {}),
@@ -36,8 +37,8 @@ export const ReadingRepository = {
     });
   },
 
-  async findById(id: string) {
-    return prisma.reading.findUnique({
+  async findById(id: string, client: Prisma.TransactionClient | PrismaClient = prisma) {
+    return client.reading.findUnique({
       where: { id },
       include: { edits: { include: { account: true }, orderBy: { editedAt: 'desc' } }, meter: true },
     });
@@ -93,7 +94,7 @@ export const ReadingRepository = {
     });
   },
 
-  async findLatestUnpaidReading(meterId: string, client = prisma) {
+  async findLatestUnpaidReading(meterId: string, client: Prisma.TransactionClient | PrismaClient = prisma) {
     return client.reading.findFirst({
       where: {
         meterId,
@@ -108,7 +109,7 @@ export const ReadingRepository = {
     });
   },
 
-  async findLatestPaidReading(meterId: string, client = prisma) {
+  async findLatestPaidReading(meterId: string, client: Prisma.TransactionClient | PrismaClient = prisma) {
     return client.reading.findFirst({
       where: {
         meterId,
@@ -123,14 +124,17 @@ export const ReadingRepository = {
     });
   },
 
-  async addEdit(params: {
+  async addEdit(
+    params: {
     readingId: string;
     accountId: string;
     editorRole: 'admin' | 'consumer' | 'staff_field' | 'staff_backoffice';
     value: number;
     reason?: string;
-  }) {
-    return prisma.readingEdit.create({
+    },
+    client: Prisma.TransactionClient | PrismaClient = prisma
+  ) {
+    return client.readingEdit.create({
       data: {
         readingId: params.readingId,
         accountId: params.accountId,

@@ -1,4 +1,4 @@
-import { AccountRole } from "@prisma/client";
+import { AccountRole, Prisma, PrismaClient } from "@prisma/client";
 import prisma from "src/utils/prisma";
 import { StaffRole, VerificationStatus } from "src/types/accounts";
 
@@ -98,8 +98,12 @@ export const AccountRepository = {
     });
   },
 
-  async updateConsumerHouseholdSize(accountId: string, householdSize: number) {
-    return prisma.consumerProfile.upsert({
+  async updateConsumerHouseholdSize(
+    accountId: string,
+    householdSize: number,
+    client: Prisma.TransactionClient | PrismaClient = prisma
+  ) {
+    return client.consumerProfile.upsert({
       where: { accountId },
       update: { householdSize },
       create: { accountId, householdSize },

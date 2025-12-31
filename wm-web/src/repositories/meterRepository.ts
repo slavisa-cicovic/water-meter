@@ -1,3 +1,4 @@
+import { Prisma, PrismaClient } from '@prisma/client';
 import prisma from 'src/utils/prisma';
 import { MeterCreateInput, MeterListParams, MeterUpdateInput } from 'src/types/meters';
 
@@ -40,7 +41,7 @@ export const MeterRepository = {
     });
   },
 
-  async findById(id: string, client = prisma) {
+  async findById(id: string, client: Prisma.TransactionClient | PrismaClient = prisma) {
     return client.meter.findUnique({
       where: { id },
       include: { consumers: { include: { account: true } } },
@@ -115,7 +116,7 @@ export const MeterRepository = {
     });
   },
 
-  async listConsumersForMeter(meterId: string, client = prisma) {
+  async listConsumersForMeter(meterId: string, client: Prisma.TransactionClient | PrismaClient = prisma) {
     return client.meterConsumer.findMany({
       where: { meterId },
       include: { account: { include: { consumerProfile: true } } },

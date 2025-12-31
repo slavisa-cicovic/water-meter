@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import prisma from 'src/utils/prisma';
 import { InvoiceListParams, InvoiceStatus, TariffCreateInput, TariffUpdateInput } from 'src/types/billings';
 
@@ -14,7 +14,7 @@ export const BillingRepository = {
 
   async findApplicableTariff(
     params: { groupCode?: string | null; periodStart: Date; periodEnd: Date },
-    client = prisma
+    client: Prisma.TransactionClient | PrismaClient = prisma
   ) {
     const { groupCode, periodStart, periodEnd } = params;
     const tariff = await client.tariff.findFirst({
@@ -75,7 +75,7 @@ export const BillingRepository = {
     });
   },
 
-  async findTariffById(id: string, client = prisma) {
+  async findTariffById(id: string, client: Prisma.TransactionClient | PrismaClient = prisma) {
     return client.tariff.findUnique({ where: { id } });
   },
 
@@ -214,15 +214,15 @@ export const BillingRepository = {
     });
   },
 
-  async findInvoicesByIds(ids: string[]) {
-    return prisma.invoice.findMany({
+  async findInvoicesByIds(ids: string[], client: Prisma.TransactionClient | PrismaClient = prisma) {
+    return client.invoice.findMany({
       where: { id: { in: ids } },
       select: { id: true, status: true, reviewFlags: true },
     });
   },
 
-  async findInvoiceById(id: string) {
-    return prisma.invoice.findUnique({
+  async findInvoiceById(id: string, client: Prisma.TransactionClient | PrismaClient = prisma) {
+    return client.invoice.findUnique({
       where: { id },
       include: {
         lines: true,
@@ -249,7 +249,7 @@ export const BillingRepository = {
     tariffSnapshot?: Record<string, any> | null;
     reviewFlags?: string[] | null;
     },
-    client = prisma
+    client: Prisma.TransactionClient | PrismaClient = prisma
   ) {
     return client.invoice.create({
       data: {
@@ -274,7 +274,7 @@ export const BillingRepository = {
 
   async listInvoicesForMeterMonth(
     params: { meterId: string; monthStart: Date; monthEnd: Date },
-    client = prisma
+    client: Prisma.TransactionClient | PrismaClient = prisma
   ) {
     const { meterId, monthStart, monthEnd } = params;
     return client.invoice.findMany({
@@ -289,9 +289,12 @@ export const BillingRepository = {
     });
   },
 
-  async listInvoicesForMeterPeriod(params: { meterId: string; periodStart: Date | null; periodEnd: Date | null }) {
+  async listInvoicesForMeterPeriod(
+    params: { meterId: string; periodStart: Date | null; periodEnd: Date | null },
+    client: Prisma.TransactionClient | PrismaClient = prisma
+  ) {
     const { meterId, periodStart, periodEnd } = params;
-    return prisma.invoice.findMany({
+    return client.invoice.findMany({
       where: {
         meterId,
         periodStart,
@@ -321,19 +324,22 @@ export const BillingRepository = {
     });
   },
 
-  async voidInvoice(params: {
+  async voidInvoice(
+    params: {
     invoiceId: string;
     adminId: string;
     prevStatus: 'draft' | 'issued' | 'paid' | 'void';
     reason?: string;
     jobRunId?: string | null;
-  }) {
-    await prisma.invoice.update({
+    },
+    client: Prisma.TransactionClient | PrismaClient = prisma
+  ) {
+    await client.invoice.update({
       where: { id: params.invoiceId },
       data: { status: 'void' },
     });
 
-    await prisma.invoiceOverrideLog.create({
+    await client.invoiceOverrideLog.create({
       data: {
         invoiceId: params.invoiceId,
         adminId: params.adminId,
@@ -351,7 +357,7 @@ export const BillingRepository = {
     status: 'draft' | 'confirmed' | 'issued' | 'paid' | 'void';
     onlyFromStatus?: 'draft' | 'confirmed' | 'issued' | 'paid' | 'void';
     },
-    client = prisma
+    client: Prisma.TransactionClient | PrismaClient = prisma
   ) {
     const { ids, status, onlyFromStatus } = params;
     const where: any = { id: { in: ids } };
@@ -374,7 +380,7 @@ export const BillingRepository = {
     unitPrice?: number;
     amount: number;
     },
-    client = prisma
+    client: Prisma.TransactionClient | PrismaClient = prisma
   ) {
     return client.invoiceLine.create({
       data: {
@@ -390,12 +396,14 @@ export const BillingRepository = {
 
   async addReadingLink(
     params: { invoiceId: string; readingId: string; role: 'start' | 'end' },
-    client = prisma
+    client: Prisma.TransactionClient | PrismaClient = prisma
   ) {
     return client.invoiceReadingLink.create({ data: params });
   },
 
-  async updateInvoice(id: string, data: {
+  async updateInvoice(
+    id: string,
+    data: {
     consumption?: number;
     unitPrice?: number;
     subtotal?: number;
@@ -405,9 +413,11 @@ export const BillingRepository = {
     periodStart?: Date | null;
     periodEnd?: Date | null;
     reviewFlags?: string[] | null;
-  }) {
+    },
+    client: Prisma.TransactionClient | PrismaClient = prisma
+  ) {
     const { reviewFlags, ...rest } = data;
-    return prisma.invoice.update({
+    return client.invoice.update({
       where: { id },
       data: {
         ...rest,
@@ -418,20 +428,23 @@ export const BillingRepository = {
     });
   },
 
-  async updateInvoiceLineByType(params: {
+  async updateInvoiceLineByType(
+    params: {
     invoiceId: string;
     type: 'consumption' | 'fee' | 'vat';
     data: { quantity?: number; unitPrice?: number; amount?: number; description?: string | null };
-  }) {
-    return prisma.invoiceLine.updateMany({
+    },
+    client: Prisma.TransactionClient | PrismaClient = prisma
+  ) {
+    return client.invoiceLine.updateMany({
       where: { invoiceId: params.invoiceId, type: params.type },
       data: params.data,
     });
   },
 
-  async bulkIssueConfirmed() {
+  async bulkIssueConfirmed(client: Prisma.TransactionClient | PrismaClient = prisma) {
     const emptyFlags = [] as Prisma.InputJsonValue;
-    const result = await prisma.invoice.updateMany({
+    const result = await client.invoice.updateMany({
       where: {
         status: 'confirmed',
         OR: [{ reviewFlags: { equals: Prisma.DbNull } }, { reviewFlags: { equals: emptyFlags } }],
@@ -441,9 +454,9 @@ export const BillingRepository = {
     return result.count;
   },
 
-  async countIssueEligible() {
+  async countIssueEligible(client: Prisma.TransactionClient | PrismaClient = prisma) {
     const emptyFlags = [] as Prisma.InputJsonValue;
-    return prisma.invoice.count({
+    return client.invoice.count({
       where: {
         status: 'confirmed',
         OR: [{ reviewFlags: { equals: Prisma.DbNull } }, { reviewFlags: { equals: emptyFlags } }],
