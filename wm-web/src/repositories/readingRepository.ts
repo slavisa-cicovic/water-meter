@@ -2,6 +2,11 @@ import prisma from 'src/utils/prisma';
 import { ReadingCreateInput, ReadingListParams, ReadingUpdateInput } from 'src/types/readings';
 
 const toDate = (value: string) => new Date(value);
+const isDateOnly = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value);
+const toNextDayStart = (value: string) => {
+  const date = new Date(value);
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+};
 
 export const ReadingRepository = {
   async create(input: ReadingCreateInput) {
@@ -48,7 +53,11 @@ export const ReadingRepository = {
         ? {
             readAt: {
               ...(from ? { gte: new Date(from) } : {}),
-              ...(to ? { lte: new Date(to) } : {}),
+              ...(to
+                ? isDateOnly(to)
+                  ? { lt: toNextDayStart(to) }
+                  : { lte: new Date(to) }
+                : {}),
             },
           }
         : {}),
