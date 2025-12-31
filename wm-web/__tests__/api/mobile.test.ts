@@ -239,6 +239,23 @@ describe("API /mobile/payments", () => {
     const res = await paymentsPost(req as any);
     expect(res.status).toBe(200);
   });
+
+  it("POST returns 400 when invoice status is not issued", async () => {
+    mockAuth();
+    vi.spyOn(BillingService, "markInvoicePaid").mockResolvedValue({
+      success: false,
+      error: "INVALID_STATUS",
+    } as any);
+
+    const req = new NextRequest("http://localhost/api/mobile/payments", {
+      method: "POST",
+      headers: { Authorization: "Bearer token" },
+    } as any);
+    (req as any).json = async () => ({ invoiceId: "inv-1" });
+
+    const res = await paymentsPost(req as any);
+    expect(res.status).toBe(400);
+  });
 });
 
 describe("API /mobile/readings", () => {
