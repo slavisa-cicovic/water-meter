@@ -580,13 +580,23 @@ export const BillingService = {
       monthStart,
       monthEnd,
     });
-    const hasDraft = existingInvoices.some((invoice) => invoice.status === 'draft');
+    const draftInvoices = existingInvoices.filter((invoice) => invoice.status === 'draft');
     const issuedInvoices = existingInvoices.filter((invoice) => invoice.status === 'issued');
+    const confirmedInvoices = existingInvoices.filter((invoice) => invoice.status === 'confirmed');
     const paidInvoices = existingInvoices.filter((invoice) => invoice.status === 'paid');
 
-    if (hasDraft) return { success: true, data: { created: false, reason: 'DRAFT_EXISTS' } };
-    if (issuedInvoices.length > 0 || paidInvoices.length > 0) {
+    if (confirmedInvoices.length > 0 || paidInvoices.length > 0) {
       return { success: true, data: { created: false, reason: 'EXISTING_FINALIZED' } };
+    }
+    if (issuedInvoices.length > 0) {
+      return { success: true, data: { created: false, reason: 'EXISTING_ISSUED' } };
+    }
+    if (draftInvoices.length > 0) {
+      await BillingRepository.bulkUpdateStatus({
+        ids: draftInvoices.map((invoice) => invoice.id),
+        status: 'void',
+        onlyFromStatus: 'draft',
+      });
     }
 
     const flags: string[] = [];
