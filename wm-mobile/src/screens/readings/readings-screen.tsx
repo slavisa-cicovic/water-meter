@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Image,
-  Modal,
   StyleSheet,
   Text,
   TextInput,
@@ -28,9 +27,6 @@ export default function ReadingsScreen() {
   const [recognizedValue, setRecognizedValue] = useState<number | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("Reading submitted successfully.");
-  const redirectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -50,10 +46,6 @@ export default function ReadingsScreen() {
     loadContext();
     return () => {
       mounted = false;
-      if (redirectTimer.current) {
-        clearTimeout(redirectTimer.current);
-        redirectTimer.current = null;
-      }
     };
   }, []);
 
@@ -61,7 +53,6 @@ export default function ReadingsScreen() {
   const meter = context?.meter ?? null;
 
   const handleTakePhoto = async () => {
-    setShowSuccess(false);
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
       Alert.alert("Camera access", "Camera permission is required to take a photo.");
@@ -119,28 +110,18 @@ export default function ReadingsScreen() {
       return;
     }
 
-    setSuccessMessage("Reading submitted successfully.");
-    setShowSuccess(true);
-    if (redirectTimer.current) {
-      clearTimeout(redirectTimer.current);
-    }
-    redirectTimer.current = setTimeout(() => {
-      setShowSuccess(false);
-      router.replace("/home");
-    }, 4500);
+    Alert.alert("Success", "Reading submitted successfully.", [
+      {
+        text: "OK",
+        onPress: () => {
+          router.replace("/home");
+        },
+      },
+    ]);
   };
 
   return (
     <ScrollScreen title="Read meter" contentContainerStyle={styles.content} keyboardAvoiding>
-      <Modal transparent animationType="fade" visible={showSuccess}>
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Success</Text>
-            <Text style={styles.modalMessage}>{successMessage}</Text>
-            <Text style={styles.modalHint}>Returning to Home...</Text>
-          </View>
-        </View>
-      </Modal>
       <View style={styles.card}>
           <Text style={styles.sectionTitle}>Meter capture</Text>
           <Text style={styles.meterMeta}>
@@ -241,24 +222,4 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   inputReadOnly: { backgroundColor: "#f3f5fb" },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: "rgba(15, 23, 42, 0.45)",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 24,
-  },
-  modalCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
-    padding: 20,
-    width: "100%",
-    maxWidth: 320,
-    borderWidth: 1,
-    borderColor: "#e1e6f3",
-    alignItems: "center",
-  },
-  modalTitle: { color: "#1f2a44", fontSize: 16, fontWeight: "700" },
-  modalMessage: { color: "#3a4c7a", fontSize: 13, marginTop: 8, textAlign: "center" },
-  modalHint: { color: "#6b7aa6", fontSize: 12, marginTop: 10 },
 });
