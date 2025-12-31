@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
-import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useEffect, useMemo, useState } from "react";
+import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "@src/state/auth-store";
 import { MobileService } from "@src/services/mobile.service";
 import ScrollScreen from "@src/components/layout/scroll-screen";
+import SubmitButton from "@src/components/ui/submit-button";
 
 export default function ProfileEditScreen() {
   const router = useRouter();
@@ -24,6 +25,19 @@ export default function ProfileEditScreen() {
       email: user?.email ?? "",
     });
   }, [user?.firstName, user?.lastName, user?.email]);
+
+  const isDirty = useMemo(() => {
+    const current = {
+      firstName: user?.firstName ?? "",
+      lastName: user?.lastName ?? "",
+      email: user?.email ?? "",
+    };
+    return (
+      form.firstName.trim() !== current.firstName ||
+      form.lastName.trim() !== current.lastName ||
+      form.email.trim() !== current.email
+    );
+  }, [form.email, form.firstName, form.lastName, user?.email, user?.firstName, user?.lastName]);
 
   const handleSave = async () => {
     if (!user || !accessToken) {
@@ -51,8 +65,14 @@ export default function ProfileEditScreen() {
       return;
     }
 
-    Alert.alert("Profile updated", "Changes saved.");
-    router.back();
+    Alert.alert("Profile updated", "Changes saved.", [
+      {
+        text: "OK",
+        onPress: () => {
+          router.replace("/home");
+        },
+      },
+    ]);
   };
 
   return (
@@ -87,12 +107,13 @@ export default function ProfileEditScreen() {
         </View>
 
         <View style={styles.actions}>
-          <TouchableOpacity style={styles.secondaryButton} onPress={() => router.back()}>
-            <Text style={styles.secondaryButtonText}>Cancel</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.primaryButton} onPress={handleSave} disabled={saving}>
-            <Text style={styles.primaryButtonText}>{saving ? "Saving..." : "Save changes"}</Text>
-          </TouchableOpacity>
+          <SubmitButton
+            label="Save changes"
+            loadingLabel="Saving..."
+            loading={saving}
+            disabled={saving || !isDirty}
+            onPress={handleSave}
+          />
         </View>
     </ScrollScreen>
   );
@@ -118,21 +139,5 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     marginTop: 6,
   },
-  actions: { flexDirection: "row", gap: 12, marginTop: 20 },
-  primaryButton: {
-    flex: 1,
-    backgroundColor: "#3a4c7a",
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  primaryButtonText: { color: "#ffffff", fontSize: 12, fontWeight: "700" },
-  secondaryButton: {
-    flex: 1,
-    backgroundColor: "#e9edfb",
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  secondaryButtonText: { color: "#3a4c7a", fontSize: 12, fontWeight: "600" },
+  actions: { marginTop: 20 },
 });
