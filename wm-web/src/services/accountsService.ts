@@ -23,7 +23,9 @@ const toAccountRole = (staffRole?: string) => (staffRole === 'backoffice' ? 'sta
 
 type AccountWithProfiles = Prisma.AccountGetPayload<{
   include: { consumerProfile: true; staffProfile: true; verificationLogs: true };
-}>;
+}> & {
+  avatarUrl?: string | null;
+};
 
 const mapAccountToRow = (acct: AccountWithProfiles): AccountRow => {
   const base = {
@@ -61,6 +63,7 @@ const mapAccountToRow = (acct: AccountWithProfiles): AccountRow => {
   return {
     ...base,
     type: acct.role as Exclude<AccountRole, 'consumer'>,
+    ...(acct.avatarUrl ? { avatar: acct.avatarUrl } : {}),
   };
 };
 
