@@ -12,9 +12,12 @@ export const BillingRepository = {
     });
   },
 
-  async findApplicableTariff(params: { groupCode?: string | null; periodStart: Date; periodEnd: Date }) {
+  async findApplicableTariff(
+    params: { groupCode?: string | null; periodStart: Date; periodEnd: Date },
+    client = prisma
+  ) {
     const { groupCode, periodStart, periodEnd } = params;
-    const tariff = await prisma.tariff.findFirst({
+    const tariff = await client.tariff.findFirst({
       where: {
         ...(groupCode ? { groupCode } : {}),
         status: 'active',
@@ -25,7 +28,7 @@ export const BillingRepository = {
       orderBy: { validFrom: 'desc' },
     });
     if (tariff) return tariff;
-    return prisma.tariff.findFirst({
+    return client.tariff.findFirst({
       where: {
         groupCode: null,
         status: 'active',
@@ -72,8 +75,8 @@ export const BillingRepository = {
     });
   },
 
-  async findTariffById(id: string) {
-    return prisma.tariff.findUnique({ where: { id } });
+  async findTariffById(id: string, client = prisma) {
+    return client.tariff.findUnique({ where: { id } });
   },
 
   async bulkUpdateTariffs(ids: string[], action: 'delete' | 'activate' | 'deactivate') {
@@ -229,7 +232,8 @@ export const BillingRepository = {
     });
   },
 
-  async createInvoice(data: {
+  async createInvoice(
+    data: {
     accountId: string;
     meterId?: string | null;
     periodStart: Date | null;
@@ -244,8 +248,10 @@ export const BillingRepository = {
     tariffId?: string | null;
     tariffSnapshot?: Record<string, any> | null;
     reviewFlags?: string[] | null;
-  }) {
-    return prisma.invoice.create({
+    },
+    client = prisma
+  ) {
+    return client.invoice.create({
       data: {
         accountId: data.accountId,
         meterId: data.meterId ?? null,
@@ -266,9 +272,12 @@ export const BillingRepository = {
     });
   },
 
-  async listInvoicesForMeterMonth(params: { meterId: string; monthStart: Date; monthEnd: Date }) {
+  async listInvoicesForMeterMonth(
+    params: { meterId: string; monthStart: Date; monthEnd: Date },
+    client = prisma
+  ) {
     const { meterId, monthStart, monthEnd } = params;
-    return prisma.invoice.findMany({
+    return client.invoice.findMany({
       where: {
         meterId,
         OR: [
@@ -336,16 +345,19 @@ export const BillingRepository = {
     });
   },
 
-  async bulkUpdateStatus(params: {
+  async bulkUpdateStatus(
+    params: {
     ids: string[];
     status: 'draft' | 'confirmed' | 'issued' | 'paid' | 'void';
     onlyFromStatus?: 'draft' | 'confirmed' | 'issued' | 'paid' | 'void';
-  }) {
+    },
+    client = prisma
+  ) {
     const { ids, status, onlyFromStatus } = params;
     const where: any = { id: { in: ids } };
     if (onlyFromStatus) where.status = onlyFromStatus;
 
-    const result = await prisma.invoice.updateMany({
+    const result = await client.invoice.updateMany({
       where,
       data: { status },
     });
@@ -353,15 +365,18 @@ export const BillingRepository = {
     return result.count;
   },
 
-  async addInvoiceLine(params: {
+  async addInvoiceLine(
+    params: {
     invoiceId: string;
     type: 'consumption' | 'fee' | 'vat';
     description?: string;
     quantity?: number;
     unitPrice?: number;
     amount: number;
-  }) {
-    return prisma.invoiceLine.create({
+    },
+    client = prisma
+  ) {
+    return client.invoiceLine.create({
       data: {
         invoiceId: params.invoiceId,
         type: params.type,
@@ -373,8 +388,11 @@ export const BillingRepository = {
     });
   },
 
-  async addReadingLink(params: { invoiceId: string; readingId: string; role: 'start' | 'end' }) {
-    return prisma.invoiceReadingLink.create({ data: params });
+  async addReadingLink(
+    params: { invoiceId: string; readingId: string; role: 'start' | 'end' },
+    client = prisma
+  ) {
+    return client.invoiceReadingLink.create({ data: params });
   },
 
   async updateInvoice(id: string, data: {

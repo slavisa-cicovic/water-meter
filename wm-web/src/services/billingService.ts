@@ -4,6 +4,7 @@ import { MeterRepository } from 'src/repositories/meterRepository';
 import { ReadingRepository } from 'src/repositories/readingRepository';
 import { InvoiceCreateInput, TariffCreateInput, TariffUpdateInput } from 'src/types/billings';
 import { validateInvoiceCreate, validateTariffCreate, validateTariffUpdate } from 'src/validation/billings';
+import prisma from 'src/utils/prisma';
 
 const toNumber = (value: any) => Number(value);
 const toMoney = (value: number) => Number(value.toFixed(2));
@@ -47,12 +48,13 @@ const resolveConsumerTariff = async (options: {
   periodStart: Date;
   periodEnd: Date;
   cache: Map<string, any | null>;
+  client?: typeof prisma;
 }) => {
-  const { tariffId, fallback, periodStart, periodEnd, cache } = options;
+  const { tariffId, fallback, periodStart, periodEnd, cache, client = prisma } = options;
   if (!tariffId) return fallback;
   if (cache.has(tariffId)) return cache.get(tariffId) ?? fallback;
 
-  const override = await BillingRepository.findTariffById(tariffId);
+  const override = await BillingRepository.findTariffById(tariffId, client);
   const usable = override && isTariffValidForPeriod(override, periodStart, periodEnd) ? override : null;
   cache.set(tariffId, usable);
   return usable ?? fallback;
@@ -570,218 +572,261 @@ export const BillingService = {
   },
 
   async generateDraftForMeter(meterId: string, referenceDate = new Date()) {
-    const meter = await MeterRepository.findById(meterId);
-    if (!meter) return { success: false, error: 'METER_NOT_FOUND' };
-    if (meter.status !== 'active') return { success: false, error: 'METER_INACTIVE' };
+    return prisma.$transaction(async (tx) => {
+      const meter = await MeterRepository.findById(meterId, tx);
+      if (!meter) return { success: false, error: 'METER_NOT_FOUND' };
+      if (meter.status !== 'active') return { success: false, error: 'METER_INACTIVE' };
 
-    const { start: monthStart, end: monthEnd } = getMonthBounds(referenceDate);
-    const existingInvoices = await BillingRepository.listInvoicesForMeterMonth({
-      meterId: meter.id,
-      monthStart,
-      monthEnd,
-    });
-    const draftInvoices = existingInvoices.filter((invoice) => invoice.status === 'draft');
-    const issuedInvoices = existingInvoices.filter((invoice) => invoice.status === 'issued');
-    const confirmedInvoices = existingInvoices.filter((invoice) => invoice.status === 'confirmed');
-    const paidInvoices = existingInvoices.filter((invoice) => invoice.status === 'paid');
+      const { start: monthStart, end: monthEnd } = getMonthBounds(referenceDate);
+      const existingInvoices = await BillingRepository.listInvoicesForMeterMonth(
+        {
+          meterId: meter.id,
+          monthStart,
+          monthEnd,
+        },
+        tx
+      );
+      const draftInvoices = existingInvoices.filter((invoice) => invoice.status === 'draft');
+      const issuedInvoices = existingInvoices.filter((invoice) => invoice.status === 'issued');
+      const confirmedInvoices = existingInvoices.filter((invoice) => invoice.status === 'confirmed');
+      const paidInvoices = existingInvoices.filter((invoice) => invoice.status === 'paid');
 
-    if (confirmedInvoices.length > 0 || paidInvoices.length > 0) {
-      return { success: true, data: { created: false, reason: 'EXISTING_FINALIZED' } };
-    }
-    if (issuedInvoices.length > 0) {
-      return { success: true, data: { created: false, reason: 'EXISTING_ISSUED' } };
-    }
-    if (draftInvoices.length > 0) {
-      await BillingRepository.bulkUpdateStatus({
-        ids: draftInvoices.map((invoice) => invoice.id),
-        status: 'void',
-        onlyFromStatus: 'draft',
-      });
-    }
+      if (confirmedInvoices.length > 0 || paidInvoices.length > 0) {
+        return { success: true, data: { created: false, reason: 'EXISTING_FINALIZED' } };
+      }
+      if (issuedInvoices.length > 0) {
+        return { success: true, data: { created: false, reason: 'EXISTING_ISSUED' } };
+      }
+      if (draftInvoices.length > 0) {
+        await BillingRepository.bulkUpdateStatus(
+          {
+            ids: draftInvoices.map((invoice) => invoice.id),
+            status: 'void',
+            onlyFromStatus: 'draft',
+          },
+          tx
+        );
+      }
 
-    const flags: string[] = [];
-    const endReading = await ReadingRepository.findLatestUnpaidReading(meter.id);
-    let periodEnd: Date | null = null;
-    let endValue = 0;
-    if (endReading) {
-      const endReadAt = new Date(endReading.readAt);
-      if (isCurrentMonth(endReadAt, referenceDate)) {
-        periodEnd = endReadAt;
-        endValue = endReading.value;
+      const flags: string[] = [];
+      const endReading = await ReadingRepository.findLatestUnpaidReading(meter.id, tx);
+      let periodEnd: Date | null = null;
+      let endValue = 0;
+      if (endReading) {
+        const endReadAt = new Date(endReading.readAt);
+        if (isCurrentMonth(endReadAt, referenceDate)) {
+          periodEnd = endReadAt;
+          endValue = endReading.value;
+        } else {
+          flags.push('no_reading_current_month');
+        }
       } else {
         flags.push('no_reading_current_month');
       }
-    } else {
-      flags.push('no_reading_current_month');
-    }
 
-    const startReading = await ReadingRepository.findLatestPaidReading(meter.id);
-    const startValue = startReading ? startReading.value : 0;
-    if (!startReading) {
-      flags.push('no_previous_reading');
-    }
-    const periodStart = startReading ? new Date(startReading.readAt) : null;
+      const startReading = await ReadingRepository.findLatestPaidReading(meter.id, tx);
+      const startValue = startReading ? startReading.value : 0;
+      if (!startReading) {
+        flags.push('no_previous_reading');
+      }
+      const periodStart = startReading ? new Date(startReading.readAt) : null;
 
-    const consumptionTotal = periodEnd ? endValue - startValue : 0;
-    if (consumptionTotal <= 0) {
-      flags.push('non_positive_consumption');
-    }
+      const consumptionTotal = periodEnd ? endValue - startValue : 0;
+      if (consumptionTotal <= 0) {
+        flags.push('non_positive_consumption');
+      }
 
-    const consumers = await MeterRepository.listConsumersForMeter(meter.id);
-    if (!consumers.length) {
-      return { success: true, data: { created: false, reason: 'NO_CONSUMERS' } };
-    }
+      const consumers = await MeterRepository.listConsumersForMeter(meter.id, tx);
+      if (!consumers.length) {
+        return { success: true, data: { created: false, reason: 'NO_CONSUMERS' } };
+      }
 
-    const tariffPeriodStart = periodStart ?? periodEnd ?? referenceDate;
-    const tariffPeriodEnd = periodEnd ?? periodStart ?? referenceDate;
-    const baseTariff = await BillingRepository.findApplicableTariff({
-      groupCode: meter.groupCode ?? null,
-      periodStart: tariffPeriodStart,
-      periodEnd: tariffPeriodEnd,
-    });
-    const tariffCache = new Map<string, any | null>();
-    const vatRate = 0.19;
+      const tariffPeriodStart = periodStart ?? periodEnd ?? referenceDate;
+      const tariffPeriodEnd = periodEnd ?? periodStart ?? referenceDate;
+      const baseTariff = await BillingRepository.findApplicableTariff(
+        {
+          groupCode: meter.groupCode ?? null,
+          periodStart: tariffPeriodStart,
+          periodEnd: tariffPeriodEnd,
+        },
+        tx
+      );
+      const tariffCache = new Map<string, any | null>();
+      const vatRate = 0.19;
 
-    const createdInvoices: any[] = [];
+      const createdInvoices: any[] = [];
 
-    if (consumers.length === 1) {
-      const accountId = consumers[0].accountId;
-      const tariff = await resolveConsumerTariff({
-        tariffId: consumers[0].account.consumerProfile?.tariffId ?? null,
-        fallback: baseTariff,
-        periodStart: tariffPeriodStart,
-        periodEnd: tariffPeriodEnd,
-        cache: tariffCache,
-      });
-      if (!tariff) {
+      if (consumers.length === 1) {
+        const accountId = consumers[0].accountId;
+        const tariff = await resolveConsumerTariff({
+          tariffId: consumers[0].account.consumerProfile?.tariffId ?? null,
+          fallback: baseTariff,
+          periodStart: tariffPeriodStart,
+          periodEnd: tariffPeriodEnd,
+          cache: tariffCache,
+          client: tx,
+        });
+        if (!tariff) {
+          return { success: true, data: { created: false, reason: 'NO_TARIFF' } };
+        }
+        const unitPrice = toNumber(tariff.basePrice);
+        const tariffSnapshot = buildTariffSnapshot(tariff);
+        const subtotal = toMoney(consumptionTotal * unitPrice);
+        const vatAmount = toMoney(subtotal * vatRate);
+        const totalAmount = toMoney(subtotal + vatAmount);
+
+        const invoice = await BillingRepository.createInvoice(
+          {
+            accountId,
+            meterId: meter.id,
+            periodStart,
+            periodEnd,
+            status: 'draft',
+            consumption: consumptionTotal,
+            unitPrice,
+            subtotal,
+            vatRate,
+            vatAmount,
+            totalAmount,
+            tariffId: tariff.id,
+            tariffSnapshot,
+            reviewFlags: flags.length ? flags : undefined,
+          },
+          tx
+        );
+
+        await BillingRepository.addInvoiceLine(
+          {
+            invoiceId: invoice.id,
+            type: 'consumption',
+            description: 'Water consumption',
+            quantity: toQuantity(consumptionTotal),
+            unitPrice,
+            amount: subtotal,
+          },
+          tx
+        );
+        await BillingRepository.addInvoiceLine(
+          {
+            invoiceId: invoice.id,
+            type: 'vat',
+            description: `VAT ${toMoney(vatRate * 100)}%`,
+            amount: vatAmount,
+          },
+          tx
+        );
+
+        if (startReading) {
+          await BillingRepository.addReadingLink(
+            { invoiceId: invoice.id, readingId: startReading.id, role: 'start' },
+            tx
+          );
+        }
+        if (endReading) {
+          await BillingRepository.addReadingLink(
+            { invoiceId: invoice.id, readingId: endReading.id, role: 'end' },
+            tx
+          );
+        }
+
+        createdInvoices.push(invoice);
+        return { success: true, data: { created: true, invoices: createdInvoices } };
+      }
+
+      const householdTotal = consumers.reduce((sum, c) => sum + (c.account.consumerProfile?.householdSize || 1), 0);
+      const tariffsByAccount = new Map<string, any>();
+      let missingTariff = false;
+
+      for (const consumer of consumers) {
+        const tariff = await resolveConsumerTariff({
+          tariffId: consumer.account.consumerProfile?.tariffId ?? null,
+          fallback: baseTariff,
+          periodStart: tariffPeriodStart,
+          periodEnd: tariffPeriodEnd,
+          cache: tariffCache,
+          client: tx,
+        });
+        if (!tariff) {
+          missingTariff = true;
+          break;
+        }
+        tariffsByAccount.set(consumer.accountId, tariff);
+      }
+
+      if (missingTariff) {
         return { success: true, data: { created: false, reason: 'NO_TARIFF' } };
       }
-      const unitPrice = toNumber(tariff.basePrice);
-      const tariffSnapshot = buildTariffSnapshot(tariff);
-      const subtotal = toMoney(consumptionTotal * unitPrice);
-      const vatAmount = toMoney(subtotal * vatRate);
-      const totalAmount = toMoney(subtotal + vatAmount);
 
-      const invoice = await BillingRepository.createInvoice({
-        accountId,
-        meterId: meter.id,
-        periodStart,
-        periodEnd,
-        status: 'draft',
-        consumption: consumptionTotal,
-        unitPrice,
-        subtotal,
-        vatRate,
-        vatAmount,
-        totalAmount,
-        tariffId: tariff.id,
-        tariffSnapshot,
-        reviewFlags: flags.length ? flags : undefined,
-      });
+      for (const consumer of consumers) {
+        const householdSize = consumer.account.consumerProfile?.householdSize || 1;
+        const share = householdSize / householdTotal;
+        const consumptionShare = toQuantity(consumptionTotal * share);
+        const tariff = tariffsByAccount.get(consumer.accountId);
+        const unitPrice = toNumber(tariff.basePrice);
+        const tariffSnapshot = buildTariffSnapshot(tariff);
+        const subtotal = toMoney(consumptionShare * unitPrice);
+        const vatAmount = toMoney(subtotal * vatRate);
+        const totalAmount = toMoney(subtotal + vatAmount);
 
-      await BillingRepository.addInvoiceLine({
-        invoiceId: invoice.id,
-        type: 'consumption',
-        description: 'Water consumption',
-        quantity: toQuantity(consumptionTotal),
-        unitPrice,
-        amount: subtotal,
-      });
-      await BillingRepository.addInvoiceLine({
-        invoiceId: invoice.id,
-        type: 'vat',
-        description: `VAT ${toMoney(vatRate * 100)}%`,
-        amount: vatAmount,
-      });
+        const invoice = await BillingRepository.createInvoice(
+          {
+            accountId: consumer.accountId,
+            meterId: meter.id,
+            periodStart,
+            periodEnd,
+            status: 'draft',
+            consumption: consumptionShare,
+            unitPrice,
+            subtotal,
+            vatRate,
+            vatAmount,
+            totalAmount,
+            tariffId: tariff.id,
+            tariffSnapshot,
+            reviewFlags: flags.length ? flags : undefined,
+          },
+          tx
+        );
 
-      if (startReading) {
-        await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: startReading.id, role: 'start' });
+        await BillingRepository.addInvoiceLine(
+          {
+            invoiceId: invoice.id,
+            type: 'consumption',
+            description: 'Water consumption',
+            quantity: toQuantity(consumptionShare),
+            unitPrice,
+            amount: subtotal,
+          },
+          tx
+        );
+        await BillingRepository.addInvoiceLine(
+          {
+            invoiceId: invoice.id,
+            type: 'vat',
+            description: `VAT ${toMoney(vatRate * 100)}%`,
+            amount: vatAmount,
+          },
+          tx
+        );
+
+        if (startReading) {
+          await BillingRepository.addReadingLink(
+            { invoiceId: invoice.id, readingId: startReading.id, role: 'start' },
+            tx
+          );
+        }
+        if (endReading) {
+          await BillingRepository.addReadingLink(
+            { invoiceId: invoice.id, readingId: endReading.id, role: 'end' },
+            tx
+          );
+        }
+
+        createdInvoices.push(invoice);
       }
-      if (endReading) {
-        await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: endReading.id, role: 'end' });
-      }
 
-      createdInvoices.push(invoice);
       return { success: true, data: { created: true, invoices: createdInvoices } };
-    }
-
-    const householdTotal = consumers.reduce((sum, c) => sum + (c.account.consumerProfile?.householdSize || 1), 0);
-    const tariffsByAccount = new Map<string, any>();
-    let missingTariff = false;
-
-    for (const consumer of consumers) {
-      const tariff = await resolveConsumerTariff({
-        tariffId: consumer.account.consumerProfile?.tariffId ?? null,
-        fallback: baseTariff,
-        periodStart: tariffPeriodStart,
-        periodEnd: tariffPeriodEnd,
-        cache: tariffCache,
-      });
-      if (!tariff) {
-        missingTariff = true;
-        break;
-      }
-      tariffsByAccount.set(consumer.accountId, tariff);
-    }
-
-    if (missingTariff) {
-      return { success: true, data: { created: false, reason: 'NO_TARIFF' } };
-    }
-
-    for (const consumer of consumers) {
-      const householdSize = consumer.account.consumerProfile?.householdSize || 1;
-      const share = householdSize / householdTotal;
-      const consumptionShare = toQuantity(consumptionTotal * share);
-      const tariff = tariffsByAccount.get(consumer.accountId);
-      const unitPrice = toNumber(tariff.basePrice);
-      const tariffSnapshot = buildTariffSnapshot(tariff);
-      const subtotal = toMoney(consumptionShare * unitPrice);
-      const vatAmount = toMoney(subtotal * vatRate);
-      const totalAmount = toMoney(subtotal + vatAmount);
-
-      const invoice = await BillingRepository.createInvoice({
-        accountId: consumer.accountId,
-        meterId: meter.id,
-        periodStart,
-        periodEnd,
-        status: 'draft',
-        consumption: consumptionShare,
-        unitPrice,
-        subtotal,
-        vatRate,
-        vatAmount,
-        totalAmount,
-        tariffId: tariff.id,
-        tariffSnapshot,
-        reviewFlags: flags.length ? flags : undefined,
-      });
-
-      await BillingRepository.addInvoiceLine({
-        invoiceId: invoice.id,
-        type: 'consumption',
-        description: 'Water consumption',
-        quantity: toQuantity(consumptionShare),
-        unitPrice,
-        amount: subtotal,
-      });
-      await BillingRepository.addInvoiceLine({
-        invoiceId: invoice.id,
-        type: 'vat',
-        description: `VAT ${toMoney(vatRate * 100)}%`,
-        amount: vatAmount,
-      });
-
-      if (startReading) {
-        await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: startReading.id, role: 'start' });
-      }
-      if (endReading) {
-        await BillingRepository.addReadingLink({ invoiceId: invoice.id, readingId: endReading.id, role: 'end' });
-      }
-
-      createdInvoices.push(invoice);
-    }
-
-    return { success: true, data: { created: true, invoices: createdInvoices } };
+    });
   },
 
   async confirmInvoices(ids: string[]) {

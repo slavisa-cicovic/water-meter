@@ -93,8 +93,8 @@ export const ReadingRepository = {
     });
   },
 
-  async findLatestUnpaidReading(meterId: string) {
-    return prisma.reading.findFirst({
+  async findLatestUnpaidReading(meterId: string, client = prisma) {
+    return client.reading.findFirst({
       where: {
         meterId,
         invoiceLinks: {
@@ -108,8 +108,8 @@ export const ReadingRepository = {
     });
   },
 
-  async findLatestPaidReading(meterId: string) {
-    return prisma.reading.findFirst({
+  async findLatestPaidReading(meterId: string, client = prisma) {
+    return client.reading.findFirst({
       where: {
         meterId,
         invoiceLinks: {

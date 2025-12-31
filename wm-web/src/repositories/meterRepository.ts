@@ -40,8 +40,8 @@ export const MeterRepository = {
     });
   },
 
-  async findById(id: string) {
-    return prisma.meter.findUnique({
+  async findById(id: string, client = prisma) {
+    return client.meter.findUnique({
       where: { id },
       include: { consumers: { include: { account: true } } },
     });
@@ -115,8 +115,8 @@ export const MeterRepository = {
     });
   },
 
-  async listConsumersForMeter(meterId: string) {
-    return prisma.meterConsumer.findMany({
+  async listConsumersForMeter(meterId: string, client = prisma) {
+    return client.meterConsumer.findMany({
       where: { meterId },
       include: { account: { include: { consumerProfile: true } } },
       orderBy: { accountId: 'asc' },
