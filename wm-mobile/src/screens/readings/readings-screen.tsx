@@ -53,6 +53,7 @@ export default function ReadingsScreen() {
     transform: [{ scale: scale.value }],
   }));
   const formatReadingValue = (value: number) => value.toFixed(2);
+  const previousMeterIdRef = useRef<string | null>(null);
 
   const routeMeterId = typeof params.meterId === "string" ? params.meterId : null;
 
@@ -80,6 +81,14 @@ export default function ReadingsScreen() {
     return () => {
       mounted = false;
     };
+  }, [routeMeterId]);
+
+  useEffect(() => {
+    if (previousMeterIdRef.current !== routeMeterId) {
+      resetReadingInput();
+      setSelectedMeterId(routeMeterId ?? null);
+      previousMeterIdRef.current = routeMeterId;
+    }
   }, [routeMeterId]);
 
   const previousPaidValue = context?.previousPaidValue ?? 0;
