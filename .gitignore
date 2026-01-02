@@ -39,3 +39,6 @@ web-build/
 coverage/
 tmp/
 .history/
+
+# Uploads (local storage)
+wm-web/public/uploads/

@@ -2,7 +2,7 @@
   "expo": {
     "name": "WaterMeterMobile",
     "slug": "water-meter-mobile",
-    "scheme": "aemobile",
+    "scheme": "wmmobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -15,10 +15,20 @@
     },
     "ios": {
       "bundleIdentifier": "com.watermeter.mobile",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Allow access to the camera to capture meter photos.",
+        "NSPhotoLibraryUsageDescription": "Allow access to your photo library to select meter photos.",
+        "NSPhotoLibraryAddUsageDescription": "Allow saving annotated meter photos."
+      }
     },
     "android": {
       "package": "com.watermeter.mobile",
+      "permissions": [
+        "CAMERA",
+        "READ_MEDIA_IMAGES",
+        "READ_EXTERNAL_STORAGE"
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",

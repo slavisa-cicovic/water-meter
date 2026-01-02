@@ -4,6 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import "react-native-reanimated";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { useColorScheme } from "@src/hooks/use-color-scheme";
 import { useAuthStore } from "@src/state/auth-store";
@@ -47,7 +48,7 @@ export default function RootLayout() {
           <ActivityIndicator />
         </View>
       ) : (
-        <>
+        <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack>
             <Stack.Screen name="login" options={{ headerShown: false }} />
             <Stack.Screen name="register" options={{ headerShown: false }} />
@@ -59,7 +60,7 @@ export default function RootLayout() {
             />
           </Stack>
           <StatusBar style="auto" />
-        </>
+        </GestureHandlerRootView>
       )}
     </ThemeProvider>
   );
