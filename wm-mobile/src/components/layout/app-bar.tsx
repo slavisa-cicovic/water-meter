@@ -1,7 +1,16 @@
 import { useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  InteractionManager,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useAuthStore } from "@src/state/auth-store";
+import { useEffect } from "react";
 
 type AppBarProps = {
   title: string;
@@ -30,8 +39,25 @@ const notifications = [
 
 export default function AppBar({ title }: AppBarProps) {
   const clearSession = useAuthStore((state) => state.clearSession);
+  const accessToken = useAuthStore((state) => state.accessToken);
   const [showNotifications, setShowNotifications] = useState(false);
   const hasNotifications = notifications.length > 0;
+
+  useEffect(() => {
+    if (!accessToken) {
+      setShowNotifications(false);
+    }
+  }, [accessToken]);
+
+  const handleLogout = async () => {
+    setShowNotifications(false);
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    await new Promise<void>((resolve) =>
+      InteractionManager.runAfterInteractions(() => resolve())
+    );
+    await clearSession();
+  };
 
   return (
     <View style={styles.wrapper}>
@@ -83,7 +109,10 @@ export default function AppBar({ title }: AppBarProps) {
               </View>
             ) : null}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} onPress={clearSession}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={handleLogout}
+          >
             <MaterialCommunityIcons name="logout-variant" size={18} color="#3a4c7a" />
           </TouchableOpacity>
         </View>

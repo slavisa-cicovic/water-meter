@@ -1,17 +1,14 @@
 import { useEffect, useState } from "react";
 import { Tabs } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { AppState, TouchableOpacity } from "react-native";
+import { AppState } from "react-native";
 import { MobileService } from "@src/services/mobile.service";
 import { useAuthStore } from "@src/state/auth-store";
 import { useNotificationsStore } from "@src/state/notifications-store";
 
-const resolveHandler = <T extends ((...args: any[]) => void) | null | undefined>(
-  handler: T
-): Exclude<T, null> | undefined => (handler ?? undefined) as Exclude<T, null> | undefined;
-
 export default function TabsLayout() {
   const user = useAuthStore((state) => state.user);
+  const accessToken = useAuthStore((state) => state.accessToken);
   const [sharedMeter, setSharedMeter] = useState<boolean | null>(null);
   const hasIssuedInvoice = useNotificationsStore((state) => state.hasIssuedInvoice);
   const refreshNotifications = useNotificationsStore((state) => state.refreshNotifications);
@@ -78,6 +75,10 @@ export default function TabsLayout() {
   const hideReadings = user?.role === "consumer" && sharedMeter === true;
   const paymentEnabled = user?.role === "consumer" ? hasIssuedInvoice : false;
 
+  if (!accessToken) {
+    return null;
+  }
+
   return (
     <Tabs
       screenOptions={{
@@ -131,37 +132,13 @@ export default function TabsLayout() {
             />
           ),
           tabBarBadge: paymentEnabled ? "1" : undefined,
-          tabBarButton: (props) => {
-            const {
-              onPress,
-              onLongPress,
-              onPressIn,
-              onPressOut,
-              onFocus,
-              onBlur,
-              accessibilityLabel,
-              accessibilityState,
-              testID,
-              style,
-              children,
-            } = props;
-            return (
-              <TouchableOpacity
-                onPress={resolveHandler(onPress)}
-                onLongPress={resolveHandler(onLongPress)}
-                onPressIn={resolveHandler(onPressIn)}
-                onPressOut={resolveHandler(onPressOut)}
-                onFocus={resolveHandler(onFocus)}
-                onBlur={resolveHandler(onBlur)}
-                accessibilityLabel={accessibilityLabel}
-                accessibilityState={accessibilityState}
-                testID={testID}
-                disabled={!paymentEnabled}
-                style={[style, !paymentEnabled ? { opacity: 0.4 } : null]}
-              >
-                {children}
-              </TouchableOpacity>
-            );
+          tabBarItemStyle: !paymentEnabled ? { opacity: 0.4 } : undefined,
+        }}
+        listeners={{
+          tabPress: (event) => {
+            if (!paymentEnabled) {
+              event.preventDefault();
+            }
           },
         }}
       />

@@ -10,6 +10,7 @@ import { useNotificationsStore } from "@src/state/notifications-store";
 export default function PaymentScreen() {
   const router = useRouter();
   const refreshNotifications = useNotificationsStore((state) => state.refreshNotifications);
+  const setHasIssuedInvoice = useNotificationsStore((state) => state.setHasIssuedInvoice);
   const [invoice, setInvoice] = useState<MobilePaymentInvoice | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +45,7 @@ export default function PaymentScreen() {
       Alert.alert("Payment failed", result.message);
       return;
     }
+    setHasIssuedInvoice(false);
     refreshNotifications().catch(() => null);
     Alert.alert("Success", "Payment submitted successfully.", [
       {
