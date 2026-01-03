@@ -14,12 +14,18 @@ const toReading = (row: any): Reading => ({
   value: row.value,
   originalValue: row.originalValue,
   imageFilename: row.imageFilename ?? undefined,
+  barcodeRaw: row.barcodeRaw ?? null,
+  barcodeFinal: row.barcodeFinal ?? null,
+  barcodeStatus: row.barcodeStatus ?? null,
+  barcodeUpdatedAt: row.barcodeUpdatedAt?.toISOString?.() ?? row.barcodeUpdatedAt ?? undefined,
+  barcodeUpdatedBy: row.barcodeUpdatedBy ?? undefined,
   createdAt: row.createdAt?.toISOString?.() ?? row.createdAt ?? undefined,
   updatedAt: row.updatedAt?.toISOString?.() ?? row.updatedAt ?? undefined,
   meter: row.meter
     ? {
         serialNumber: row.meter.serialNumber,
         groupCode: row.meter.groupCode ?? undefined,
+        barcode: row.meter.barcode ?? undefined,
         address: row.meter.address ?? undefined,
       }
     : undefined,
@@ -37,7 +43,8 @@ const toReading = (row: any): Reading => ({
 });
 
 const allowedReaderRoles = new Set(['consumer', 'staff_field']);
-const allowedEditorRoles = new Set(['consumer', 'staff_field', 'staff_backoffice']);
+const allowedEditorRoles = new Set(['consumer', 'staff_field', 'staff_backoffice', 'admin']);
+const allowedBarcodeRoles = new Set(['staff_backoffice', 'admin']);
 
 export const ReadingsService = {
   async create(input: ReadingCreateInput) {
@@ -75,6 +82,9 @@ export const ReadingsService = {
       const existing = await ReadingRepository.findById(input.id, tx);
       if (!existing) return { success: false, error: 'NOT_FOUND' };
 
+      const hasBarcodeUpdate =
+        input.barcodeFinal !== undefined || input.barcodeStatus !== undefined;
+
       if (existing.method === 'photo_ocr' && input.imageFilename === null) {
         return { success: false, error: 'IMAGE_REQUIRED' };
       }
@@ -100,6 +110,24 @@ export const ReadingsService = {
           },
           tx
         );
+      }
+
+      if (hasBarcodeUpdate) {
+        const editor = await AccountRepository.findById(input.editorAccountId || '');
+        if (!editor) return { success: false, error: 'ACCOUNT_NOT_FOUND' };
+        if (!allowedBarcodeRoles.has(editor.role)) return { success: false, error: 'EDITOR_FORBIDDEN' };
+        if (input.editorRole && input.editorRole !== editor.role) {
+          return { success: false, error: 'EDITOR_ROLE_MISMATCH' };
+        }
+        if (input.barcodeStatus === 'accepted' && input.barcodeFinal === undefined) {
+          input.barcodeFinal = existing.barcodeRaw ?? null;
+        }
+        if (input.barcodeStatus === 'accepted' && input.barcodeFinal) {
+          await tx.meter.update({
+            where: { id: existing.meterId },
+            data: { barcode: input.barcodeFinal },
+          });
+        }
       }
 
       const updated = await ReadingRepository.update(input, tx);

@@ -9,6 +9,7 @@ export const MeterRepository = {
     return prisma.meter.create({
       data: {
         serialNumber: input.serialNumber,
+        barcode: input.barcode ?? null,
         groupCode: input.groupCode ?? null,
         address: input.address,
         status: input.status ?? 'active',
@@ -31,6 +32,7 @@ export const MeterRepository = {
       where: { id: input.id },
       data: {
         ...(input.serialNumber !== undefined ? { serialNumber: input.serialNumber } : {}),
+        ...(input.barcode !== undefined ? { barcode: input.barcode } : {}),
         ...(input.groupCode !== undefined ? { groupCode: input.groupCode } : {}),
         ...(input.address !== undefined ? { address: input.address } : {}),
         ...(input.status !== undefined ? { status: input.status } : {}),
@@ -54,6 +56,7 @@ export const MeterRepository = {
       status,
       groupCode,
       type,
+      review,
       consumerAccountId,
       orderBy = 'createdAt',
       order = 'desc',
@@ -65,6 +68,7 @@ export const MeterRepository = {
       ...(status ? { status } : {}),
       ...(groupCode ? { groupCode } : {}),
       ...(type ? { type } : {}),
+      ...(review === 'pending' ? { readings: { some: { barcodeStatus: 'pending' } } } : {}),
       ...(search
         ? {
             OR: [
@@ -97,7 +101,13 @@ export const MeterRepository = {
         orderBy: orderByClause,
         skip: page * pageSize,
         take: pageSize,
-        include: { consumers: true },
+        include: {
+          consumers: true,
+          readings: {
+            where: { barcodeStatus: 'pending' },
+            select: { id: true },
+          },
+        },
       }),
     ]);
 

@@ -272,6 +272,7 @@ export default function ReadingsScreen() {
       value: normalizedValue,
       originalValue,
       imageFilename: sourceUri ? payloadFilename : null,
+      barcode: sortedBarcodes[0] ?? null,
     };
 
     setSubmitting(true);

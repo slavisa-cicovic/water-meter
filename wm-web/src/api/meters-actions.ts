@@ -3,6 +3,7 @@ import axiosInstance, { endpoints } from 'src/utils/axios';
 export const MetersApi = {
   async create(payload: {
     serialNumber: string;
+    barcode?: string | null;
     groupCode?: string;
     address: string;
     type: 'automatic' | 'mechanical';
@@ -19,6 +20,7 @@ export const MetersApi = {
   async update(payload: {
     id: string;
     serialNumber?: string;
+    barcode?: string | null;
     groupCode?: string | null;
     status?: 'active' | 'inactive' | 'removed';
   }) {

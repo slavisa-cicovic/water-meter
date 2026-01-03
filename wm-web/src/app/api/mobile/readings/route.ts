@@ -20,7 +20,10 @@ const getAuthPayload = (req: NextRequest) => {
   return { payload };
 };
 
-type MobileReadingCreatePayload = Partial<ReadingCreateInput> & { accountId?: string };
+type MobileReadingCreatePayload = Partial<ReadingCreateInput> & {
+  accountId?: string;
+  barcode?: string | null;
+};
 
 export const GET = async (req: NextRequest) => {
   const auth = getAuthPayload(req);
@@ -62,6 +65,7 @@ export const POST = async (req: NextRequest) => {
     value: body.value as number,
     originalValue: body.originalValue,
     imageFilename: body.imageFilename ?? null,
+    barcodeRaw: body.barcode ?? null,
   };
 
   const result = await MobileService.createReading(auth.payload.accountId, input);

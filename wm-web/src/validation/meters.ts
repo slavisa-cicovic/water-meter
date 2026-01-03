@@ -46,6 +46,9 @@ export const validateMeterCreate = (input: MeterCreateInput): ValidationResult =
   const errors: Record<string, string[]> = {};
 
   if (isBlank(input.serialNumber)) pushError(errors, 'serialNumber', 'Required');
+  if (input.barcode !== undefined && input.barcode !== null && isBlank(input.barcode)) {
+    pushError(errors, 'barcode', 'Must not be blank');
+  }
   if (isBlank(input.address)) pushError(errors, 'address', 'Required');
 
   validateGroupCode(input.groupCode, errors);
@@ -61,6 +64,9 @@ export const validateMeterUpdate = (input: MeterUpdateInput): ValidationResult =
 
   if (isBlank(input.id)) pushError(errors, 'id', 'Required');
   if (input.serialNumber !== undefined && isBlank(input.serialNumber)) pushError(errors, 'serialNumber', 'Must not be blank');
+  if (input.barcode !== undefined && input.barcode !== null && isBlank(input.barcode)) {
+    pushError(errors, 'barcode', 'Must not be blank');
+  }
   if (input.address !== undefined && isBlank(input.address)) pushError(errors, 'address', 'Must not be blank');
 
   validateGroupCode(input.groupCode, errors);

@@ -120,6 +120,12 @@ enum InvoiceReadingRole {
   end
 }
 
+enum BarcodeStatus {
+  pending
+  accepted
+  rejected
+}
+
 model Account {
   id                 String              @id @default(uuid())
   firstName          String
@@ -177,6 +183,7 @@ model VerificationLog {
 model Meter {
   id           String      @id @default(uuid())
   serialNumber String      @unique
+  barcode      String?
   groupCode    String?
   address      String
   status       MeterStatus @default(active)
@@ -213,6 +220,11 @@ model Reading {
   value             Int
   originalValue     Int
   imageFilename     String?
+  barcodeRaw        String?
+  barcodeFinal      String?
+  barcodeStatus     BarcodeStatus?
+  barcodeUpdatedAt  DateTime?
+  barcodeUpdatedBy  String?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 

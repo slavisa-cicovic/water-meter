@@ -93,6 +93,7 @@ export type MobileReadingCreateInput = {
   value: number;
   originalValue: number;
   imageFilename?: string | null;
+  barcode?: string | null;
   readAt?: string;
 };
 

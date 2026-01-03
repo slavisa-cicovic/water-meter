@@ -1,10 +1,12 @@
 export type ReadingMethod = 'remote' | 'manual' | 'photo_ocr';
+export type BarcodeStatus = 'pending' | 'accepted' | 'rejected';
 
 export type Reading = {
   id: string;
   meterId: string;
   meter?: {
     serialNumber?: string;
+    barcode?: string;
     groupCode?: string;
     address?: string;
   };
@@ -14,6 +16,11 @@ export type Reading = {
   value: number;
   originalValue: number;
   imageFilename?: string;
+  barcodeRaw?: string | null;
+  barcodeFinal?: string | null;
+  barcodeStatus?: BarcodeStatus | null;
+  barcodeUpdatedAt?: string;
+  barcodeUpdatedBy?: string;
   createdAt?: string;
   updatedAt?: string;
   edits?: ReadingEdit[];
@@ -39,6 +46,7 @@ export type ReadingCreateInput = {
   value: number;
   originalValue?: number;
   imageFilename?: string | null;
+  barcodeRaw?: string | null;
 };
 
 export type ReadingUpdateInput = {
@@ -46,6 +54,8 @@ export type ReadingUpdateInput = {
   value?: number;
   readAt?: string;
   imageFilename?: string | null;
+  barcodeFinal?: string | null;
+  barcodeStatus?: BarcodeStatus | null;
   editReason?: string;
   editorAccountId?: string;
   editorRole?: ReadingEdit['editorRole'];

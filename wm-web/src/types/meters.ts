@@ -6,6 +6,7 @@ export type GroupCode = string; // expected format: "01".."99" (validated in `sr
 export type Meter = {
   id: string;
   serialNumber: string;
+  barcode?: string;
   groupCode?: GroupCode;
   address: string;
   status: MeterStatus;
@@ -17,6 +18,7 @@ export type Meter = {
     lastName: string;
     address: string;
   }>;
+  needsBarcodeReview?: boolean;
   installedAt?: string;
   notes?: string;
   createdAt?: string;
@@ -25,6 +27,7 @@ export type Meter = {
 
 export type MeterCreateInput = {
   serialNumber: string;
+  barcode?: string | null;
   groupCode?: GroupCode | null;
   address: string;
   status?: MeterStatus;
@@ -36,6 +39,7 @@ export type MeterCreateInput = {
 export type MeterUpdateInput = {
   id: string;
   serialNumber?: string;
+  barcode?: string | null;
   groupCode?: GroupCode | null;
   address?: string;
   status?: MeterStatus;
@@ -54,6 +58,7 @@ export type MeterListParams = {
   status?: MeterStatus;
   groupCode?: GroupCode;
   type?: MeterType;
+  review?: 'pending';
   consumerAccountId?: string;
   orderBy?: 'serialNumber' | 'groupCode' | 'address' | 'type' | 'status' | 'createdAt';
   order?: 'asc' | 'desc';

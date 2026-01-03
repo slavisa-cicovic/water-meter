@@ -48,6 +48,12 @@ const validateEditorRole = (role: ReadingEdit['editorRole'] | undefined, errors:
   if (!allowed.includes(role)) pushError(errors, 'editorRole', 'Invalid editor role');
 };
 
+const validateBarcodeStatus = (status: ReadingUpdateInput['barcodeStatus'], errors: Record<string, string[]>) => {
+  if (!status) return;
+  const allowed: NonNullable<ReadingUpdateInput['barcodeStatus']>[] = ['pending', 'accepted', 'rejected'];
+  if (!allowed.includes(status)) pushError(errors, 'barcodeStatus', 'Invalid barcode status');
+};
+
 export const validateReadingCreate = (input: ReadingCreateInput): ValidationResult => {
   const errors: Record<string, string[]> = {};
 
@@ -58,6 +64,9 @@ export const validateReadingCreate = (input: ReadingCreateInput): ValidationResu
   validateMethod(input.method, errors);
   validateValue(input.value, 'value', errors);
   validateImage(input.method, input.imageFilename, errors);
+  if (input.barcodeRaw !== undefined && input.barcodeRaw !== null && isBlank(input.barcodeRaw)) {
+    pushError(errors, 'barcodeRaw', 'Must be null or a barcode');
+  }
 
   return { valid: Object.keys(errors).length === 0, errors };
 };
@@ -77,6 +86,17 @@ export const validateReadingUpdate = (input: ReadingUpdateInput): ValidationResu
 
   if (input.imageFilename !== undefined && input.imageFilename !== null && isBlank(input.imageFilename)) {
     pushError(errors, 'imageFilename', 'Must be null or a filename');
+  }
+
+  if (input.barcodeFinal !== undefined && input.barcodeFinal !== null && isBlank(input.barcodeFinal)) {
+    pushError(errors, 'barcodeFinal', 'Must be null or a barcode');
+  }
+  if (input.barcodeStatus !== undefined) {
+    validateBarcodeStatus(input.barcodeStatus, errors);
+  }
+  if (input.barcodeFinal !== undefined || input.barcodeStatus !== undefined) {
+    if (isBlank(input.editorAccountId)) pushError(errors, 'editorAccountId', 'Required when reviewing barcode');
+    validateEditorRole(input.editorRole, errors);
   }
 
   return { valid: Object.keys(errors).length === 0, errors };

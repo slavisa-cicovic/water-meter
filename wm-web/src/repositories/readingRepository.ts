@@ -20,6 +20,8 @@ export const ReadingRepository = {
         value: input.value,
         originalValue: input.originalValue ?? input.value,
         imageFilename: input.imageFilename ?? null,
+        barcodeRaw: input.barcodeRaw ?? null,
+        barcodeStatus: input.barcodeRaw ? 'pending' : null,
       },
       include: { edits: { include: { account: true }, orderBy: { editedAt: 'desc' } }, meter: true },
     });
@@ -32,6 +34,11 @@ export const ReadingRepository = {
         ...(input.readAt !== undefined ? { readAt: toDate(input.readAt) } : {}),
         ...(input.value !== undefined ? { value: input.value } : {}),
         ...(input.imageFilename !== undefined ? { imageFilename: input.imageFilename } : {}),
+        ...(input.barcodeFinal !== undefined ? { barcodeFinal: input.barcodeFinal } : {}),
+        ...(input.barcodeStatus !== undefined ? { barcodeStatus: input.barcodeStatus } : {}),
+        ...((input.barcodeFinal !== undefined || input.barcodeStatus !== undefined) && input.editorAccountId
+          ? { barcodeUpdatedAt: new Date(), barcodeUpdatedBy: input.editorAccountId }
+          : {}),
       },
       include: { edits: { include: { account: true }, orderBy: { editedAt: 'desc' } }, meter: true },
     });

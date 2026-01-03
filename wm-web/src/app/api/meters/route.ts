@@ -11,6 +11,7 @@ export const GET = async (req: NextRequest) => {
   const status = (searchParams.get('status') || undefined) as any;
   const groupCode = searchParams.get('groupCode') || undefined;
   const type = (searchParams.get('type') || undefined) as any;
+  const review = (searchParams.get('review') || undefined) as any;
   const consumerAccountId = searchParams.get('consumerAccountId') || undefined;
   const orderBy = (searchParams.get('orderBy') || undefined) as
     | 'serialNumber'
@@ -29,6 +30,7 @@ export const GET = async (req: NextRequest) => {
     status,
     groupCode,
     type,
+    review,
     consumerAccountId,
     orderBy,
     order,

@@ -28,6 +28,10 @@ export function MeterTableFiltersResult({ filters, onFilters, onResetFilters, re
     chips.push({ key: 'type', label: `Type: ${filters.type}`, onDelete: () => onFilters('type', '') });
   }
 
+  if (filters.review) {
+    chips.push({ key: 'review', label: 'Review: pending', onDelete: () => onFilters('review', '') });
+  }
+
   return (
     <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={sx}>
       {chips.map((chip) => (

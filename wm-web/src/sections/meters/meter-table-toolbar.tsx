@@ -13,14 +13,16 @@ export type IMeterTableFilters = {
   status: '' | MeterStatus;
   groupCode: string;
   type: '' | 'automatic' | 'mechanical';
+  review: '' | 'pending';
 };
 
 type Props = {
   filters: IMeterTableFilters;
   onFilters: (name: string, value: IMeterTableFilterValue) => void;
+  showReviewFilter?: boolean;
 };
 
-export function MeterTableToolbar({ filters, onFilters }: Props) {
+export function MeterTableToolbar({ filters, onFilters, showReviewFilter = false }: Props) {
   const handleSearch = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       onFilters('search', event.target.value);
@@ -45,6 +47,13 @@ export function MeterTableToolbar({ filters, onFilters }: Props) {
   const handleType = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       onFilters('type', event.target.value);
+    },
+    [onFilters]
+  );
+
+  const handleReview = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      onFilters('review', event.target.value);
     },
     [onFilters]
   );
@@ -91,6 +100,13 @@ export function MeterTableToolbar({ filters, onFilters }: Props) {
           <MenuItem value="automatic">automatic</MenuItem>
           <MenuItem value="mechanical">mechanical</MenuItem>
         </TextField>
+
+        {showReviewFilter ? (
+          <TextField select label="Review" value={filters.review} onChange={handleReview} sx={{ minWidth: 160 }}>
+            <MenuItem value="">All</MenuItem>
+            <MenuItem value="pending">Needs review</MenuItem>
+          </TextField>
+        ) : null}
       </Stack>
     </Stack>
   );

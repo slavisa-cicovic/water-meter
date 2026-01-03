@@ -27,6 +27,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
+import Divider from '@mui/material/Divider';
 import * as Yup from 'yup';
 import { format } from 'date-fns';
 import { useForm } from 'react-hook-form';
@@ -94,6 +95,7 @@ export function MeterEditForm({ currentMeter }: Props) {
 
   const MeterSchema = Yup.object().shape({
     serialNumber: Yup.string().required('Required'),
+    barcode: Yup.string().nullable(),
     address: isCreate ? Yup.string().required('Required') : Yup.string(),
     type: isCreate ? Yup.string().required('Required') : Yup.string(),
     status: isCreate ? Yup.string() : Yup.string().required('Required'),
@@ -101,6 +103,7 @@ export function MeterEditForm({ currentMeter }: Props) {
 
   const defaultValues = {
     serialNumber: currentMeter?.serialNumber || '',
+    barcode: currentMeter?.barcode || '',
     groupCode: currentMeter?.groupCode || '',
     address: currentMeter?.address || '',
     type: currentMeter?.type || 'mechanical',
@@ -135,6 +138,8 @@ export function MeterEditForm({ currentMeter }: Props) {
   const [editError, setEditError] = useState('');
   const [editReasonError, setEditReasonError] = useState('');
   const [editSaving, setEditSaving] = useState(false);
+  const [barcodeError, setBarcodeError] = useState('');
+  const [barcodeSaving, setBarcodeSaving] = useState(false);
   const [editBounds, setEditBounds] = useState<{ min?: number; max?: number } | null>(null);
   const { readings, readingsLoading, readingsEmpty, mutate: mutateReadings } = useGetReadings(
     meterId ? { meterId, from: readingFrom || undefined, to: readingTo || undefined } : undefined
@@ -144,6 +149,7 @@ export function MeterEditForm({ currentMeter }: Props) {
     if (isCreate) {
       const result = await MetersApi.create({
         serialNumber: data.serialNumber,
+        barcode: data.barcode || null,
         groupCode: data.groupCode || undefined,
         address: data.address,
         type: data.type,
@@ -165,6 +171,7 @@ export function MeterEditForm({ currentMeter }: Props) {
       await MetersApi.update({
         id: currentMeter.id,
         serialNumber: data.serialNumber,
+        barcode: data.barcode || null,
         groupCode: data.groupCode || null,
         status: data.status,
       });
@@ -249,7 +256,12 @@ export function MeterEditForm({ currentMeter }: Props) {
 
   const viewerRole = (user as any)?.role as AccountRole | undefined;
   const viewerId = (user as any)?.accountId || (user as any)?.id;
-  const canEditReadings = viewerRole === 'staff_backoffice';
+  const canEditReadings = viewerRole === 'staff_backoffice' || viewerRole === 'admin';
+  const canReviewBarcode = viewerRole === 'staff_backoffice' || viewerRole === 'admin';
+  const editingReading = useMemo(
+    () => sortedReadings.find((reading) => reading.id === editingReadingId) ?? null,
+    [sortedReadings, editingReadingId]
+  );
 
   const getMonthKey = (date: string) => {
     const parsed = new Date(date);
@@ -290,6 +302,7 @@ export function MeterEditForm({ currentMeter }: Props) {
       min: prev ? prev.value : undefined,
       max: next ? next.value : undefined,
     });
+    setBarcodeError('');
     setEditDialogOpen(true);
   };
 
@@ -302,6 +315,7 @@ export function MeterEditForm({ currentMeter }: Props) {
     setEditReason('');
     setEditReasonError('');
     setEditBounds(null);
+    setBarcodeError('');
   };
 
   const handleSaveEdit = async () => {
@@ -351,6 +365,39 @@ export function MeterEditForm({ currentMeter }: Props) {
     }
   };
 
+  const handleBarcodeDecision = async (status: 'accepted' | 'rejected') => {
+    if (!editingReading) return;
+    if (!viewerId || !viewerRole) {
+      setBarcodeError('Missing reviewer information.');
+      return;
+    }
+    if (!canReviewBarcode) {
+      setBarcodeError('Not allowed to review barcodes.');
+      return;
+    }
+    if (!editingReading.barcodeRaw) {
+      setBarcodeError('No barcode submitted for this reading.');
+      return;
+    }
+
+    setBarcodeSaving(true);
+    setBarcodeError('');
+    try {
+      await ReadingsApi.updateReading(editingReading.id, {
+        id: editingReading.id,
+        barcodeStatus: status,
+        barcodeFinal: status === 'accepted' ? editingReading.barcodeRaw : null,
+        editorAccountId: viewerId,
+        editorRole: viewerRole,
+      });
+      await mutateReadings();
+    } catch {
+      setBarcodeError('Failed to update barcode status.');
+    } finally {
+      setBarcodeSaving(false);
+    }
+  };
+
   const toggleReadingExpanded = (readingId: string) => {
     setExpandedReadings((prev) => {
       const next = new Set(prev);
@@ -374,6 +421,7 @@ export function MeterEditForm({ currentMeter }: Props) {
               {isCreate ? (
                 <Stack spacing={2}>
                   <RHFTextField name="serialNumber" label="Serial number" />
+                  <RHFTextField name="barcode" label="Barcode" />
                   <RHFTextField name="groupCode" label="Group code (01-99)" />
                   <RHFTextField name="address" label="Address" />
                   <TextField
@@ -406,6 +454,7 @@ export function MeterEditForm({ currentMeter }: Props) {
                 <>
                   <Stack spacing={2}>
                     <RHFTextField name="serialNumber" label="Serial number" />
+                    <RHFTextField name="barcode" label="Barcode" />
                     <RHFTextField name="groupCode" label="Group code (01-99)" />
                     <RHFTextField name="address" label="Address" disabled />
                     <RHFTextField name="status" label="Status" select>
@@ -510,6 +559,8 @@ export function MeterEditForm({ currentMeter }: Props) {
                               <TableCell sx={{ width: 140 }}>Method</TableCell>
                               <TableCell sx={{ width: 120 }}>Value</TableCell>
                               <TableCell sx={{ width: 140 }}>Consumption</TableCell>
+                              <TableCell sx={{ width: 160 }}>Barcode</TableCell>
+                              <TableCell sx={{ width: 140 }}>Barcode status</TableCell>
                               <TableCell sx={{ width: 80 }}>Actions</TableCell>
                             </TableRow>
                           </TableHead>
@@ -545,6 +596,12 @@ export function MeterEditForm({ currentMeter }: Props) {
                                     <TableCell sx={{ width: 140 }}>
                                       {consumption !== undefined ? consumption : '-'}
                                     </TableCell>
+                                    <TableCell sx={{ width: 160 }}>
+                                      {reading.barcodeRaw ?? '-'}
+                                    </TableCell>
+                                    <TableCell sx={{ width: 140 }}>
+                                      {reading.barcodeStatus ?? '-'}
+                                    </TableCell>
                                     <TableCell sx={{ width: 80 }}>
                                       <IconButton
                                         size="small"
@@ -558,7 +615,7 @@ export function MeterEditForm({ currentMeter }: Props) {
                                   </TableRow>
                                   {hasEdits ? (
                                     <TableRow sx={{ backgroundColor: 'action.hover' }}>
-                                      <TableCell colSpan={6} sx={{ py: 0 }}>
+                                      <TableCell colSpan={8} sx={{ py: 0 }}>
                                         <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                                           <Stack
                                             spacing={1.5}
@@ -669,6 +726,42 @@ export function MeterEditForm({ currentMeter }: Props) {
               multiline
               minRows={2}
             />
+            <Divider />
+            <Stack spacing={1}>
+              <Typography variant="subtitle2">Barcode review</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Meter barcode: {editingReading?.meter?.barcode || currentMeter?.barcode || '-'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Mobile barcode: {editingReading?.barcodeRaw || '-'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Status: {editingReading?.barcodeStatus || '-'}
+              </Typography>
+              {barcodeError && (
+                <Typography variant="body2" color="error">
+                  {barcodeError}
+                </Typography>
+              )}
+              <Stack direction="row" spacing={1}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  disabled={!canReviewBarcode || barcodeSaving || !editingReading?.barcodeRaw}
+                  onClick={() => handleBarcodeDecision('accepted')}
+                >
+                  Accept barcode
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  disabled={!canReviewBarcode || barcodeSaving || !editingReading?.barcodeRaw}
+                  onClick={() => handleBarcodeDecision('rejected')}
+                >
+                  Reject barcode
+                </Button>
+              </Stack>
+            </Stack>
           </Stack>
         </DialogContent>
         <DialogActions>

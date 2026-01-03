@@ -6,9 +6,10 @@ import { paths } from 'src/routes/paths';
 
 type Props = {
   row: Meter & { consumersCount?: number };
+  showReviewColumn?: boolean;
 };
 
-export function MeterTableRow({ row }: Props) {
+export function MeterTableRow({ row, showReviewColumn = false }: Props) {
   return (
     <TableRow hover>
       <TableCell sx={{ width: 220 }}>{row.serialNumber}</TableCell>
@@ -20,6 +21,15 @@ export function MeterTableRow({ row }: Props) {
       </TableCell>
       <TableCell sx={{ width: 120 }}>{row.consumersCount ?? '-'}</TableCell>
       <TableCell sx={{ width: 160 }}>{row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '-'}</TableCell>
+      {showReviewColumn ? (
+        <TableCell sx={{ width: 120 }}>
+          {row.needsBarcodeReview ? (
+            <Chip size="small" color="warning" label="Review" />
+          ) : (
+            '-'
+          )}
+        </TableCell>
+      ) : null}
       <TableCell align="right" sx={{ width: 140 }}>
         <Stack direction="row" justifyContent="flex-end" spacing={1}>
           <Tooltip title="Details">

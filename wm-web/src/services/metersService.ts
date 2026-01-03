@@ -6,6 +6,7 @@ import { validateMeterCreate, validateMeterUpdate } from 'src/validation/meters'
 const toMeter = (row: any): Meter => ({
   id: row.id,
   serialNumber: row.serialNumber,
+  barcode: row.barcode ?? undefined,
   groupCode: row.groupCode ?? undefined,
   address: row.address,
   status: row.status,
@@ -22,6 +23,7 @@ const toMeter = (row: any): Meter => ({
           address: account.address,
         }))
     : undefined,
+  needsBarcodeReview: Array.isArray(row.readings) ? row.readings.length > 0 : undefined,
   installedAt: row.installedAt?.toISOString?.() ?? row.installedAt ?? undefined,
   notes: row.notes ?? undefined,
   createdAt: row.createdAt?.toISOString?.() ?? row.createdAt ?? undefined,

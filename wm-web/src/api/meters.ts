@@ -8,6 +8,7 @@ type MetersQuery = {
   status?: string;
   groupCode?: string;
   type?: string;
+  review?: string;
   consumerAccountId?: string;
   orderBy?: string;
   order?: 'asc' | 'desc';
@@ -21,6 +22,7 @@ export function useGetMeters(params?: MetersQuery) {
   if (params?.status) query.set('status', params.status);
   if (params?.groupCode) query.set('groupCode', params.groupCode);
   if (params?.type) query.set('type', params.type);
+  if (params?.review) query.set('review', params.review);
   if (params?.consumerAccountId) query.set('consumerAccountId', params.consumerAccountId);
   if (params?.orderBy) query.set('orderBy', params.orderBy);
   if (params?.order) query.set('order', params.order);

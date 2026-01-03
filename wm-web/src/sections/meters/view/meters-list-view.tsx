@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Alert, Button, Card, CardContent, Container, Table, TableBody, TableContainer } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { isEqual } from 'lodash';
@@ -12,6 +12,7 @@ import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
 import { useGetMeters } from 'src/api/meters';
 import { RouterLink } from 'src/routes/components';
 import { paths } from 'src/routes/paths';
+import { useAuthContext } from 'src/auth/hooks';
 import { MeterTableFiltersResult } from '../meter-table-filters-result';
 import { MeterTableRow } from '../meter-table-row';
 import { MeterTableSkeleton } from '../meter-skeleton';
@@ -22,9 +23,10 @@ const defaultFilters: IMeterTableFilters = {
   status: '',
   groupCode: '',
   type: '',
+  review: '',
 };
 
-const TABLE_HEAD = [
+const BASE_TABLE_HEAD = [
   { id: 'serialNumber', label: 'Serial', width: 220 },
   { id: 'groupCode', label: 'Group', width: 120 },
   { id: 'address', label: 'Address', minWidth: 420 },
@@ -38,14 +40,24 @@ const TABLE_HEAD = [
 export function MetersListView() {
   const settings = useSettingsContext();
   const theme = useTheme();
+  const { user } = useAuthContext();
+  const showReviewColumn = user?.role === 'staff_backoffice' || user?.role === 'admin';
   const [filters, setFilters] = useState(defaultFilters);
   const table = useTable({ defaultRowsPerPage: 25, defaultDense: true, defaultOrderBy: 'createdAt', defaultOrder: 'desc' });
+  const tableHead = useMemo(() => {
+    if (!showReviewColumn) return BASE_TABLE_HEAD;
+    const reviewColumn = { id: 'barcodeReview', label: 'Review', width: 120, disableSort: true };
+    const next = BASE_TABLE_HEAD.slice();
+    next.splice(next.length - 1, 0, reviewColumn);
+    return next;
+  }, [showReviewColumn]);
 
   const { meters, metersLoading, metersError, metersEmpty, total } = useGetMeters({
     search: filters.search,
     status: filters.status || undefined,
     groupCode: filters.groupCode || undefined,
     type: filters.type || undefined,
+    review: filters.review || undefined,
     orderBy: table.orderBy,
     order: table.order,
     page: table.page,
@@ -101,7 +113,11 @@ export function MetersListView() {
       />
 
       <Card>
-        <MeterTableToolbar filters={filters} onFilters={handleFilters} />
+        <MeterTableToolbar
+          filters={filters}
+          onFilters={handleFilters}
+          showReviewFilter={showReviewColumn}
+        />
 
         {canReset && (
           <MeterTableFiltersResult
@@ -140,7 +156,7 @@ export function MetersListView() {
                 <TableHeadCustom
                   order={table.order}
                   orderBy={table.orderBy}
-                  headLabel={TABLE_HEAD}
+                  headLabel={tableHead}
                   rowCount={meters.length}
                   numSelected={table.selected.length}
                   onSort={table.onSort}
@@ -150,7 +166,7 @@ export function MetersListView() {
                     ? [...Array(table.rowsPerPage)].map((_i, index) => (
                         <MeterTableSkeleton
                           key={index}
-                          columns={TABLE_HEAD.map((el) => el.width || el.minWidth || 100)}
+                          columns={tableHead.map((el) => el.width || el.minWidth || 100)}
                           sx={{ height: denseHeight }}
                         />
                       ))
@@ -160,6 +176,7 @@ export function MetersListView() {
                           row={{
                             ...row,
                           }}
+                          showReviewColumn={showReviewColumn}
                         />
                       ))}
                   <TableNoData notFound={notFound} />
