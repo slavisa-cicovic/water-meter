@@ -33,7 +33,7 @@ import Tooltip from '@mui/material/Tooltip';
 // routes
 import { useRouter } from 'src/routes/hooks';
 import { paths } from 'src/routes/paths';
-import { formatReadingValue } from 'src/utils/reading-format';
+import { formatReadingValue, roundReadingValue } from 'src/utils/reading-format';
 // locales
 import { useLocales } from 'src/locales';
 // hooks
@@ -763,7 +763,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
                   <TableBody>
                     {filteredReadings.map((reading, index) => {
                       const prev = filteredReadings[index + 1];
-                      const consumption = prev ? reading.value - prev.value : undefined;
+                      const consumption = prev ? roundReadingValue(reading.value - prev.value) : undefined;
                       const latestEdit = reading.edits && reading.edits.length ? reading.edits[0] : undefined;
                       const editorName = latestEdit
                         ? [latestEdit.editorFirstName, latestEdit.editorLastName].filter(Boolean).join(' ')

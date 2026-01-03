@@ -238,7 +238,7 @@ const buildYearlyRows = (
     const sorted = items.slice().sort((a, b) => new Date(a.readAt).getTime() - new Date(b.readAt).getTime());
     const last = sorted[sorted.length - 1];
     const baseValue = rollingPrevious ?? (sorted.length > 1 ? sorted[0].value : last.value);
-    const consumption = last.value - baseValue;
+    const consumption = Math.round((last.value - baseValue) * 100) / 100;
     rollingPrevious = last.value;
 
     return {

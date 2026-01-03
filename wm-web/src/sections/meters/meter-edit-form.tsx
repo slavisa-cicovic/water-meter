@@ -37,7 +37,7 @@ import { useRouter } from 'src/routes/hooks';
 import { paths } from 'src/routes/paths';
 import { AccountRole } from 'src/types/accounts';
 import { Meter } from 'src/types/meters';
-import { formatReadingValue } from 'src/utils/reading-format';
+import { formatReadingValue, roundReadingValue } from 'src/utils/reading-format';
 import { Fragment, ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useGetAccounts } from 'src/api/accounts';
 import { MetersApi } from 'src/api/meters-actions';
@@ -567,7 +567,7 @@ export function MeterEditForm({ currentMeter }: Props) {
                             <TableBody>
                               {sortedReadings.map((reading, index) => {
                                 const prev = sortedReadings[index + 1];
-                                const consumption = prev ? reading.value - prev.value : undefined;
+                                const consumption = prev ? roundReadingValue(reading.value - prev.value) : undefined;
                                 const canEdit =
                                   canEditReadings && getMonthKey(reading.readAt) === currentMonthKey;
                                 const hasEdits = Boolean(reading.edits && reading.edits.length);
