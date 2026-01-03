@@ -139,9 +139,18 @@ export default function ReadingsScreen() {
     try {
       const result = await recognize(uri, imageSize ?? undefined);
       const barcodeResult = await scan(uri);
-      setShowCandidatePicker(result.candidates.length > 0 || barcodeResult.length > 0);
+      const hasCandidates = result.candidates.length > 0;
+      const hasBarcodes = barcodeResult.length > 0;
 
-      if (!result.candidates.length && !barcodeResult.length) {
+      if (result.best) {
+        setSelectedBoxId(result.best.id);
+        setRecognizedValue(result.best.value);
+        setInputValue(formatReadingValue(result.best.value));
+        setShowCandidatePicker(false);
+        return;
+      }
+
+      if (!hasCandidates && !hasBarcodes) {
         setRecognizedValue(null);
         setInputValue("");
         setSelectedBoxId(null);
@@ -149,16 +158,10 @@ export default function ReadingsScreen() {
         return;
       }
 
-      if (!result.best) {
-        setRecognizedValue(null);
-        setInputValue("");
-        setSelectedBoxId(null);
-        return;
-      }
-
-      setSelectedBoxId(result.best.id);
-      setRecognizedValue(result.best.value);
-      setInputValue(formatReadingValue(result.best.value));
+      setRecognizedValue(null);
+      setInputValue("");
+      setSelectedBoxId(null);
+      setShowCandidatePicker(true);
     } catch {
       setRecognizedValue(null);
       setInputValue("");
@@ -506,12 +509,9 @@ export default function ReadingsScreen() {
             <View style={styles.ocrActions}>
               <TouchableOpacity
                 style={styles.retryButton}
-                onPress={() => setShowCandidatePicker(true)}
-                disabled={recognizing || scanningBarcode}
+                onPress={() => runRecognition(sourceUri)}
+                disabled={recognizing}
               >
-                <Text style={styles.retryButtonText}>Pick from OCR results</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.retryButton} onPress={() => runRecognition(sourceUri)} disabled={recognizing}>
                 <Text style={styles.retryButtonText}>{recognizing ? "Recognizing..." : "Try OCR again"}</Text>
               </TouchableOpacity>
             </View>

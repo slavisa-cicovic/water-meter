@@ -23,57 +23,38 @@ const normalizeText = (text: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
-const parseMeterValue = (text: string): number | null => {
-  const clean = normalizeText(text);
-  const compact = clean.replace(/\s+/g, "");
-  const compactMatch = compact.match(/(\d{4,5})[.,](\d{2,3})/);
-  if (compactMatch) {
-    const rawWhole = compactMatch[1];
-    const decimalsRaw = compactMatch[2];
-    const whole = Number(rawWhole.length === 4 ? `0${rawWhole}` : rawWhole);
-    if (Number.isFinite(whole)) {
-      if (decimalsRaw.length >= 3) {
-        const decimals = Number(decimalsRaw.slice(0, 3));
-        if (Number.isFinite(decimals)) {
-          return Math.round((whole + decimals / 1000) * 100) / 100;
-        }
-      }
-      if (decimalsRaw.length >= 2) {
-        const decimals = Number(decimalsRaw.slice(0, 2));
-        if (Number.isFinite(decimals)) {
-          return whole + decimals / 100;
-        }
-      }
+const parseMeterValue = (
+  text: string,
+  previousValue?: number
+): number | null => {
+
+  const digits = text.replace(/\D/g, "");
+
+  if (digits.length < 5) return null;
+
+  const whole = Number(digits.slice(0, 5));
+  if (!Number.isFinite(whole)) return null;
+
+  let decimals = 0;
+
+  if (digits.length >= 7) {
+    decimals = Number(digits.slice(5, 7)) / 100;
+
+  } else if (digits.length === 6) {
+    const firstDecimal = Number(digits[5]);
+    if (!Number.isFinite(firstDecimal)) return null;
+
+    let secondDecimal = 0;
+
+    if (typeof previousValue === "number") {
+      const prevDecimals = Math.round((previousValue % 1) * 100);
+      secondDecimal = prevDecimals % 10;
     }
+
+    decimals = (firstDecimal * 10 + secondDecimal) / 100;
   }
 
-  const parts = clean.split(" ").filter(Boolean);
-
-  // Expected: 02653 412 -> 02653.41 (rounded from 3 decimals)
-  if (parts.length >= 2 && parts[0].length === 5) {
-    const whole = Number(parts[0]);
-    const decimalsRaw = parts[1];
-    if (Number.isFinite(whole)) {
-      if (decimalsRaw.length >= 3) {
-        const decimals = Number(decimalsRaw.slice(0, 3));
-        if (Number.isFinite(decimals)) {
-          return Math.round((whole + decimals / 1000) * 100) / 100;
-        }
-      }
-      if (decimalsRaw.length >= 2) {
-        const decimals = Number(decimalsRaw.slice(0, 2));
-        if (Number.isFinite(decimals)) {
-          return whole + decimals / 100;
-        }
-      }
-    }
-  }
-
-  // fallback: samo 5 cifara
-  const match = clean.match(/\b\d{5}\b/);
-  if (match) return Number(match[0]);
-
-  return null;
+  return whole + decimals;
 };
 
 const mapFrameFromRotation = (
@@ -159,12 +140,10 @@ export function useMeterOcr(previousPaidValue: number) {
       let foundBoxes: OcrBox[] = [];
       let foundCandidates: OcrCandidate[] = [];
 
-      // 1️⃣ original
       const base = await process(uri, 0);
       foundBoxes = base.nextBoxes;
       foundCandidates = base.nextCandidates;
 
-      // 2️⃣ rotacije samo ako nema ništa
       if (!foundBoxes.length) {
         for (const rot of [90, 180, 270] as const) {
           const rotated = await ImageManipulator.manipulateAsync(
@@ -182,7 +161,6 @@ export function useMeterOcr(previousPaidValue: number) {
         }
       }
 
-      // heuristika: filtriraj
       const filtered = foundBoxes
         .filter(b => b.value > previousPaidValue)
         .filter(b => b.value < previousPaidValue + 10000)
@@ -201,7 +179,7 @@ export function useMeterOcr(previousPaidValue: number) {
         candidates: foundCandidates,
       };
     } catch (error) {
-      console.log(".............................", JSON.stringify(error));
+      console.log(JSON.stringify(error));
       return {
         best: null,
         boxes: [],
