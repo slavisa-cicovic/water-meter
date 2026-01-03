@@ -245,12 +245,6 @@ export function MeterEditForm({ currentMeter }: Props) {
 
   const hasChartData = readingsChartData.data.length > 0;
 
-  const renderReadingsContent = (content: React.ReactNode) => {
-    if (readingsLoading) return <Typography variant="body2">Loading readings...</Typography>;
-    if (readingsEmpty) return <Typography variant="body2">No readings found.</Typography>;
-    return content;
-  };
-
   const consumerRowHeight = 26;
   const maxConsumerRows = 8;
   const consumers = currentMeter?.consumers || [];
@@ -517,167 +511,173 @@ export function MeterEditForm({ currentMeter }: Props) {
             <Card>
               <CardHeader title="Readings history" />
               <CardContent>
-                {renderReadingsContent(
-                  <Stack spacing={2}>
-                    <Stack direction="row" spacing={2}>
-                      <TextField
-                        label="From"
-                        type="date"
-                        value={readingFrom}
-                        onChange={(event) => setReadingFrom(event.target.value)}
-                        slotProps={{ inputLabel: { shrink: true } }}
-                        sx={{ minWidth: 160 }}
-                      />
-                      <TextField
-                        label="To"
-                        type="date"
-                        value={readingTo}
-                        onChange={(event) => setReadingTo(event.target.value)}
-                        slotProps={{ inputLabel: { shrink: true } }}
-                        sx={{ minWidth: 160 }}
-                      />
-                    </Stack>
+                <Stack spacing={2}>
+                  <Stack direction="row" spacing={2}>
+                    <TextField
+                      label="From"
+                      type="date"
+                      value={readingFrom}
+                      onChange={(event) => setReadingFrom(event.target.value)}
+                      slotProps={{ inputLabel: { shrink: true } }}
+                      sx={{ minWidth: 160 }}
+                    />
+                    <TextField
+                      label="To"
+                      type="date"
+                      value={readingTo}
+                      onChange={(event) => setReadingTo(event.target.value)}
+                      slotProps={{ inputLabel: { shrink: true } }}
+                      sx={{ minWidth: 160 }}
+                    />
+                  </Stack>
 
-                    <Tabs value={readingsTab} onChange={(_, value) => setReadingsTab(value)}>
-                      <Tab value="chart" label="Chart" />
-                      <Tab value="table" label="Table" />
-                    </Tabs>
+                  <Tabs value={readingsTab} onChange={(_, value) => setReadingsTab(value)}>
+                    <Tab value="chart" label="Chart" />
+                    <Tab value="table" label="Table" />
+                  </Tabs>
 
-                    {readingsTab === 'chart' &&
-                      (hasChartData ? (
-                        <ChartWrapper type="bar" series={chartSeries} options={chartOptions} height={360} />
-                      ) : (
-                        <Typography variant="body2">Add at least two readings to see trends.</Typography>
-                      ))}
+                  {readingsLoading ? (
+                    <Typography variant="body2">Loading readings...</Typography>
+                  ) : readingsEmpty ? (
+                    <Typography variant="body2">No readings found.</Typography>
+                  ) : (
+                    <>
+                      {readingsTab === 'chart' &&
+                        (hasChartData ? (
+                          <ChartWrapper type="bar" series={chartSeries} options={chartOptions} height={360} />
+                        ) : (
+                          <Typography variant="body2">Add at least two readings to see trends.</Typography>
+                        ))}
 
-                    {readingsTab === 'table' && (
-                      <TableContainer>
-                        <Table size="small">
-                          <TableHead>
-                            <TableRow>
-                              <TableCell sx={{ width: 48 }} />
-                              <TableCell sx={{ width: 160 }}>Date</TableCell>
-                              <TableCell sx={{ width: 140 }}>Method</TableCell>
-                              <TableCell sx={{ width: 120 }}>Value</TableCell>
-                              <TableCell sx={{ width: 140 }}>Consumption</TableCell>
-                              <TableCell sx={{ width: 160 }}>Barcode</TableCell>
-                              <TableCell sx={{ width: 140 }}>Barcode status</TableCell>
-                              <TableCell sx={{ width: 80 }}>Actions</TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {sortedReadings.map((reading, index) => {
-                              const prev = sortedReadings[index + 1];
-                              const consumption = prev ? reading.value - prev.value : undefined;
-                              const canEdit =
-                                canEditReadings && getMonthKey(reading.readAt) === currentMonthKey;
-                              const hasEdits = Boolean(reading.edits && reading.edits.length);
-                              const isExpanded = expandedReadings.has(reading.id);
-                              return (
-                                <Fragment key={reading.id}>
-                                  <TableRow>
-                                    <TableCell sx={{ width: 48 }}>
-                                      {hasEdits ? (
+                      {readingsTab === 'table' && (
+                        <TableContainer>
+                          <Table size="small">
+                            <TableHead>
+                              <TableRow>
+                                <TableCell sx={{ width: 48 }} />
+                                <TableCell sx={{ width: 160 }}>Date</TableCell>
+                                <TableCell sx={{ width: 140 }}>Method</TableCell>
+                                <TableCell sx={{ width: 120 }}>Value</TableCell>
+                                <TableCell sx={{ width: 140 }}>Consumption</TableCell>
+                                <TableCell sx={{ width: 160 }}>Barcode</TableCell>
+                                <TableCell sx={{ width: 140 }}>Barcode status</TableCell>
+                                <TableCell sx={{ width: 80 }}>Actions</TableCell>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {sortedReadings.map((reading, index) => {
+                                const prev = sortedReadings[index + 1];
+                                const consumption = prev ? reading.value - prev.value : undefined;
+                                const canEdit =
+                                  canEditReadings && getMonthKey(reading.readAt) === currentMonthKey;
+                                const hasEdits = Boolean(reading.edits && reading.edits.length);
+                                const isExpanded = expandedReadings.has(reading.id);
+                                return (
+                                  <Fragment key={reading.id}>
+                                    <TableRow>
+                                      <TableCell sx={{ width: 48 }}>
+                                        {hasEdits ? (
+                                          <IconButton
+                                            size="small"
+                                            onClick={() => toggleReadingExpanded(reading.id)}
+                                            aria-label={isExpanded ? 'Collapse edits' : 'Expand edits'}
+                                          >
+                                            {isExpanded ? (
+                                              <KeyboardArrowDownIcon fontSize="small" />
+                                            ) : (
+                                              <KeyboardArrowRightIcon fontSize="small" />
+                                            )}
+                                          </IconButton>
+                                        ) : null}
+                                      </TableCell>
+                                      <TableCell sx={{ width: 160 }}>{reading.readAt?.slice(0, 10)}</TableCell>
+                                      <TableCell sx={{ width: 140 }}>{reading.method}</TableCell>
+                                      <TableCell sx={{ width: 120 }}>
+                                        {formatReadingValue(reading.value)}
+                                      </TableCell>
+                                      <TableCell sx={{ width: 140 }}>
+                                        {formatReadingValue(consumption)}
+                                      </TableCell>
+                                      <TableCell sx={{ width: 160 }}>
+                                        {reading.barcodeRaw ?? '-'}
+                                      </TableCell>
+                                      <TableCell sx={{ width: 140 }}>
+                                        {reading.barcodeStatus ?? '-'}
+                                      </TableCell>
+                                      <TableCell sx={{ width: 80 }}>
                                         <IconButton
                                           size="small"
-                                          onClick={() => toggleReadingExpanded(reading.id)}
-                                          aria-label={isExpanded ? 'Collapse edits' : 'Expand edits'}
+                                          disabled={!canEdit}
+                                          onClick={() => handleOpenEditDialog(reading.id, index)}
+                                          aria-label="Edit reading"
                                         >
-                                          {isExpanded ? (
-                                            <KeyboardArrowDownIcon fontSize="small" />
-                                          ) : (
-                                            <KeyboardArrowRightIcon fontSize="small" />
-                                          )}
+                                          <EditIcon fontSize="small" />
                                         </IconButton>
-                                      ) : null}
-                                    </TableCell>
-                                    <TableCell sx={{ width: 160 }}>{reading.readAt?.slice(0, 10)}</TableCell>
-                                    <TableCell sx={{ width: 140 }}>{reading.method}</TableCell>
-                                    <TableCell sx={{ width: 120 }}>
-                                      {formatReadingValue(reading.value)}
-                                    </TableCell>
-                                    <TableCell sx={{ width: 140 }}>
-                                      {formatReadingValue(consumption)}
-                                    </TableCell>
-                                    <TableCell sx={{ width: 160 }}>
-                                      {reading.barcodeRaw ?? '-'}
-                                    </TableCell>
-                                    <TableCell sx={{ width: 140 }}>
-                                      {reading.barcodeStatus ?? '-'}
-                                    </TableCell>
-                                    <TableCell sx={{ width: 80 }}>
-                                      <IconButton
-                                        size="small"
-                                        disabled={!canEdit}
-                                        onClick={() => handleOpenEditDialog(reading.id, index)}
-                                        aria-label="Edit reading"
-                                      >
-                                        <EditIcon fontSize="small" />
-                                      </IconButton>
-                                    </TableCell>
-                                  </TableRow>
-                                  {hasEdits ? (
-                                    <TableRow sx={{ backgroundColor: 'action.hover' }}>
-                                      <TableCell colSpan={8} sx={{ py: 0 }}>
-                                        <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                                          <Stack
-                                            spacing={1.5}
-                                            sx={{
-                                              py: 1,
-                                              px: 2,
-                                              borderLeft: '3px solid',
-                                              borderColor: 'divider',
-                                            }}
-                                          >
-                                            <Typography variant="subtitle2">Edit history</Typography>
-                                            <Table size="small">
-                                              <TableHead>
-                                                <TableRow>
-                                                  <TableCell sx={{ width: 180 }}>Editor</TableCell>
-                                                  <TableCell sx={{ width: 160 }}>Edited at</TableCell>
-                                                  <TableCell sx={{ width: 120 }}>Value</TableCell>
-                                                  <TableCell>Reason</TableCell>
-                                                </TableRow>
-                                              </TableHead>
-                                              <TableBody>
-                                                {reading.edits?.map((edit) => (
-                                                  <TableRow key={edit.id}>
-                                                    <TableCell sx={{ width: 180 }}>
-                                                      {[edit.editorFirstName, edit.editorLastName]
-                                                        .filter(Boolean)
-                                                        .join(' ') || '-'}
-                                                    </TableCell>
-                                                    <TableCell sx={{ width: 160 }}>
-                                                      {edit.editedAt?.slice(0, 16).replace('T', ' ') || '-'}
-                                                    </TableCell>
-                                                    <TableCell sx={{ width: 120 }}>
-                                                      {formatReadingValue(edit.value)}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                      {edit.reason ? (
-                                                        <TruncatedText text={edit.reason} />
-                                                      ) : (
-                                                        '-'
-                                                      )}
-                                                    </TableCell>
-                                                  </TableRow>
-                                                ))}
-                                              </TableBody>
-                                            </Table>
-                                          </Stack>
-                                        </Collapse>
                                       </TableCell>
                                     </TableRow>
-                                  ) : null}
-                                </Fragment>
-                              );
-                            })}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    )}
-                  </Stack>
-                )}
+                                    {hasEdits ? (
+                                      <TableRow sx={{ backgroundColor: 'action.hover' }}>
+                                        <TableCell colSpan={8} sx={{ py: 0 }}>
+                                          <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                                            <Stack
+                                              spacing={1.5}
+                                              sx={{
+                                                py: 1,
+                                                px: 2,
+                                                borderLeft: '3px solid',
+                                                borderColor: 'divider',
+                                              }}
+                                            >
+                                              <Typography variant="subtitle2">Edit history</Typography>
+                                              <Table size="small">
+                                                <TableHead>
+                                                  <TableRow>
+                                                    <TableCell sx={{ width: 180 }}>Editor</TableCell>
+                                                    <TableCell sx={{ width: 160 }}>Edited at</TableCell>
+                                                    <TableCell sx={{ width: 120 }}>Value</TableCell>
+                                                    <TableCell>Reason</TableCell>
+                                                  </TableRow>
+                                                </TableHead>
+                                                <TableBody>
+                                                  {reading.edits?.map((edit) => (
+                                                    <TableRow key={edit.id}>
+                                                      <TableCell sx={{ width: 180 }}>
+                                                        {[edit.editorFirstName, edit.editorLastName]
+                                                          .filter(Boolean)
+                                                          .join(' ') || '-'}
+                                                      </TableCell>
+                                                      <TableCell sx={{ width: 160 }}>
+                                                        {edit.editedAt?.slice(0, 16).replace('T', ' ') || '-'}
+                                                      </TableCell>
+                                                      <TableCell sx={{ width: 120 }}>
+                                                        {formatReadingValue(edit.value)}
+                                                      </TableCell>
+                                                      <TableCell>
+                                                        {edit.reason ? (
+                                                          <TruncatedText text={edit.reason} />
+                                                        ) : (
+                                                          '-'
+                                                        )}
+                                                      </TableCell>
+                                                    </TableRow>
+                                                  ))}
+                                                </TableBody>
+                                              </Table>
+                                            </Stack>
+                                          </Collapse>
+                                        </TableCell>
+                                      </TableRow>
+                                    ) : null}
+                                  </Fragment>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      )}
+                    </>
+                  )}
+                </Stack>
               </CardContent>
             </Card>
           </Grid>
