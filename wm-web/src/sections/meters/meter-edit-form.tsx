@@ -227,9 +227,14 @@ export function MeterEditForm({ currentMeter }: Props) {
     useMemo(
       () => ({
         xaxis: { categories: readingsChartData.categories },
+        yaxis: {
+          labels: {
+            formatter: (value: number) => formatReadingValue(value),
+          },
+        },
         tooltip: {
           y: {
-            formatter: (value: number) => `${value}`,
+            formatter: (value: number) => formatReadingValue(value),
             title: { formatter: () => 'Consumption' },
           },
         },
