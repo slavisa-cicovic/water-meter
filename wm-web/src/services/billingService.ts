@@ -110,6 +110,18 @@ export const BillingService = {
     if (!id) return { success: false, error: 'VALIDATION_FAILED', details: { id: ['Required'] } };
     const invoice = await BillingRepository.findInvoiceById(id);
     if (!invoice) return { success: false, error: 'NOT_FOUND' };
+    if (Array.isArray(invoice.readings)) {
+      invoice.readings = invoice.readings.map((link: any) => ({
+        ...link,
+        reading: link.reading
+          ? {
+              ...link.reading,
+              value: Number(link.reading.value),
+              originalValue: Number(link.reading.originalValue),
+            }
+          : link.reading,
+      }));
+    }
     return { success: true, data: { invoice } };
   },
 
@@ -143,7 +155,7 @@ export const BillingService = {
         continue;
       }
 
-      const consumptionTotal = endReading.value - startReading.value;
+      const consumptionTotal = Number(endReading.value) - Number(startReading.value);
       if (consumptionTotal <= 0) {
         skipped.push({ meterId: meter.id, reason: 'NON_POSITIVE_CONSUMPTION' });
         continue;
@@ -427,7 +439,7 @@ export const BillingService = {
         const endReadAt = new Date(endReading.readAt);
         if (isCurrentMonth(endReadAt, referenceDate)) {
           periodEnd = endReadAt;
-          endValue = endReading.value;
+          endValue = Number(endReading.value);
         } else {
           flags.push('no_reading_current_month');
         }
@@ -436,7 +448,7 @@ export const BillingService = {
       }
 
       const startReading = await ReadingRepository.findLatestPaidReading(meter.id);
-      const startValue = startReading ? startReading.value : 0;
+      const startValue = startReading ? Number(startReading.value) : 0;
       if (!startReading) {
         flags.push('no_previous_reading');
       }
@@ -703,7 +715,7 @@ export const BillingService = {
         const endReadAt = new Date(endReading.readAt);
         if (isCurrentMonth(endReadAt, referenceDate)) {
           periodEnd = endReadAt;
-          endValue = endReading.value;
+          endValue = Number(endReading.value);
         } else {
           flags.push('no_reading_current_month');
         }
@@ -712,7 +724,7 @@ export const BillingService = {
       }
 
       const startReading = await ReadingRepository.findLatestPaidReading(meter.id, tx);
-      const startValue = startReading ? startReading.value : 0;
+      const startValue = startReading ? Number(startReading.value) : 0;
       if (!startReading) {
         flags.push('no_previous_reading');
       }
@@ -998,11 +1010,11 @@ export const BillingService = {
 
     const prevValue = Number(input.previous?.value);
     const currentValue = Number(input.current?.value);
-    if (!Number.isFinite(prevValue) || !Number.isInteger(prevValue) || prevValue < 0) {
-      pushError('previous.value', 'Must be a non-negative integer');
+    if (!Number.isFinite(prevValue) || prevValue < 0) {
+      pushError('previous.value', 'Must be a non-negative number');
     }
-    if (!Number.isFinite(currentValue) || !Number.isInteger(currentValue) || currentValue < 0) {
-      pushError('current.value', 'Must be a non-negative integer');
+    if (!Number.isFinite(currentValue) || currentValue < 0) {
+      pushError('current.value', 'Must be a non-negative number');
     }
 
     const prevReadAt = new Date(input.previous?.readAt);
@@ -1109,8 +1121,12 @@ export const BillingService = {
       const currentId = await updateOrCreate('end', { value: currentValue, readAt: input.current.readAt });
 
       const consumptionLine = invoice.lines?.find((line: any) => line.type === 'consumption');
-      const oldStart = invoice.readings?.find((link: any) => link.role === 'start')?.reading?.value;
-      const oldEnd = invoice.readings?.find((link: any) => link.role === 'end')?.reading?.value;
+      const oldStart = Number(
+        invoice.readings?.find((link: any) => link.role === 'start')?.reading?.value ?? 0
+      );
+      const oldEnd = Number(
+        invoice.readings?.find((link: any) => link.role === 'end')?.reading?.value ?? 0
+      );
       const oldTotal =
         Number.isFinite(Number(oldStart)) && Number.isFinite(Number(oldEnd))
           ? Number(oldEnd) - Number(oldStart)

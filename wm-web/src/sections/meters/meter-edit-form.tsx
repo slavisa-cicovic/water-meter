@@ -37,6 +37,7 @@ import { useRouter } from 'src/routes/hooks';
 import { paths } from 'src/routes/paths';
 import { AccountRole } from 'src/types/accounts';
 import { Meter } from 'src/types/meters';
+import { formatReadingValue } from 'src/utils/reading-format';
 import { Fragment, ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useGetAccounts } from 'src/api/accounts';
 import { MetersApi } from 'src/api/meters-actions';
@@ -592,9 +593,11 @@ export function MeterEditForm({ currentMeter }: Props) {
                                     </TableCell>
                                     <TableCell sx={{ width: 160 }}>{reading.readAt?.slice(0, 10)}</TableCell>
                                     <TableCell sx={{ width: 140 }}>{reading.method}</TableCell>
-                                    <TableCell sx={{ width: 120 }}>{reading.value}</TableCell>
+                                    <TableCell sx={{ width: 120 }}>
+                                      {formatReadingValue(reading.value)}
+                                    </TableCell>
                                     <TableCell sx={{ width: 140 }}>
-                                      {consumption !== undefined ? consumption : '-'}
+                                      {formatReadingValue(consumption)}
                                     </TableCell>
                                     <TableCell sx={{ width: 160 }}>
                                       {reading.barcodeRaw ?? '-'}
@@ -647,7 +650,9 @@ export function MeterEditForm({ currentMeter }: Props) {
                                                     <TableCell sx={{ width: 160 }}>
                                                       {edit.editedAt?.slice(0, 16).replace('T', ' ') || '-'}
                                                     </TableCell>
-                                                    <TableCell sx={{ width: 120 }}>{edit.value}</TableCell>
+                                                    <TableCell sx={{ width: 120 }}>
+                                                      {formatReadingValue(edit.value)}
+                                                    </TableCell>
                                                     <TableCell>
                                                       {edit.reason ? (
                                                         <TruncatedText text={edit.reason} />
@@ -705,6 +710,7 @@ export function MeterEditForm({ currentMeter }: Props) {
                 setEditValue(event.target.value);
                 if (editError) setEditError('');
               }}
+              inputProps={{ step: '0.01' }}
               error={Boolean(editError)}
               helperText={
                 editError ||

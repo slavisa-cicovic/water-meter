@@ -157,6 +157,7 @@ export function ReadingsReviewDialog({ open, onClose, invoice, isShared = false,
               type="number"
               value={prevValue}
               onChange={(event) => setPrevValue(event.target.value)}
+              inputProps={{ step: '0.01' }}
               slotProps={{ inputLabel: { shrink: true } }}
               fullWidth
             />
@@ -177,6 +178,7 @@ export function ReadingsReviewDialog({ open, onClose, invoice, isShared = false,
               type="number"
               value={currentValue}
               onChange={(event) => setCurrentValue(event.target.value)}
+              inputProps={{ step: '0.01' }}
               slotProps={{ inputLabel: { shrink: true } }}
               error={Boolean(consumptionError)}
               helperText={consumptionError || 'Consumption must be greater than 0.'}

@@ -132,7 +132,7 @@ export const MobileRepository = {
     return readings.map((reading) => ({
       id: reading.id,
       readAt: reading.readAt.toISOString(),
-      value: reading.value,
+      value: Number(reading.value),
     }));
   },
 
@@ -216,7 +216,7 @@ export const MobileRepository = {
 
     if (!reading) return null;
 
-    return { value: reading.value, readAt: reading.readAt.toISOString() };
+    return { value: Number(reading.value), readAt: reading.readAt.toISOString() };
   },
 
   async findLatestReadingBefore(
@@ -234,7 +234,7 @@ export const MobileRepository = {
     return {
       id: reading.id,
       readAt: reading.readAt.toISOString(),
-      value: reading.value,
+      value: Number(reading.value),
     };
   },
 
@@ -278,9 +278,9 @@ export const MobileRepository = {
       meterSerialNumber: invoice.meter?.serialNumber ?? undefined,
       periodStart: invoice.periodStart,
       periodEnd: invoice.periodEnd,
-      consumption: invoice.consumption,
-      previousValue: startReading?.value ?? null,
-      currentValue: endReading?.value ?? null,
+      consumption: Number(invoice.consumption),
+      previousValue: startReading?.value !== undefined ? Number(startReading.value) : null,
+      currentValue: endReading?.value !== undefined ? Number(endReading.value) : null,
       unitPrice: Number(invoice.unitPrice),
       subtotal: Number(invoice.subtotal),
       vatRate: Number(invoice.vatRate),

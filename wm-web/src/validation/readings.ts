@@ -26,8 +26,13 @@ const validateValue = (value: number | undefined, field: string, errors: Record<
     pushError(errors, field, 'Required');
     return;
   }
-  if (!Number.isInteger(value) || value < 0) {
-    pushError(errors, field, 'Must be a non-negative integer');
+  if (!Number.isFinite(value) || value < 0) {
+    pushError(errors, field, 'Must be a non-negative number');
+    return;
+  }
+  const scaled = Math.round(value * 100);
+  if (Math.abs(value * 100 - scaled) > 1e-6) {
+    pushError(errors, field, 'Must have at most 2 decimal places');
   }
 };
 

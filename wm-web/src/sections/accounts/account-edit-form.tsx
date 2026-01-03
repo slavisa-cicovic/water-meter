@@ -33,6 +33,7 @@ import Tooltip from '@mui/material/Tooltip';
 // routes
 import { useRouter } from 'src/routes/hooks';
 import { paths } from 'src/routes/paths';
+import { formatReadingValue } from 'src/utils/reading-format';
 // locales
 import { useLocales } from 'src/locales';
 // hooks
@@ -772,8 +773,10 @@ export default function AccountEditForm({ currentAccount }: Props) {
                         <TableRow key={reading.id}>
                           <TableCell sx={{ width: 140 }}>{reading.readAt?.slice(0, 10)}</TableCell>
                           <TableCell sx={{ width: 140 }}>{reading.method}</TableCell>
-                          <TableCell sx={{ width: 120 }}>{reading.value}</TableCell>
-                          <TableCell sx={{ width: 140 }}>{consumption !== undefined ? consumption : '-'}</TableCell>
+                          <TableCell sx={{ width: 120 }}>{formatReadingValue(reading.value)}</TableCell>
+                          <TableCell sx={{ width: 140 }}>
+                            {formatReadingValue(consumption)}
+                          </TableCell>
                           <TableCell sx={{ width: 200 }}>
                             {latestEdit ? (
                               <Tooltip title={latestEdit.reason || 'No reason provided'}>
@@ -826,6 +829,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
                 setEditValue(event.target.value);
                 if (editError) setEditError('');
               }}
+              inputProps={{ step: '0.01' }}
               error={Boolean(editError)}
               helperText={
                 editError ||

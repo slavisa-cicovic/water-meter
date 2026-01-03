@@ -7,6 +7,7 @@ import EmptyContent from 'src/components/empty-content';
 import { useMemo } from 'react';
 import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
 import { paths } from 'src/routes/paths';
+import { formatReadingValue } from 'src/utils/reading-format';
 
 type Props = {
   id: string;
@@ -97,7 +98,7 @@ export function InvoiceDetailView({ id }: Props) {
                       <TableRow key={idx}>
                         <TableCell sx={{ width: 120 }}>{reading.role}</TableCell>
                         <TableCell sx={{ width: 160 }}>{reading.readAt?.slice?.(0, 10) || '-'}</TableCell>
-                        <TableCell>{reading.value ?? '-'}</TableCell>
+                        <TableCell>{formatReadingValue(reading.value)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

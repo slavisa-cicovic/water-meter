@@ -1,0 +1,6 @@
+ALTER TABLE `Reading`
+  MODIFY `value` DECIMAL(12, 2) NOT NULL,
+  MODIFY `originalValue` DECIMAL(12, 2) NOT NULL;
+
+ALTER TABLE `ReadingEdit`
+  MODIFY `value` DECIMAL(12, 2) NOT NULL;

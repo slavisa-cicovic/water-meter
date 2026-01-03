@@ -11,8 +11,8 @@ const toReading = (row: any): Reading => ({
   readerAccountId: row.readerAccountId,
   readAt: row.readAt?.toISOString?.() ?? row.readAt,
   method: row.method,
-  value: row.value,
-  originalValue: row.originalValue,
+  value: Number(row.value),
+  originalValue: Number(row.originalValue),
   imageFilename: row.imageFilename ?? undefined,
   barcodeRaw: row.barcodeRaw ?? null,
   barcodeFinal: row.barcodeFinal ?? null,
@@ -36,7 +36,7 @@ const toReading = (row: any): Reading => ({
     editorRole: edit.editorRole,
     editorFirstName: edit.account?.firstName ?? undefined,
     editorLastName: edit.account?.lastName ?? undefined,
-    value: edit.value,
+    value: Number(edit.value),
     reason: edit.reason ?? undefined,
     editedAt: edit.editedAt?.toISOString?.() ?? edit.editedAt,
   })),
@@ -89,7 +89,8 @@ export const ReadingsService = {
         return { success: false, error: 'IMAGE_REQUIRED' };
       }
 
-      const valueChanged = input.value !== undefined && input.value !== existing.value;
+      const valueChanged =
+        input.value !== undefined && input.value !== Number(existing.value);
       const reasonProvided = typeof input.editReason === 'string' && input.editReason.trim().length > 0;
 
       if (input.value !== undefined && (valueChanged || reasonProvided)) {
