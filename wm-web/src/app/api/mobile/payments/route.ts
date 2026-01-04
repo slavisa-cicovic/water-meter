@@ -61,5 +61,6 @@ export const POST = async (req: NextRequest) => {
     return NextResponse.json({ success: false, error: result.error }, { status });
   }
 
-  return NextResponse.json({ success: true, data: result.data });
+  const data = (result as { data: { updated: number } }).data;
+  return NextResponse.json({ success: true, data });
 };

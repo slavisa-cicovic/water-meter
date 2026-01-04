@@ -79,5 +79,6 @@ export const PATCH = async (req: NextRequest) => {
     return NextResponse.json({ success: false, error: result.error }, { status: 400 });
   }
 
-  return NextResponse.json(result.data);
+  const data = (result as { data: { updated: number } }).data;
+  return NextResponse.json({ success: true, data });
 };

@@ -18,7 +18,8 @@ export const GET = async (req: NextRequest, { params }: Params) => {
     return NextResponse.json({ success: false, error: result.error, details: (result as any).details }, { status });
   }
 
-  return NextResponse.json(result.data);
+  const data = (result as { data: unknown }).data;
+  return NextResponse.json({ success: true, data });
 };
 
 export const PATCH = async (req: NextRequest, { params }: Params) => {
@@ -53,5 +54,6 @@ export const PATCH = async (req: NextRequest, { params }: Params) => {
     return NextResponse.json({ success: false, error: result.error, details: (result as any).details }, { status });
   }
 
-  return NextResponse.json(result.data);
+  const data = (result as { data: unknown }).data;
+  return NextResponse.json({ success: true, data });
 };
