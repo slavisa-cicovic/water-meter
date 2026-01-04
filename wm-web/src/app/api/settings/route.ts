@@ -29,6 +29,10 @@ export const GET = async (req: NextRequest) => {
   }
 
   const result = await SettingsService.getSettings();
+  if (!result.success) {
+    return NextResponse.json({ success: false, error: result.error }, { status: 500 });
+  }
+
   return NextResponse.json({ success: true, data: result.data });
 };
 
