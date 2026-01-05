@@ -4,6 +4,8 @@ import { Reading, ReadingCreateInput, ReadingListParams, ReadingUpdateInput } fr
 import { SettingsService } from 'src/services/settingsService';
 import { validateReadingCreate, validateReadingUpdate } from 'src/validation/readings';
 import prisma from 'src/utils/prisma';
+import { AuthorizationService } from 'src/services/authorizationService';
+import { PERMISSIONS } from 'src/constants/permissions';
 
 const toReading = (row: any): Reading => ({
   id: row.id,
@@ -42,9 +44,10 @@ const toReading = (row: any): Reading => ({
   })),
 });
 
-const allowedReaderRoles = new Set(['consumer', 'staff_field']);
-const allowedEditorRoles = new Set(['consumer', 'staff_field', 'staff_backoffice', 'admin']);
-const allowedBarcodeRoles = new Set(['staff_backoffice', 'admin']);
+const hasPermission = async (accountId: string, permission: string) => {
+  const permissions = await AuthorizationService.resolveAccountPermissions(accountId);
+  return permissions.includes(permission);
+};
 
 export const ReadingsService = {
   async create(input: ReadingCreateInput) {
@@ -55,7 +58,8 @@ export const ReadingsService = {
 
     const reader = await AccountRepository.findById(input.readerAccountId);
     if (!reader) return { success: false, error: 'ACCOUNT_NOT_FOUND' };
-    if (!allowedReaderRoles.has(reader.role)) return { success: false, error: 'READER_FORBIDDEN' };
+    const canCreate = await hasPermission(reader.id, PERMISSIONS.READINGS_CREATE);
+    if (!canCreate) return { success: false, error: 'READER_FORBIDDEN' };
 
     try {
       const reading = await ReadingRepository.create(input);
@@ -96,7 +100,8 @@ export const ReadingsService = {
       if (input.value !== undefined && (valueChanged || reasonProvided)) {
         const editor = await AccountRepository.findById(input.editorAccountId || '');
         if (!editor) return { success: false, error: 'ACCOUNT_NOT_FOUND' };
-        if (!allowedEditorRoles.has(editor.role)) return { success: false, error: 'EDITOR_FORBIDDEN' };
+        const canEdit = await hasPermission(editor.id, PERMISSIONS.READINGS_UPDATE);
+        if (!canEdit) return { success: false, error: 'EDITOR_FORBIDDEN' };
         if (input.editorRole && input.editorRole !== editor.role) {
           return { success: false, error: 'EDITOR_ROLE_MISMATCH' };
         }
@@ -116,7 +121,8 @@ export const ReadingsService = {
       if (hasBarcodeUpdate) {
         const editor = await AccountRepository.findById(input.editorAccountId || '');
         if (!editor) return { success: false, error: 'ACCOUNT_NOT_FOUND' };
-        if (!allowedBarcodeRoles.has(editor.role)) return { success: false, error: 'EDITOR_FORBIDDEN' };
+        const canEdit = await hasPermission(editor.id, PERMISSIONS.READINGS_UPDATE);
+        if (!canEdit) return { success: false, error: 'EDITOR_FORBIDDEN' };
         if (input.editorRole && input.editorRole !== editor.role) {
           return { success: false, error: 'EDITOR_ROLE_MISMATCH' };
         }

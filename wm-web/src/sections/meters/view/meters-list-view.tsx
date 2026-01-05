@@ -13,6 +13,7 @@ import { useGetMeters } from 'src/api/meters';
 import { RouterLink } from 'src/routes/components';
 import { paths } from 'src/routes/paths';
 import { useAuthContext } from 'src/auth/hooks';
+import { PERMISSIONS } from 'src/constants/permissions';
 import { MeterTableFiltersResult } from '../meter-table-filters-result';
 import { MeterTableRow } from '../meter-table-row';
 import { MeterTableSkeleton } from '../meter-skeleton';
@@ -41,7 +42,8 @@ export function MetersListView() {
   const settings = useSettingsContext();
   const theme = useTheme();
   const { user } = useAuthContext();
-  const showReviewColumn = user?.role === 'staff_backoffice' || user?.role === 'admin';
+  const currentPermissions = (user as any)?.permissions as string[] | undefined;
+  const showReviewColumn = currentPermissions?.includes(PERMISSIONS.READINGS_UPDATE) ?? false;
   const [filters, setFilters] = useState(defaultFilters);
   const table = useTable({ defaultRowsPerPage: 25, defaultDense: true, defaultOrderBy: 'createdAt', defaultOrder: 'desc' });
   const tableHead = useMemo(() => {

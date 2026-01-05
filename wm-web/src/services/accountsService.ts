@@ -17,11 +17,24 @@ import {
 import { AccountRepository } from 'src/repositories/accountRepository';
 import { BillingRepository } from 'src/repositories/billingRepository';
 import { MeterRepository } from 'src/repositories/meterRepository';
-import { AccountRole, Prisma } from '@prisma/client';
+import { AccountRole, Prisma, StaffRole } from '@prisma/client';
+import prisma from 'src/utils/prisma';
 import { AuthorizationService } from './authorizationService';
 import { PERMISSIONS } from 'src/constants/permissions';
 
-const toAccountRole = (staffRole?: string) => (staffRole === 'backoffice' ? 'staff_backoffice' : 'staff_field');
+const toAccountRole = async (staffRole?: StaffRole) => {
+  if (!staffRole) return AccountRole.staff_field;
+  const role = await prisma.role.findFirst({
+    where: { staffRole } as any,
+    select: { slug: true },
+  });
+
+  if (role && (Object.values(AccountRole) as string[]).includes(role.slug)) {
+    return role.slug as AccountRole;
+  }
+
+  return staffRole === 'backoffice' ? AccountRole.staff_backoffice : AccountRole.staff_field;
+};
 
 type AccountWithProfiles = Prisma.AccountGetPayload<{
   include: { consumerProfile: true; staffProfile: true; verificationLogs: true };
@@ -115,6 +128,7 @@ export const AccountsService = {
     }
 
     try {
+      const role = await toAccountRole(input.staffRole);
       const account = await AccountRepository.createStaff({
         firstName: input.firstName,
         lastName: input.lastName,
@@ -123,7 +137,7 @@ export const AccountsService = {
         address: input.address,
         password: input.password, // TODO: hash password
         staffRole: input.staffRole,
-        role: toAccountRole(input.staffRole),
+        role,
       });
 
       return {

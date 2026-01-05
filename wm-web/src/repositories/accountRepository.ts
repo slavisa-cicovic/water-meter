@@ -174,10 +174,6 @@ export const AccountRepository = {
 
     if (allowedRoles && allowedRoles.length) {
       where.role = { in: allowedRoles };
-    } else if (type === "consumer") {
-      where.role = AccountRole.consumer;
-    } else if (type === "staff") {
-      where.role = { in: [AccountRole.staff_field, AccountRole.staff_backoffice] };
     }
 
     const orderByClause =

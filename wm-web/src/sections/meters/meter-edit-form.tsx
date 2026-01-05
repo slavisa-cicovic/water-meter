@@ -36,6 +36,7 @@ import Scrollbar from 'src/components/scrollbar';
 import { useRouter } from 'src/routes/hooks';
 import { paths } from 'src/routes/paths';
 import { Meter } from 'src/types/meters';
+import { PERMISSIONS } from 'src/constants/permissions';
 import { formatReadingValue, roundReadingValue } from 'src/utils/reading-format';
 import { Fragment, ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useGetAccounts } from 'src/api/accounts';
@@ -255,8 +256,10 @@ export function MeterEditForm({ currentMeter }: Props) {
 
   const viewerRole = (user as any)?.role as string | undefined;
   const viewerId = (user as any)?.accountId || (user as any)?.id;
-  const canEditReadings = viewerRole === 'staff_backoffice' || viewerRole === 'admin';
-  const canReviewBarcode = viewerRole === 'staff_backoffice' || viewerRole === 'admin';
+  const currentPermissions = (user as any)?.permissions as string[] | undefined;
+  const hasPermission = (permission: string) => currentPermissions?.includes(permission) ?? false;
+  const canEditReadings = hasPermission(PERMISSIONS.READINGS_UPDATE);
+  const canReviewBarcode = hasPermission(PERMISSIONS.READINGS_UPDATE);
   const editingReading = useMemo(
     () => sortedReadings.find((reading) => reading.id === editingReadingId) ?? null,
     [sortedReadings, editingReadingId]

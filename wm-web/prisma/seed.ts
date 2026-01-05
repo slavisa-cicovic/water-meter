@@ -395,8 +395,8 @@ const permissions: PermissionSeed[] = [
 async function seedRbac() {
   const roleData = [
     { slug: 'admin', name: 'Admin', isSystem: true },
-    { slug: 'staff_backoffice', name: 'Staff Backoffice', isSystem: true },
-    { slug: 'staff_field', name: 'Staff Field', isSystem: true },
+    { slug: 'staff_backoffice', name: 'Staff Backoffice', isSystem: true, staffRole: 'backoffice' },
+    { slug: 'staff_field', name: 'Staff Field', isSystem: true, staffRole: 'field' },
     { slug: 'consumer', name: 'Consumer', isSystem: true },
   ];
 
