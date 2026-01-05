@@ -1,20 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAccountsAccess } from 'src/services/authGuardAccounts';
+import { PERMISSIONS } from 'src/constants/permissions';
+import { withPermission } from 'src/services/permissionGuard';
 import { runJobNow } from 'src/services/job-scheduler';
 import { BillingService } from 'src/services/billingService';
-import { TokenService } from 'src/services/tokenService';
 
 type Params = {
   params: Promise<{ id: string }>;
 };
 
-export const POST = async (req: NextRequest, { params }: Params) => {
-  const guard = requireAccountsAccess(req);
-  if (!guard.ok) return guard.response;
-  if (guard.role !== 'admin') {
-    return NextResponse.json({ success: false, error: 'FORBIDDEN' }, { status: 403 });
-  }
-
+export const POST = withPermission(
+  PERMISSIONS.JOBS_RUN,
+  async (req: NextRequest, { params }: Params, guard) => {
   const { id } = await params;
   const body = await req.json().catch(() => ({}));
 
@@ -23,12 +19,8 @@ export const POST = async (req: NextRequest, { params }: Params) => {
     return NextResponse.json(preview.data);
   }
 
-  const authHeader = req.headers.get('authorization');
-  const token = authHeader?.replace('Bearer ', '');
-  const payload = token ? TokenService.parseAccountToken(token) : null;
-
   const result = await runJobNow(id, {
-    initiatorId: payload?.accountId,
+    initiatorId: guard.payload.accountId,
     payload: {
       mode: 'manual',
       overrideIssued: Boolean(body?.overrideIssued),
@@ -42,4 +34,5 @@ export const POST = async (req: NextRequest, { params }: Params) => {
   }
 
   return NextResponse.json({ success: true });
-};
+  }
+);

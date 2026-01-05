@@ -26,7 +26,7 @@ export default function NavItem({
   externalLink,
   ...other
 }: Props) {
-  const { title, path, icon, info, children, disabled, caption, roles } = item;
+  const { title, path, icon, info, children, disabled, caption, roles, permissions } = item;
 
   const subItem = depth !== 1;
 
@@ -91,6 +91,14 @@ export default function NavItem({
   );
 
   // Hidden item by role
+  if (
+    permissions &&
+    (!Array.isArray(config.currentPermissions) ||
+      !permissions.some((permission) => config.currentPermissions?.includes(permission)))
+  ) {
+    return null;
+  }
+
   if (roles && !roles.includes(`${config.currentRole}`)) {
     return null;
   }

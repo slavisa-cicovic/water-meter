@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AccountsService } from 'src/services/accountsService';
-import { requireAccountsAccess } from 'src/services/authGuardAccounts';
+import { PERMISSIONS } from 'src/constants/permissions';
+import { withPermission } from 'src/services/permissionGuard';
 
-export const POST = async (req: NextRequest) => {
-  const guard = requireAccountsAccess(req);
-  if (!guard.ok) return guard.response;
-
+export const POST = withPermission(PERMISSIONS.ACCOUNTS_VERIFY, async (req: NextRequest, _ctx, guard) => {
   const body = await req.json();
-  const result = await AccountsService.verify(body);
+  const result = await AccountsService.verify(body, { viewerAccountId: guard.payload.accountId });
 
   if (!result.success) {
     const conflictErrors = ['NO_STATUS_CHANGE', 'INVALID_TRANSITION'];
@@ -17,4 +15,4 @@ export const POST = async (req: NextRequest) => {
   }
 
   return NextResponse.json({ success: true, data: result.data });
-};
+});

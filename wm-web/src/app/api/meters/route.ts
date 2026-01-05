@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAccountsAccess } from 'src/services/authGuardAccounts';
+import { PERMISSIONS } from 'src/constants/permissions';
+import { withPermission } from 'src/services/permissionGuard';
 import { MetersService } from 'src/services/metersService';
 
-export const GET = async (req: NextRequest) => {
-  const guard = requireAccountsAccess(req);
-  if (!guard.ok) return guard.response;
-
+export const GET = withPermission(PERMISSIONS.METERS_LIST, async (req: NextRequest) => {
   const { searchParams } = new URL(req.url);
   const search = searchParams.get('search') || undefined;
   const status = (searchParams.get('status') || undefined) as any;
@@ -39,12 +37,9 @@ export const GET = async (req: NextRequest) => {
   });
 
   return NextResponse.json(result.data);
-};
+});
 
-export const POST = async (req: NextRequest) => {
-  const guard = requireAccountsAccess(req);
-  if (!guard.ok) return guard.response;
-
+export const POST = withPermission(PERMISSIONS.METERS_CREATE, async (req: NextRequest) => {
   const body = await req.json();
   const result = await MetersService.create(body);
 
@@ -54,4 +49,4 @@ export const POST = async (req: NextRequest) => {
   }
 
   return NextResponse.json(result.data, { status: 201 });
-};
+});

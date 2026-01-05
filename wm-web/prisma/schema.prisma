@@ -135,6 +135,7 @@ model Account {
   address            String
   passwordHash       String
   role               AccountRole
+  permissionsVersion Int                 @default(1)
   verificationStatus VerificationStatus   @default(pending)
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
@@ -147,6 +148,7 @@ model Account {
   readingEdits     ReadingEdit[]
   invoices         Invoice[]
   invoiceOverrideLogs InvoiceOverrideLog[]
+  accountRoleLinks AccountRoleLink[]
 }
 
 model ConsumerProfile {
@@ -178,6 +180,57 @@ model VerificationLog {
   reviewedAt DateTime           @default(now())
 
   account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
+
+model Role {
+  id          String           @id @default(uuid())
+  slug        String           @unique
+  name        String
+  description String?
+  isSystem    Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  rolePermissions RolePermission[]
+  accountRoleLinks AccountRoleLink[]
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  slug        String           @unique
+  name        String
+  description String?
+  resource    String
+  action      String
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  rolePermissions RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  conditions   Json?
+  createdAt    DateTime   @default(now())
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+}
+
+model AccountRoleLink {
+  accountId String
+  roleId    String
+  createdAt DateTime @default(now())
+
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  role    Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([accountId, roleId])
+  @@index([roleId])
 }
 
 model Meter {

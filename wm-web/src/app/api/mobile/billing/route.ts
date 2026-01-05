@@ -1,21 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MobileService } from "src/services/mobileService";
-import { TokenService } from "src/services/tokenService";
-
-const getAuthPayload = (req: NextRequest) => {
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader) {
-    return { error: "UNAUTHORIZED" as const };
-  }
-
-  const token = authHeader.replace("Bearer ", "");
-  const payload = TokenService.parseAccountToken(token);
-  if (!payload) {
-    return { error: "INVALID_TOKEN" as const };
-  }
-
-  return { payload };
-};
+import { PERMISSIONS } from "src/constants/permissions";
+import { withPermission } from "src/services/permissionGuard";
 
 const parseYear = (value: string | null) => {
   if (!value) return new Date().getUTCFullYear();
@@ -26,21 +12,16 @@ const parseYear = (value: string | null) => {
   return parsed;
 };
 
-export const GET = async (req: NextRequest) => {
-  const auth = getAuthPayload(req);
-  if ("error" in auth) {
-    return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
-  }
-
+export const GET = withPermission(PERMISSIONS.MOBILE_BILLING_READ, async (req: NextRequest, _ctx, guard) => {
   const year = parseYear(req.nextUrl.searchParams.get("year"));
   if (!year) {
     return NextResponse.json({ success: false, error: "INVALID_YEAR" }, { status: 400 });
   }
 
-  const result = await MobileService.getBilling(auth.payload.accountId, year);
+  const result = await MobileService.getBilling(guard.payload.accountId, year);
   if (!result.success) {
     return NextResponse.json({ success: false, error: result.error }, { status: 500 });
   }
 
   return NextResponse.json({ success: true, data: result.data });
-};
+});

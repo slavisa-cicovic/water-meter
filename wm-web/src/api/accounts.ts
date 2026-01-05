@@ -44,7 +44,9 @@ export function useGetAccounts(params?: AccountsQuery) {
 export function useGetAccount(id?: string) {
   const URL = id ? `${endpoints.accounts.details(id)}` : null;
 
-  const { data, isLoading, error, isValidating, mutate } = useSWR(URL, fetcher);
+  const { data, isLoading, error, isValidating, mutate } = useSWR(URL, fetcher, {
+    shouldRetryOnError: (err) => (err as { error?: string } | undefined)?.error !== 'FORBIDDEN',
+  });
 
   const account = data?.data;
 

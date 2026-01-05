@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAccountsAccess } from 'src/services/authGuardAccounts';
+import { PERMISSIONS } from 'src/constants/permissions';
+import { withPermission } from 'src/services/permissionGuard';
 import { BillingService } from 'src/services/billingService';
 
 type Params = {
   params: Promise<{ id: string }>;
 };
 
-export const GET = async (req: NextRequest, { params }: Params) => {
-  const guard = requireAccountsAccess(req);
-  if (!guard.ok) return guard.response;
-
+export const GET = withPermission(
+  PERMISSIONS.TARIFFS_READ,
+  async (req: NextRequest, { params }: Params) => {
   const { id } = await params;
   const result = await BillingService.findTariffById(id);
   if (!result.success) {
@@ -18,4 +18,5 @@ export const GET = async (req: NextRequest, { params }: Params) => {
   }
 
   return NextResponse.json(result.data);
-};
+  }
+);

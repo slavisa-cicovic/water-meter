@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAccountsAccess } from 'src/services/authGuardAccounts';
+import { PERMISSIONS } from 'src/constants/permissions';
+import { withPermission } from 'src/services/permissionGuard';
 import { JobsService } from 'src/services/jobsService';
 
 type Params = {
   params: Promise<{ id: string }>;
 };
 
-export const GET = async (req: NextRequest, { params }: Params) => {
-  const guard = requireAccountsAccess(req);
-  if (!guard.ok) return guard.response;
-  if (guard.role !== 'admin') {
-    return NextResponse.json({ success: false, error: 'FORBIDDEN' }, { status: 403 });
-  }
-
+export const GET = withPermission(
+  PERMISSIONS.JOBS_RUNS_LIST,
+  async (req: NextRequest, { params }: Params) => {
   const { searchParams } = new URL(req.url);
   const limit = searchParams.get('limit');
   const { id } = await params;
@@ -24,4 +21,5 @@ export const GET = async (req: NextRequest, { params }: Params) => {
   }
 
   return NextResponse.json(result.data);
-};
+  }
+);

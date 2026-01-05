@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAccountsAccess } from 'src/services/authGuardAccounts';
+import { PERMISSIONS } from 'src/constants/permissions';
+import { withPermission } from 'src/services/permissionGuard';
 import { BillingService } from 'src/services/billingService';
 
-export const GET = async (req: NextRequest) => {
-  const guard = requireAccountsAccess(req);
-  if (!guard.ok) return guard.response;
-
+export const GET = withPermission(PERMISSIONS.BILLING_LIST, async (req: NextRequest) => {
   const { searchParams } = new URL(req.url);
   const accountId = searchParams.get('accountId') || undefined;
   const search = searchParams.get('search') || undefined;
@@ -44,12 +42,9 @@ export const GET = async (req: NextRequest) => {
   });
 
   return NextResponse.json(result.data);
-};
+});
 
-export const POST = async (req: NextRequest) => {
-  const guard = requireAccountsAccess(req);
-  if (!guard.ok) return guard.response;
-
+export const POST = withPermission(PERMISSIONS.BILLING_GENERATE, async (req: NextRequest) => {
   const body = await req.json();
   const result = await BillingService.generateForPeriod(body);
 
@@ -59,12 +54,9 @@ export const POST = async (req: NextRequest) => {
   }
 
   return NextResponse.json(result.data, { status: 201 });
-};
+});
 
-export const PATCH = async (req: NextRequest) => {
-  const guard = requireAccountsAccess(req);
-  if (!guard.ok) return guard.response;
-
+export const PATCH = withPermission(PERMISSIONS.BILLING_CONFIRM, async (req: NextRequest) => {
   const body = await req.json();
   if (!body?.ids || !Array.isArray(body.ids)) {
     return NextResponse.json({ success: false, error: 'VALIDATION_FAILED' }, { status: 400 });
@@ -81,4 +73,4 @@ export const PATCH = async (req: NextRequest) => {
 
   const data = (result as { data: { updated: number } }).data;
   return NextResponse.json({ success: true, data });
-};
+});

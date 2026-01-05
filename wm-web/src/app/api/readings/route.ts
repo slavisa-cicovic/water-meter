@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAccountsAccess } from 'src/services/authGuardAccounts';
+import { PERMISSIONS } from 'src/constants/permissions';
+import { withPermission } from 'src/services/permissionGuard';
 import { ReadingsService } from 'src/services/readingsService';
 
-export const GET = async (req: NextRequest) => {
-  const guard = requireAccountsAccess(req);
-  if (!guard.ok) return guard.response;
-
+export const GET = withPermission(PERMISSIONS.READINGS_LIST, async (req: NextRequest) => {
   const { searchParams } = new URL(req.url);
   const meterId = searchParams.get('meterId') || undefined;
   const accountId = searchParams.get('accountId') || undefined;
@@ -24,12 +22,9 @@ export const GET = async (req: NextRequest) => {
   });
 
   return NextResponse.json(result.data);
-};
+});
 
-export const POST = async (req: NextRequest) => {
-  const guard = requireAccountsAccess(req);
-  if (!guard.ok) return guard.response;
-
+export const POST = withPermission(PERMISSIONS.READINGS_CREATE, async (req: NextRequest) => {
   const body = await req.json();
   const result = await ReadingsService.create(body);
 
@@ -39,4 +34,4 @@ export const POST = async (req: NextRequest) => {
   }
 
   return NextResponse.json(result.data, { status: 201 });
-};
+});

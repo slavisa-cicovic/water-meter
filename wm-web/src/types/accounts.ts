@@ -91,6 +91,7 @@ export type AccountTokenPayload = {
   accountId: string;
   role: AccountRole;
   verificationStatus: VerificationStatus;
+  permissionsVersion: number;
   issuedAt: string;
 };
 

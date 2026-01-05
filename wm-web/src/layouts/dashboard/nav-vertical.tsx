@@ -32,6 +32,7 @@ export default function NavVertical({ openNav, onCloseNav }: Props) {
   const lgUp = useResponsive('up', 'lg');
   const { user } = useAuthContext();
   const currentRole = user?.role;
+  const currentPermissions = user?.permissions as string[] | undefined;
 
   const navData = useNavData();
 
@@ -55,7 +56,7 @@ export default function NavVertical({ openNav, onCloseNav }: Props) {
     >
       <Logo sx={{ mt: 3, ml: 4, mb: 1 }} />
 
-      <NavSectionVertical data={navData} config={{ currentRole }} />
+      <NavSectionVertical data={navData} config={{ currentRole, currentPermissions }} />
       <Box sx={{ flexGrow: 1 }} />
     </Scrollbar>
   );

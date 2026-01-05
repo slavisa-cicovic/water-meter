@@ -1,43 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { BillingService } from "src/services/billingService";
 import { MobileService } from "src/services/mobileService";
-import { TokenService } from "src/services/tokenService";
+import { PERMISSIONS } from "src/constants/permissions";
+import { withPermission } from "src/services/permissionGuard";
 
-const getAuthPayload = (req: NextRequest) => {
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader) {
-    return { error: "UNAUTHORIZED" as const };
-  }
-
-  const token = authHeader.replace("Bearer ", "");
-  const payload = TokenService.parseAccountToken(token);
-  if (!payload) {
-    return { error: "INVALID_TOKEN" as const };
-  }
-
-  return { payload };
-};
-
-export const GET = async (req: NextRequest) => {
-  const auth = getAuthPayload(req);
-  if ("error" in auth) {
-    return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
-  }
-
-  const result = await MobileService.getLatestIssuedInvoice(auth.payload.accountId);
+export const GET = withPermission(PERMISSIONS.MOBILE_PAYMENTS_READ, async (req: NextRequest, _ctx, guard) => {
+  const result = await MobileService.getLatestIssuedInvoice(guard.payload.accountId);
   if (!result.success) {
     return NextResponse.json({ success: false, error: result.error }, { status: 500 });
   }
 
   return NextResponse.json({ success: true, data: result.data });
-};
+});
 
-export const POST = async (req: NextRequest) => {
-  const auth = getAuthPayload(req);
-  if ("error" in auth) {
-    return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
-  }
-
+export const POST = withPermission(PERMISSIONS.MOBILE_PAYMENTS_PAY, async (req: NextRequest, _ctx, guard) => {
   const body = await req.json();
   const invoiceId = body?.invoiceId as string | undefined;
   if (!invoiceId) {
@@ -46,7 +22,7 @@ export const POST = async (req: NextRequest) => {
 
   const result = await BillingService.markInvoicePaid({
     invoiceId,
-    accountId: auth.payload.accountId,
+    accountId: guard.payload.accountId,
   });
 
   if (!result.success) {
@@ -63,4 +39,4 @@ export const POST = async (req: NextRequest) => {
 
   const data = (result as { data: { updated: number } }).data;
   return NextResponse.json({ success: true, data });
-};
+});

@@ -1,19 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAccountsAccess } from 'src/services/authGuardAccounts';
+import { PERMISSIONS } from 'src/constants/permissions';
+import { withPermission } from 'src/services/permissionGuard';
 import { BillingService } from 'src/services/billingService';
 
-export const GET = async (req: NextRequest) => {
-  const guard = requireAccountsAccess(req);
-  if (!guard.ok) return guard.response;
-
+export const GET = withPermission(PERMISSIONS.TARIFFS_LIST, async (req: NextRequest) => {
   const result = await BillingService.listTariffs();
   return NextResponse.json(result.data);
-};
+});
 
-export const POST = async (req: NextRequest) => {
-  const guard = requireAccountsAccess(req);
-  if (!guard.ok) return guard.response;
-
+export const POST = withPermission(PERMISSIONS.TARIFFS_CREATE, async (req: NextRequest) => {
   const body = await req.json();
   const result = await BillingService.createTariff(body);
 
@@ -22,12 +17,9 @@ export const POST = async (req: NextRequest) => {
   }
 
   return NextResponse.json(result.data, { status: 201 });
-};
+});
 
-export const PUT = async (req: NextRequest) => {
-  const guard = requireAccountsAccess(req);
-  if (!guard.ok) return guard.response;
-
+export const PUT = withPermission(PERMISSIONS.TARIFFS_UPDATE, async (req: NextRequest) => {
   const body = await req.json();
   const result = await BillingService.updateTariff(body);
 
@@ -37,12 +29,9 @@ export const PUT = async (req: NextRequest) => {
   }
 
   return NextResponse.json(result.data);
-};
+});
 
-export const PATCH = async (req: NextRequest) => {
-  const guard = requireAccountsAccess(req);
-  if (!guard.ok) return guard.response;
-
+export const PATCH = withPermission(PERMISSIONS.TARIFFS_BULK_UPDATE, async (req: NextRequest) => {
   const body = await req.json();
   if (!body?.ids || !Array.isArray(body.ids) || !body.action) {
     return NextResponse.json({ success: false, error: 'VALIDATION_FAILED' }, { status: 400 });
@@ -58,4 +47,4 @@ export const PATCH = async (req: NextRequest) => {
   }
 
   return NextResponse.json(result.data);
-};
+});

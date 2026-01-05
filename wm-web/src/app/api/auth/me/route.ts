@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AccountRepository } from "src/repositories/accountRepository";
+import { AuthorizationService } from "src/services/authorizationService";
 import { TokenService } from "src/services/tokenService";
 
 export const GET = async (req: NextRequest) => {
@@ -20,6 +21,12 @@ export const GET = async (req: NextRequest) => {
     return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   }
 
+  if (account.permissionsVersion !== payload.permissionsVersion) {
+    return NextResponse.json({ error: "STALE_TOKEN" }, { status: 401 });
+  }
+
+  const permissions = await AuthorizationService.resolveAccountPermissions(account.id);
+
   return NextResponse.json({
     user: {
       id: account.id,
@@ -28,6 +35,8 @@ export const GET = async (req: NextRequest) => {
       email: account.email,
       role: account.role,
       verificationStatus: account.verificationStatus,
+      permissions,
+      permissionsVersion: account.permissionsVersion,
     },
   });
 };

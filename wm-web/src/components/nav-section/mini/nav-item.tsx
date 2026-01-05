@@ -22,7 +22,7 @@ const NavItem = forwardRef<HTMLDivElement, Props>(
   ({ item, depth, open, active, externalLink, config, ...other }, ref) => {
     const theme = useTheme();
 
-    const { title, path, icon, children, disabled, caption, roles } = item;
+    const { title, path, icon, children, disabled, caption, roles, permissions } = item;
 
     const subItem = depth !== 1;
 
@@ -108,6 +108,14 @@ const NavItem = forwardRef<HTMLDivElement, Props>(
     );
 
     // Hidden item by role
+    if (
+      permissions &&
+      (!Array.isArray(config.currentPermissions) ||
+        !permissions.some((permission) => config.currentPermissions?.includes(permission)))
+    ) {
+      return null;
+    }
+
     if (roles && !roles.includes(`${config.currentRole}`)) {
       return null;
     }

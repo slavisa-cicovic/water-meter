@@ -10,6 +10,7 @@ import { NavSectionMini } from 'src/components/nav-section';
 import { NAV } from '../config-layout';
 import { useNavData } from './config-navigation';
 import { NavToggleButton } from '../_common';
+import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
@@ -18,6 +19,7 @@ export default function NavMini() {
   const navData = useNavData();
   const { user } = useAuthContext();
   const currentRole = user?.role;
+  const currentPermissions = user?.permissions as string[] | undefined;
 
   return (
     <Box
@@ -46,9 +48,8 @@ export default function NavMini() {
       >
         <Logo sx={{ mx: 'auto', my: 2 }} />
 
-        <NavSectionMini data={navData} config={{ currentRole }} />
+        <NavSectionMini data={navData} config={{ currentRole, currentPermissions }} />
       </Stack>
     </Box>
   );
 }
-import { useAuthContext } from 'src/auth/hooks';

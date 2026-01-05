@@ -7,6 +7,7 @@ import { useLocales } from 'src/locales';
 import Label from 'src/components/label';
 import Iconify from 'src/components/iconify';
 import SvgColor from 'src/components/svg-color';
+import { PERMISSIONS } from 'src/constants/permissions';
 
 // ----------------------------------------------------------------------
 
@@ -41,33 +42,37 @@ export function useNavData() {
             title: 'Accounts',
             path: paths.dashboard.accounts.root,
             icon: ICONS.accounts,
+            permissions: [PERMISSIONS.ACCOUNTS_LIST],
           },
           {
             title: 'Meters',
             path: paths.dashboard.meters.root,
             icon: ICONS.meters,
+            permissions: [PERMISSIONS.METERS_LIST],
           },
           {
             title: 'Billing',
             path: paths.dashboard.billing.root,
             icon: ICONS.billing,
+            permissions: [PERMISSIONS.BILLING_LIST],
           },
           {
             title: 'Tariffs',
             path: paths.dashboard.billing.tariffs.root,
             icon: ICONS.billing,
+            permissions: [PERMISSIONS.TARIFFS_LIST],
           },
           {
             title: 'Jobs',
             path: paths.dashboard.jobs.root,
             icon: ICONS.jobs,
-            roles: ['admin'],
+            permissions: [PERMISSIONS.JOBS_LIST],
           },
           {
             title: 'Settings',
             path: paths.dashboard.settings.root,
             icon: ICONS.settings,
-            roles: ['admin'],
+            permissions: [PERMISSIONS.SETTINGS_READ],
           },
         ],
       },

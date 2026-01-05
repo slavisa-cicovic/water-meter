@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAccountsAccess } from 'src/services/authGuardAccounts';
+import { PERMISSIONS } from 'src/constants/permissions';
+import { withPermission } from 'src/services/permissionGuard';
 import { MetersService } from 'src/services/metersService';
 
 type Params = {
   params: Promise<{ id: string }>;
 };
 
-export const POST = async (req: NextRequest, { params }: Params) => {
-  const guard = requireAccountsAccess(req);
-  if (!guard.ok) return guard.response;
-
+export const POST = withPermission(
+  PERMISSIONS.METERS_UPDATE,
+  async (req: NextRequest, { params }: Params) => {
   const body = await req.json();
   const accountId = body?.accountId as string | undefined;
 
@@ -29,12 +29,12 @@ export const POST = async (req: NextRequest, { params }: Params) => {
   }
 
   return NextResponse.json({ success: true }, { status: 201 });
-};
+  }
+);
 
-export const DELETE = async (req: NextRequest, { params }: Params) => {
-  const guard = requireAccountsAccess(req);
-  if (!guard.ok) return guard.response;
-
+export const DELETE = withPermission(
+  PERMISSIONS.METERS_UPDATE,
+  async (req: NextRequest, { params }: Params) => {
   const { searchParams } = new URL(req.url);
   const accountId = searchParams.get('accountId') || '';
 
@@ -46,4 +46,5 @@ export const DELETE = async (req: NextRequest, { params }: Params) => {
   }
 
   return NextResponse.json({ success: true });
-};
+  }
+);

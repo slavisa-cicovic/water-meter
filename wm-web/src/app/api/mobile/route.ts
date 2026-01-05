@@ -1,48 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MobileService } from "src/services/mobileService";
-import { TokenService } from "src/services/tokenService";
+import { PERMISSIONS } from "src/constants/permissions";
+import { withPermission } from "src/services/permissionGuard";
 import type { MobileProfileUpdateInput } from "src/types/mobile";
 
-const getAuthPayload = (req: NextRequest) => {
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader) {
-    return { error: "UNAUTHORIZED" as const };
-  }
-
-  const token = authHeader.replace("Bearer ", "");
-  const payload = TokenService.parseAccountToken(token);
-  if (!payload) {
-    return { error: "INVALID_TOKEN" as const };
-  }
-
-  return { payload };
-};
-
-export const GET = async (req: NextRequest) => {
-  const auth = getAuthPayload(req);
-  if ("error" in auth) {
-    const status = auth.error === "UNAUTHORIZED" ? 401 : 401;
-    return NextResponse.json({ success: false, error: auth.error }, { status });
-  }
-
-  const result = await MobileService.getAccount(auth.payload.accountId);
+export const GET = withPermission(PERMISSIONS.MOBILE_PROFILE_READ, async (req: NextRequest, _ctx, guard) => {
+  const result = await MobileService.getAccount(guard.payload.accountId);
   if (!result.success) {
     const status = result.error === "NOT_FOUND" ? 404 : 500;
     return NextResponse.json({ success: false, error: result.error }, { status });
   }
 
   return NextResponse.json({ success: true, data: result.data });
-};
+});
 
-export const PUT = async (req: NextRequest) => {
-  const auth = getAuthPayload(req);
-  if ("error" in auth) {
-    const status = auth.error === "UNAUTHORIZED" ? 401 : 401;
-    return NextResponse.json({ success: false, error: auth.error }, { status });
-  }
-
+export const PUT = withPermission(PERMISSIONS.MOBILE_PROFILE_UPDATE, async (req: NextRequest, _ctx, guard) => {
   const body = (await req.json()) as MobileProfileUpdateInput;
-  const result = await MobileService.updateProfile(auth.payload.accountId, body);
+  const result = await MobileService.updateProfile(guard.payload.accountId, body);
 
   if (!result.success) {
     const status =
@@ -57,4 +31,4 @@ export const PUT = async (req: NextRequest) => {
   }
 
   return NextResponse.json({ success: true, data: result.data });
-};
+});

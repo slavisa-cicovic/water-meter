@@ -18,6 +18,8 @@ import { AccountRepository } from 'src/repositories/accountRepository';
 import { BillingRepository } from 'src/repositories/billingRepository';
 import { MeterRepository } from 'src/repositories/meterRepository';
 import { AccountRole, Prisma } from '@prisma/client';
+import { AuthorizationService } from './authorizationService';
+import { PERMISSIONS } from 'src/constants/permissions';
 
 const toAccountRole = (staffRole?: string) => (staffRole === 'backoffice' ? 'staff_backoffice' : 'staff_field');
 
@@ -94,6 +96,7 @@ export const AccountsService = {
             id: account.id,
             role: 'consumer',
             verificationStatus: account.verificationStatus as VerificationStatus,
+            permissionsVersion: account.permissionsVersion,
           }),
         },
       };
@@ -132,6 +135,7 @@ export const AccountsService = {
             id: account.id,
             role: account.role,
             verificationStatus: account.verificationStatus as VerificationStatus,
+            permissionsVersion: account.permissionsVersion,
           }),
         },
       };
@@ -143,7 +147,10 @@ export const AccountsService = {
     }
   },
 
-  async verify(action: VerificationAction): Promise<{ success: boolean; error?: string; details?: any; data?: VerificationResponse }> {
+  async verify(
+    action: VerificationAction,
+    options: { viewerAccountId?: string } = {}
+  ): Promise<{ success: boolean; error?: string; details?: any; data?: VerificationResponse }> {
     const validation = validateVerificationAction(action);
     if (!validation.valid) {
       return { success: false, error: 'VALIDATION_FAILED', details: validation.errors };
@@ -154,6 +161,16 @@ export const AccountsService = {
 
       if (!account) {
         return { success: false, error: 'NOT_FOUND' };
+      }
+
+      if (options.viewerAccountId) {
+        const allowedRoles = await AuthorizationService.resolveAllowedAccountRoles(
+          options.viewerAccountId,
+          PERMISSIONS.ACCOUNTS_VERIFY
+        );
+        if (allowedRoles && !allowedRoles.includes(account.role)) {
+          return { success: false, error: 'FORBIDDEN' };
+        }
       }
 
       if (account.verificationStatus !== 'pending' && account.verificationStatus === action.status) {
@@ -195,6 +212,7 @@ export const AccountsService = {
             id: updated.id,
             role: updated.role,
             verificationStatus: updated.verificationStatus as VerificationStatus,
+            permissionsVersion: updated.permissionsVersion,
           }),
         },
       };
@@ -211,51 +229,89 @@ export const AccountsService = {
     status?: VerificationStatus;
     page?: number;
     pageSize?: number;
-    viewerRole?: 'admin' | 'staff_backoffice';
+    viewerAccountId?: string;
   } = {}): Promise<{ accounts: AccountRow[]; total: number }> {
-    const { viewerRole, ...rest } = params;
-    let allowedRoles: AccountRole[] | undefined;
+    const { viewerAccountId, ...rest } = params;
 
-    if (viewerRole === 'staff_backoffice') {
-      const base = [AccountRole.consumer, AccountRole.staff_field, AccountRole.staff_backoffice];
-      if (rest.type === 'consumer') allowedRoles = [AccountRole.consumer];
-      else if (rest.type === 'staff_field') allowedRoles = [AccountRole.staff_field];
-      else if (rest.type === 'staff_backoffice') allowedRoles = [AccountRole.staff_backoffice];
-      else allowedRoles = base;
-    } else if (viewerRole === 'admin') {
-      const base = [AccountRole.admin, AccountRole.staff_backoffice];
-      if (rest.type === 'admin') allowedRoles = [AccountRole.admin];
-      else if (rest.type === 'staff_backoffice') allowedRoles = [AccountRole.staff_backoffice];
-      else allowedRoles = base;
+    const typeRoles: AccountRole[] | null = rest.type
+      ? rest.type === 'consumer'
+        ? [AccountRole.consumer]
+        : rest.type === 'staff'
+        ? [AccountRole.staff_field, AccountRole.staff_backoffice]
+        : rest.type === 'admin'
+        ? [AccountRole.admin]
+        : rest.type === 'staff_backoffice'
+        ? [AccountRole.staff_backoffice]
+        : [AccountRole.staff_field]
+      : null;
+
+    const permissionRoles = viewerAccountId
+      ? await AuthorizationService.resolveAllowedAccountRoles(viewerAccountId, PERMISSIONS.ACCOUNTS_LIST)
+      : null;
+
+    const allowedRoles = permissionRoles
+      ? typeRoles
+        ? permissionRoles.filter((role) => typeRoles.includes(role))
+        : permissionRoles
+      : typeRoles ?? undefined;
+
+    if (allowedRoles && allowedRoles.length === 0) {
+      return { accounts: [], total: 0 };
     }
 
     const { accounts, total } = await AccountRepository.list({
       ...rest,
+      type: undefined,
       allowedRoles,
     });
     return { accounts: accounts.map(mapAccountToRow), total };
   },
 
-  async findById(id: string, viewerRole?: 'admin' | 'staff_backoffice'): Promise<AccountRow | null> {
+  async findById(id: string, viewerAccountId?: string): Promise<AccountRow | null> {
     const acct = await AccountRepository.findById(id);
 
     if (!acct) return null;
 
-    if (viewerRole === 'staff_backoffice' && !(acct.role === 'consumer' || acct.role === 'staff_field')) {
-      return null;
-    }
-
-    if (viewerRole === 'admin' && (acct.role === 'consumer' || acct.role === 'staff_field')) {
-      return null;
+    if (viewerAccountId) {
+      const allowedRoles = await AuthorizationService.resolveAllowedAccountRoles(
+        viewerAccountId,
+        PERMISSIONS.ACCOUNTS_READ
+      );
+      if (allowedRoles && !allowedRoles.includes(acct.role)) {
+        return null;
+      }
     }
 
     return mapAccountToRow(acct);
   },
 
+  async findByIdForViewer(
+    id: string,
+    viewerAccountId?: string
+  ): Promise<{ account: AccountRow | null; error?: 'NOT_FOUND' | 'FORBIDDEN' }> {
+    const acct = await AccountRepository.findById(id);
+
+    if (!acct) {
+      return { account: null, error: 'NOT_FOUND' };
+    }
+
+    if (viewerAccountId) {
+      const allowedRoles = await AuthorizationService.resolveAllowedAccountRoles(
+        viewerAccountId,
+        PERMISSIONS.ACCOUNTS_READ
+      );
+      if (allowedRoles && !allowedRoles.includes(acct.role)) {
+        return { account: null, error: 'FORBIDDEN' };
+      }
+    }
+
+    return { account: mapAccountToRow(acct) };
+  },
+
   async updateAccount(
     id: string,
     input: AccountUpdateInput,
-    options: { viewerRole?: 'admin' | 'staff_backoffice'; viewerId?: string } = {}
+    options: { viewerAccountId?: string; viewerId?: string } = {}
   ): Promise<{ success: boolean; error?: string; details?: any; data?: { account: AccountRow } }> {
     const validation = validateAccountUpdate(input);
     if (!validation.valid) return { success: false, error: 'VALIDATION_FAILED', details: validation.errors };
@@ -263,11 +319,15 @@ export const AccountsService = {
     const account = await AccountRepository.findById(id);
     if (!account) return { success: false, error: 'NOT_FOUND' };
 
-    const viewerRole = options.viewerRole;
-    if (viewerRole === 'staff_backoffice' && !(account.role === 'consumer' || account.role === 'staff_field')) {
-      return { success: false, error: 'FORBIDDEN' };
-    }
-    if (viewerRole === 'admin' && (account.role === 'consumer' || account.role === 'staff_field')) {
+    if (options.viewerAccountId) {
+      const allowedRoles = await AuthorizationService.resolveAllowedAccountRoles(
+        options.viewerAccountId,
+        PERMISSIONS.ACCOUNTS_UPDATE
+      );
+      if (allowedRoles && !allowedRoles.includes(account.role)) {
+        return { success: false, error: 'FORBIDDEN' };
+      }
+    } else if (options.viewerId) {
       return { success: false, error: 'FORBIDDEN' };
     }
 

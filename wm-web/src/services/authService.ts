@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "src/utils/prisma";
 import { TokenService } from "./tokenService";
+import { AuthorizationService } from "./authorizationService";
 import { VerificationStatus } from "src/types/accounts";
 
 type LoginInput = {
@@ -29,6 +30,8 @@ export const AuthService = {
       return NextResponse.json({ success: false, error: "ACCOUNT_NOT_VERIFIED" }, { status: 403 });
     }
 
+    const permissions = await AuthorizationService.resolveAccountPermissions(account.id);
+
     return NextResponse.json({
       success: true,
       data: {
@@ -36,6 +39,7 @@ export const AuthService = {
           id: account.id,
           role: account.role,
           verificationStatus: account.verificationStatus as VerificationStatus,
+          permissionsVersion: account.permissionsVersion,
         }),
         user: {
           id: account.id,
@@ -45,6 +49,8 @@ export const AuthService = {
           address: account.address,
           role: account.role,
           verificationStatus: account.verificationStatus,
+          permissions,
+          permissionsVersion: account.permissionsVersion,
         },
       },
     });

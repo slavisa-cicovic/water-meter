@@ -15,6 +15,7 @@ import {useSettingsContext} from 'src/components/settings';
 import EmptyContent from "src/components/empty-content";
 import Iconify from "src/components/iconify";
 import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
+import PermissionDenied from 'src/components/permission-denied';
 //
 import { AccountDetailsSkeleton } from '../account-skeleton';
 import AccountEditForm from '../account-edit-form';
@@ -33,6 +34,7 @@ export default function AccountEditView({id}: Props) {
 
 
   const {account: currentAccount, accountLoading, accountError} = useGetAccount(id);
+  const forbidden = (accountError as { error?: string } | undefined)?.error === 'FORBIDDEN';
 
   const renderSkeleton = <AccountDetailsSkeleton />;
 
@@ -70,18 +72,21 @@ export default function AccountEditView({id}: Props) {
 
   return (
       <Container maxWidth={settings.themeStretch ? false : 'lg'}>
-        <CustomBreadcrumbs
-          heading={accountName}
-          description={description}
-        links={[
-          { name: 'App', href: paths.dashboard.root },
-          { name: 'Accounts', href: paths.dashboard.accounts.root },
-          { name: 'Details' },
-        ]}
-          sx={{ mb: { xs: 3, md: 5 } }}
-        />
+        {!forbidden && (
+          <CustomBreadcrumbs
+            heading={accountName}
+            description={description}
+            links={[
+              { name: 'App', href: paths.dashboard.root },
+              { name: 'Accounts', href: paths.dashboard.accounts.root },
+              { name: 'Details' },
+            ]}
+            sx={{ mb: { xs: 3, md: 5 } }}
+          />
+        )}
         {accountLoading && renderSkeleton}
-        {accountError && renderError}
+        {forbidden && <PermissionDenied sx={{ py: 6 }} illustrationSx={{ my: 6 }} />}
+        {accountError && !forbidden && renderError}
         {currentAccount && renderAccount}
       </Container>
   );

@@ -1,32 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { MobileService } from "src/services/mobileService";
-import { TokenService } from "src/services/tokenService";
+import { PERMISSIONS } from "src/constants/permissions";
+import { withPermission } from "src/services/permissionGuard";
 
-const getAuthPayload = (req: NextRequest) => {
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader) {
-    return { error: "UNAUTHORIZED" as const };
-  }
-
-  const token = authHeader.replace("Bearer ", "");
-  const payload = TokenService.parseAccountToken(token);
-  if (!payload) {
-    return { error: "INVALID_TOKEN" as const };
-  }
-
-  return { payload };
-};
-
-export const GET = async (req: NextRequest) => {
-  const auth = getAuthPayload(req);
-  if ("error" in auth) {
-    return NextResponse.json({ success: false, error: auth.error }, { status: 401 });
-  }
-
-  const result = await MobileService.getNotifications(auth.payload.accountId);
+export const GET = withPermission(
+  PERMISSIONS.MOBILE_NOTIFICATIONS_READ,
+  async (req: NextRequest, _ctx, guard) => {
+  const result = await MobileService.getNotifications(guard.payload.accountId);
   if (!result.success) {
     return NextResponse.json({ success: false, error: result.error }, { status: 500 });
   }
 
   return NextResponse.json({ success: true, data: result.data });
-};
+  }
+);

@@ -10,6 +10,7 @@ export type NavConfigProps = {
   itemRadius?: number;
   itemPadding?: string;
   currentRole?: string;
+  currentPermissions?: string[];
   itemSubHeight?: number;
   itemRootHeight?: number;
 };
@@ -30,6 +31,7 @@ export type NavListProps = {
   caption?: string;
   disabled?: boolean;
   roles?: string[];
+  permissions?: string[];
   children?: any;
 };
 

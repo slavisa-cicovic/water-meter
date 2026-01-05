@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AccountsService } from 'src/services/accountsService';
-import { requireAccountsAccess } from 'src/services/authGuardAccounts';
+import { PERMISSIONS } from 'src/constants/permissions';
+import { withPermission } from 'src/services/permissionGuard';
 
-export const GET = async (req: NextRequest) => {
-  const guard = requireAccountsAccess(req);
-  if (!guard.ok) return guard.response;
-  const viewerRole = guard.role === 'admin' || guard.role === 'staff_backoffice' ? guard.role : undefined;
-
+export const GET = withPermission(PERMISSIONS.ACCOUNTS_LIST, async (req: NextRequest, _ctx, guard) => {
   const { searchParams } = new URL(req.url);
   const search = searchParams.get('search') || undefined;
   const orderBy = (searchParams.get('orderBy') || undefined) as
@@ -36,8 +33,8 @@ export const GET = async (req: NextRequest) => {
     status,
     page: page ? Number(page) : 0,
     pageSize: pageSize ? Number(pageSize) : 25,
-    viewerRole,
+    viewerAccountId: guard.payload.accountId,
   });
 
   return NextResponse.json({ accounts, total });
-};
+});

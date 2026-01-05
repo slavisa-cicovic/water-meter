@@ -145,6 +145,10 @@ const staff: StaffSeed[] = [
 ];
 
 async function clearData() {
+  await prisma.accountRoleLink.deleteMany({});
+  await prisma.rolePermission.deleteMany({});
+  await prisma.permission.deleteMany({});
+  await prisma.role.deleteMany({});
   await prisma.verificationLog.deleteMany({});
   await prisma.meterConsumer.deleteMany({});
   await prisma.meter.deleteMany({});
@@ -331,6 +335,194 @@ async function seedStaff() {
     });
     console.log(`Seeded staff ${account.email} (${account.verificationStatus})`);
   }
+}
+
+type PermissionSeed = {
+  slug: string;
+  name: string;
+  description?: string;
+  resource: string;
+  action: string;
+};
+
+const permissions: PermissionSeed[] = [
+  { slug: 'settings:read', name: 'Read settings', resource: 'settings', action: 'read' },
+  { slug: 'settings:update', name: 'Update settings', resource: 'settings', action: 'update' },
+  { slug: 'accounts:list', name: 'List accounts', resource: 'accounts', action: 'list' },
+  { slug: 'accounts:read', name: 'Read account', resource: 'accounts', action: 'read' },
+  { slug: 'accounts:update', name: 'Update account', resource: 'accounts', action: 'update' },
+  { slug: 'accounts:verify', name: 'Verify account', resource: 'accounts', action: 'verify' },
+  { slug: 'meters:list', name: 'List meters', resource: 'meters', action: 'list' },
+  { slug: 'meters:read', name: 'Read meter', resource: 'meters', action: 'read' },
+  { slug: 'meters:create', name: 'Create meter', resource: 'meters', action: 'create' },
+  { slug: 'meters:update', name: 'Update meter', resource: 'meters', action: 'update' },
+  { slug: 'meters:delete', name: 'Delete meter', resource: 'meters', action: 'delete' },
+  { slug: 'readings:list', name: 'List readings', resource: 'readings', action: 'list' },
+  { slug: 'readings:read', name: 'Read reading', resource: 'readings', action: 'read' },
+  { slug: 'readings:create', name: 'Create reading', resource: 'readings', action: 'create' },
+  { slug: 'readings:update', name: 'Update reading', resource: 'readings', action: 'update' },
+  { slug: 'notifications:read', name: 'Read notifications', resource: 'notifications', action: 'read' },
+  { slug: 'billing:list', name: 'List invoices', resource: 'billing', action: 'list' },
+  { slug: 'billing:generate', name: 'Generate invoices', resource: 'billing', action: 'generate' },
+  { slug: 'billing:confirm', name: 'Confirm invoices', resource: 'billing', action: 'confirm' },
+  { slug: 'billing:read', name: 'Read invoice', resource: 'billing', action: 'read' },
+  { slug: 'billing:review', name: 'Review invoice', resource: 'billing', action: 'review' },
+  { slug: 'tariffs:list', name: 'List tariffs', resource: 'tariffs', action: 'list' },
+  { slug: 'tariffs:read', name: 'Read tariff', resource: 'tariffs', action: 'read' },
+  { slug: 'tariffs:create', name: 'Create tariff', resource: 'tariffs', action: 'create' },
+  { slug: 'tariffs:update', name: 'Update tariff', resource: 'tariffs', action: 'update' },
+  { slug: 'tariffs:bulk_update', name: 'Bulk update tariffs', resource: 'tariffs', action: 'bulk_update' },
+  { slug: 'jobs:list', name: 'List jobs', resource: 'jobs', action: 'list' },
+  { slug: 'jobs:read', name: 'Read job', resource: 'jobs', action: 'read' },
+  { slug: 'jobs:create', name: 'Create job', resource: 'jobs', action: 'create' },
+  { slug: 'jobs:update', name: 'Update job', resource: 'jobs', action: 'update' },
+  { slug: 'jobs:bulk_update', name: 'Bulk update jobs', resource: 'jobs', action: 'bulk_update' },
+  { slug: 'jobs:run', name: 'Run job', resource: 'jobs', action: 'run' },
+  { slug: 'jobs:runs_list', name: 'List job runs', resource: 'jobs', action: 'runs_list' },
+  { slug: 'mobile_profile:read', name: 'Read mobile profile', resource: 'mobile_profile', action: 'read' },
+  { slug: 'mobile_profile:update', name: 'Update mobile profile', resource: 'mobile_profile', action: 'update' },
+  { slug: 'mobile_readings:context', name: 'Read mobile reading context', resource: 'mobile_readings', action: 'context' },
+  { slug: 'mobile_readings:create', name: 'Create mobile reading', resource: 'mobile_readings', action: 'create' },
+  { slug: 'mobile_meters:list', name: 'List mobile meters', resource: 'mobile_meters', action: 'list' },
+  { slug: 'mobile_consumption:read', name: 'Read mobile consumption', resource: 'mobile_consumption', action: 'read' },
+  { slug: 'mobile_notifications:read', name: 'Read mobile notifications', resource: 'mobile_notifications', action: 'read' },
+  { slug: 'mobile_payments:read', name: 'Read mobile payments', resource: 'mobile_payments', action: 'read' },
+  { slug: 'mobile_payments:pay', name: 'Pay mobile invoice', resource: 'mobile_payments', action: 'pay' },
+  { slug: 'mobile_billing:read', name: 'Read mobile billing', resource: 'mobile_billing', action: 'read' },
+];
+
+async function seedRbac() {
+  const roleData = [
+    { slug: 'admin', name: 'Admin', isSystem: true },
+    { slug: 'staff_backoffice', name: 'Staff Backoffice', isSystem: true },
+    { slug: 'staff_field', name: 'Staff Field', isSystem: true },
+    { slug: 'consumer', name: 'Consumer', isSystem: true },
+  ];
+
+  const roles = await Promise.all(
+    roleData.map((role) =>
+      prisma.role.create({
+        data: role,
+      })
+    )
+  );
+
+  const permissionsCreated = await Promise.all(
+    permissions.map((permission) => prisma.permission.create({ data: permission }))
+  );
+
+  const roleBySlug = new Map(roles.map((role) => [role.slug, role]));
+  const permissionBySlug = new Map(permissionsCreated.map((permission) => [permission.slug, permission]));
+
+  const adminPermissions = permissions.map((permission) => permission.slug);
+  const backofficePermissions = [
+    'settings:read',
+    'accounts:list',
+    'accounts:read',
+    'accounts:update',
+    'accounts:verify',
+    'meters:list',
+    'meters:read',
+    'meters:create',
+    'meters:update',
+    'meters:delete',
+    'readings:list',
+    'readings:read',
+    'readings:create',
+    'readings:update',
+    'notifications:read',
+    'billing:list',
+    'billing:generate',
+    'billing:confirm',
+    'billing:read',
+    'billing:review',
+    'tariffs:list',
+    'tariffs:read',
+    'tariffs:create',
+    'tariffs:update',
+    'tariffs:bulk_update',
+  ];
+
+  const accountPermissions = ['accounts:list', 'accounts:read', 'accounts:update', 'accounts:verify'];
+  const rolePermissionConditions: Record<string, Record<string, { accountRoles: AccountRole[] }>> = {
+    admin: Object.fromEntries(
+      accountPermissions.map((permission) => [
+        permission,
+        { accountRoles: [AccountRole.admin, AccountRole.staff_backoffice] },
+      ])
+    ),
+    staff_backoffice: Object.fromEntries(
+      accountPermissions.map((permission) => [
+        permission,
+        { accountRoles: [AccountRole.consumer, AccountRole.staff_field, AccountRole.staff_backoffice] },
+      ])
+    ),
+  };
+
+  const rolePermissions = [
+    { roleSlug: 'admin', permissionSlugs: adminPermissions },
+    { roleSlug: 'staff_backoffice', permissionSlugs: backofficePermissions },
+    {
+      roleSlug: 'staff_field',
+      permissionSlugs: [
+        'mobile_profile:read',
+        'mobile_profile:update',
+        'mobile_readings:context',
+        'mobile_readings:create',
+        'mobile_meters:list',
+        'mobile_notifications:read',
+      ],
+    },
+    {
+      roleSlug: 'consumer',
+      permissionSlugs: [
+        'mobile_profile:read',
+        'mobile_profile:update',
+        'mobile_readings:context',
+        'mobile_readings:create',
+        'mobile_consumption:read',
+        'mobile_notifications:read',
+        'mobile_payments:read',
+        'mobile_payments:pay',
+        'mobile_billing:read',
+      ],
+    },
+  ];
+
+  for (const { roleSlug, permissionSlugs } of rolePermissions) {
+    const role = roleBySlug.get(roleSlug);
+    if (!role) continue;
+    const data = permissionSlugs
+      .map((slug) => permissionBySlug.get(slug))
+      .filter((permission): permission is NonNullable<typeof permission> => Boolean(permission))
+      .map((permission) => {
+        const conditions = rolePermissionConditions[roleSlug]?.[permission.slug];
+        return {
+          roleId: role.id,
+          permissionId: permission.id,
+          ...(conditions ? { conditions } : {}),
+        };
+      });
+
+    if (data.length) {
+      await prisma.rolePermission.createMany({ data });
+    }
+  }
+
+  const accounts = await prisma.account.findMany({ select: { id: true, role: true } });
+  const accountRoles = accounts
+    .map((account) => {
+      const role = roleBySlug.get(account.role);
+      if (!role) return null;
+      return { accountId: account.id, roleId: role.id };
+    })
+    .filter((entry): entry is { accountId: string; roleId: string } => Boolean(entry));
+
+  if (accountRoles.length) {
+    await prisma.accountRoleLink.createMany({ data: accountRoles });
+  }
+
+  console.log('Seeded RBAC roles, permissions, and account role mappings');
 }
 
 const pad2 = (value: number) => String(value).padStart(2, '0');
@@ -582,7 +774,7 @@ async function seedInvoices() {
     return;
   }
 
-  let consumption = endReading.value - startReading.value;
+  let consumption = Number(endReading.value) - Number(startReading.value);
   if (consumption <= 0) {
     consumption = 10;
     console.log('Billing seed: non-positive consumption, using fallback 10');
@@ -663,6 +855,7 @@ async function main() {
   await seedBulkConsumers();
   await seedStaff();
   await seedExtraStaffField();
+  await seedRbac();
   await seedMeters();
   await seedReadings();
   await seedTariffs();

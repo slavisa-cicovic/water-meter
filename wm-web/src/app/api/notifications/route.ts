@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAccountsAccess } from 'src/services/authGuardAccounts';
+import { PERMISSIONS } from 'src/constants/permissions';
+import { withPermission } from 'src/services/permissionGuard';
 import { NotificationService } from 'src/services/notificationService';
 
-export const GET = async (req: NextRequest) => {
-  const guard = requireAccountsAccess(req);
-  if (!guard.ok) return guard.response;
-
+export const GET = withPermission(PERMISSIONS.NOTIFICATIONS_READ, async (req: NextRequest) => {
   const result = await NotificationService.getSummary();
 
   return NextResponse.json(result.data);
-};
+});

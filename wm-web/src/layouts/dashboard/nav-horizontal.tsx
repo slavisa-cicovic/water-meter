@@ -18,6 +18,7 @@ function NavHorizontal() {
   const theme = useTheme();
   const { user } = useAuthContext();
   const currentRole = user?.role;
+  const currentPermissions = user?.permissions as string[] | undefined;
 
   const navData = useNavData();
 
@@ -35,7 +36,7 @@ function NavHorizontal() {
           }),
         }}
       >
-        <NavSectionHorizontal data={navData} config={{ currentRole }} />
+        <NavSectionHorizontal data={navData} config={{ currentRole, currentPermissions }} />
       </Toolbar>
     </AppBar>
   );
