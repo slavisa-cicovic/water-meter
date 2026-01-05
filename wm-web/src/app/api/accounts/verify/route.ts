@@ -5,7 +5,13 @@ import { withPermission } from 'src/services/permissionGuard';
 
 export const POST = withPermission(PERMISSIONS.ACCOUNTS_VERIFY, async (req: NextRequest, _ctx, guard) => {
   const body = await req.json();
-  const result = await AccountsService.verify(body, { viewerAccountId: guard.payload.accountId });
+  const result = await AccountsService.verify(
+    {
+      ...body,
+      reviewerId: guard.payload.accountId,
+    },
+    { viewerAccountId: guard.payload.accountId }
+  );
 
   if (!result.success) {
     const conflictErrors = ['NO_STATUS_CHANGE', 'INVALID_TRANSITION'];

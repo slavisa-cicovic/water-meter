@@ -225,7 +225,7 @@ export const AccountsService = {
     search?: string;
     orderBy?: 'createdAt' | 'verificationStatus' | 'email' | 'name' | 'type';
     order?: 'asc' | 'desc';
-    type?: 'consumer' | 'staff' | 'admin' | 'staff_backoffice' | 'staff_field';
+    type?: string;
     status?: VerificationStatus;
     page?: number;
     pageSize?: number;

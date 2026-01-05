@@ -64,7 +64,6 @@ export const AccountsApi = {
     await axiosInstance.post(endpoints.accounts.verify, {
       accountId,
       status,
-      reviewerId: 'backoffice-user',
     });
   },
 

@@ -14,13 +14,7 @@ export const GET = withPermission(PERMISSIONS.ACCOUNTS_LIST, async (req: NextReq
     | 'type'
     | undefined;
   const order = (searchParams.get('order') || undefined) as 'asc' | 'desc' | undefined;
-  const type = (searchParams.get('type') || undefined) as
-    | 'consumer'
-    | 'staff'
-    | 'admin'
-    | 'staff_backoffice'
-    | 'staff_field'
-    | undefined;
+  const type = searchParams.get('type') || undefined;
   const status = (searchParams.get('status') || undefined) as any;
   const page = searchParams.get('page');
   const pageSize = searchParams.get('pageSize');

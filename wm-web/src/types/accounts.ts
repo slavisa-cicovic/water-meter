@@ -130,6 +130,6 @@ export type IAccountTableFilterValue = string;
 
 export type IAccountTableFilters = {
   name: string;
-  type: '' | 'consumer' | 'staff' | 'admin' | 'staff_backoffice' | 'staff_field';
+  type: string;
   status: '' | VerificationStatus;
 };
