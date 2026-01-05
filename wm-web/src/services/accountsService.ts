@@ -64,7 +64,7 @@ const mapAccountToRow = (acct: AccountWithProfiles): AccountRow => {
 
   return {
     ...base,
-    type: acct.role as Exclude<AccountRole, 'consumer'>,
+    type: acct.role,
     ...(acct.avatarUrl ? { avatar: acct.avatarUrl } : {}),
   };
 };

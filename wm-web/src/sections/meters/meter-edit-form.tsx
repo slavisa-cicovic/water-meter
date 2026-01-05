@@ -35,7 +35,6 @@ import FormProvider, { RHFTextField } from 'src/components/hook-form';
 import Scrollbar from 'src/components/scrollbar';
 import { useRouter } from 'src/routes/hooks';
 import { paths } from 'src/routes/paths';
-import { AccountRole } from 'src/types/accounts';
 import { Meter } from 'src/types/meters';
 import { formatReadingValue, roundReadingValue } from 'src/utils/reading-format';
 import { Fragment, ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -254,7 +253,7 @@ export function MeterEditForm({ currentMeter }: Props) {
   const maxConsumerRows = 8;
   const consumers = currentMeter?.consumers || [];
 
-  const viewerRole = (user as any)?.role as AccountRole | undefined;
+  const viewerRole = (user as any)?.role as string | undefined;
   const viewerId = (user as any)?.accountId || (user as any)?.id;
   const canEditReadings = viewerRole === 'staff_backoffice' || viewerRole === 'admin';
   const canReviewBarcode = viewerRole === 'staff_backoffice' || viewerRole === 'admin';

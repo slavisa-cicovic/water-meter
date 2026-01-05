@@ -49,7 +49,7 @@ import { useAuthContext } from 'src/auth/hooks';
 import FormProvider, { RHFTextField } from 'src/components/hook-form';
 import { ChartWrapper, useChart } from 'src/components/chart';
 // types
-import { AccountRole, AccountRow } from 'src/types/accounts';
+import { AccountRow } from 'src/types/accounts';
 import { Invoice, InvoiceStatus } from 'src/types/billings';
 import { Reading } from 'src/types/readings';
 import { ReadingsReviewDialog } from 'src/components/billing/readings-review-dialog';
@@ -114,7 +114,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
   const [addressPromptOpen, setAddressPromptOpen] = useState(false);
   const [pendingSubmit, setPendingSubmit] = useState<any>(null);
 
-  const viewerRole = (user as any)?.role as AccountRole | undefined;
+  const viewerRole = (user as any)?.role as string | undefined;
   const viewerId = (user as any)?.accountId || (user as any)?.id;
   const canEditReadings = viewerRole === 'staff_backoffice';
   const canEdit =
