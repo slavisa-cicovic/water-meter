@@ -991,7 +991,7 @@ export const BillingService = {
     current: { value: number; readAt: string };
     reason: string;
     editorAccountId: string;
-    editorRole: 'admin' | 'staff_backoffice';
+    editorRole: string;
     householdSize?: number;
   }) {
     const errors: Record<string, string[]> = {};

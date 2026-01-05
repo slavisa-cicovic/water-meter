@@ -135,7 +135,7 @@ export const ReadingRepository = {
     params: {
     readingId: string;
     accountId: string;
-    editorRole: 'admin' | 'consumer' | 'staff_field' | 'staff_backoffice';
+    editorRole: string;
     value: number;
     reason?: string;
     },

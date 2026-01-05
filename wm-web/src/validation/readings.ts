@@ -45,12 +45,9 @@ const validateImage = (method: ReadingMethod, imageFilename: string | null | und
 };
 
 const validateEditorRole = (role: ReadingEdit['editorRole'] | undefined, errors: Record<string, string[]>) => {
-  if (!role) {
+  if (!role || isBlank(role)) {
     pushError(errors, 'editorRole', 'Required');
-    return;
   }
-  const allowed: ReadingEdit['editorRole'][] = ['consumer', 'staff_field', 'staff_backoffice', 'admin'];
-  if (!allowed.includes(role)) pushError(errors, 'editorRole', 'Invalid editor role');
 };
 
 const validateBarcodeStatus = (status: ReadingUpdateInput['barcodeStatus'], errors: Record<string, string[]>) => {

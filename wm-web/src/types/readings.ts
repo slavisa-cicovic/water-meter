@@ -30,7 +30,7 @@ export type ReadingEdit = {
   id: string;
   readingId: string;
   accountId: string;
-  editorRole: 'admin' | 'consumer' | 'staff_field' | 'staff_backoffice';
+  editorRole: string;
   editorFirstName?: string;
   editorLastName?: string;
   value: number;
