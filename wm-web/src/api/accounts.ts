@@ -7,7 +7,7 @@ type AccountsQuery = {
   search?: string;
   orderBy?: string;
   order?: 'asc' | 'desc';
-  type?: 'consumer' | 'staff' | 'admin' | 'staff_backoffice' | 'staff_field';
+  type?: string;
   status?: string;
   page?: number;
   pageSize?: number;
