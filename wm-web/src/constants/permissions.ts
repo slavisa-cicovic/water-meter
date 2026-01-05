@@ -32,6 +32,7 @@ export const PERMISSIONS = {
   JOBS_BULK_UPDATE: 'jobs:bulk_update',
   JOBS_RUN: 'jobs:run',
   JOBS_RUNS_LIST: 'jobs:runs_list',
+  ROLES_LIST: 'roles:list',
   MOBILE_PROFILE_READ: 'mobile_profile:read',
   MOBILE_PROFILE_UPDATE: 'mobile_profile:update',
   MOBILE_READINGS_CONTEXT: 'mobile_readings:context',

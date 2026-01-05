@@ -379,6 +379,7 @@ const permissions: PermissionSeed[] = [
   { slug: 'jobs:bulk_update', name: 'Bulk update jobs', resource: 'jobs', action: 'bulk_update' },
   { slug: 'jobs:run', name: 'Run job', resource: 'jobs', action: 'run' },
   { slug: 'jobs:runs_list', name: 'List job runs', resource: 'jobs', action: 'runs_list' },
+  { slug: 'roles:list', name: 'List roles', resource: 'roles', action: 'list' },
   { slug: 'mobile_profile:read', name: 'Read mobile profile', resource: 'mobile_profile', action: 'read' },
   { slug: 'mobile_profile:update', name: 'Update mobile profile', resource: 'mobile_profile', action: 'update' },
   { slug: 'mobile_readings:context', name: 'Read mobile reading context', resource: 'mobile_readings', action: 'context' },
@@ -441,6 +442,7 @@ async function seedRbac() {
     'tariffs:create',
     'tariffs:update',
     'tariffs:bulk_update',
+    'roles:list',
   ];
 
   const accountPermissions = ['accounts:list', 'accounts:read', 'accounts:update', 'accounts:verify'];

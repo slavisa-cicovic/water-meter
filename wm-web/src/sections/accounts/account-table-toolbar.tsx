@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 // @mui
 import Stack from '@mui/material/Stack';
 import MenuItem from '@mui/material/MenuItem';
@@ -6,9 +6,9 @@ import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 // components
 import Iconify from 'src/components/iconify';
+import { useGetRoles } from 'src/api/roles';
 // types
 import { IAccountTableFilters, IAccountTableFilterValue } from 'src/types/accounts';
-import { useAuthContext } from 'src/auth/hooks';
 
 // ----------------------------------------------------------------------
 
@@ -22,28 +22,15 @@ export default function AccountTableToolbar({
     filters,
     onFilters,
 }: Props) {
-    const { user } = useAuthContext();
-    const role = (user as any)?.role as string | undefined;
+    const { roles } = useGetRoles();
 
-    const typeOptions =
-      role === 'admin'
-        ? [
-            { value: '', label: 'All' },
-            { value: 'admin', label: 'admin' },
-            { value: 'staff_backoffice', label: 'staff_backoffice' },
-          ]
-        : role === 'staff_backoffice'
-        ? [
-            { value: '', label: 'All' },
-            { value: 'consumer', label: 'consumer' },
-            { value: 'staff_field', label: 'staff_field' },
-            { value: 'staff_backoffice', label: 'staff_backoffice' },
-          ]
-        : [
-            { value: '', label: 'All' },
-            { value: 'consumer', label: 'consumer' },
-            { value: 'staff', label: 'staff' },
-          ];
+    const typeOptions = useMemo(() => {
+        const base = [{ value: '', label: 'All' }, { value: 'staff', label: 'staff' }];
+        if (!roles.length) return base;
+        return base.concat(
+            roles.map((role) => ({ value: role.slug, label: role.slug }))
+        );
+    }, [roles]);
 
     const handleFilterName = useCallback(
         (event: React.ChangeEvent<HTMLInputElement>) => {
