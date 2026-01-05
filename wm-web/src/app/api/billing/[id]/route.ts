@@ -37,7 +37,7 @@ export const PATCH = withPermission(
       current: body.current,
       reason: body.reason,
       editorAccountId: guard.payload.accountId,
-      editorRole: guard.payload.role as 'admin' | 'staff_backoffice',
+      editorRole: guard.payload.role,
       householdSize: body.householdSize,
     });
 

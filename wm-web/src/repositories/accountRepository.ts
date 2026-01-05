@@ -49,7 +49,7 @@ export const AccountRepository = {
     address: string;
     password: string;
     staffRole: StaffRole;
-    role: "staff_field" | "staff_backoffice";
+    role: AccountRole;
   }) {
     return prisma.account.create({
       data: {

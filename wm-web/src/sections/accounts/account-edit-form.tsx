@@ -45,6 +45,7 @@ import { AccountsApi } from 'src/api/accounts';
 import { useGetSettings } from 'src/api/settings';
 // auth
 import { useAuthContext } from 'src/auth/hooks';
+import { PERMISSIONS } from 'src/constants/permissions';
 // components
 import FormProvider, { RHFTextField } from 'src/components/hook-form';
 import { ChartWrapper, useChart } from 'src/components/chart';
@@ -116,11 +117,10 @@ export default function AccountEditForm({ currentAccount }: Props) {
 
   const viewerRole = (user as any)?.role as string | undefined;
   const viewerId = (user as any)?.accountId || (user as any)?.id;
-  const canEditReadings = viewerRole === 'staff_backoffice';
-  const canEdit =
-    (viewerRole === 'staff_backoffice' &&
-      (currentAccount?.type === 'consumer' || currentAccount?.type === 'staff_field' || currentAccount?.id === viewerId)) ||
-    (viewerRole === 'admin' && currentAccount?.id === viewerId);
+  const currentPermissions = (user as any)?.permissions as string[] | undefined;
+  const hasPermission = (permission: string) => currentPermissions?.includes(permission) ?? false;
+  const canEditReadings = hasPermission(PERMISSIONS.READINGS_UPDATE);
+  const canEdit = hasPermission(PERMISSIONS.ACCOUNTS_UPDATE);
 
   useEffect(() => {
     if (currentAccount) {

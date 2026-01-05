@@ -3,6 +3,7 @@ import { RouterLink } from "src/routes/components";
 import { paths } from "src/routes/paths";
 import { useAuthContext } from "src/auth/hooks";
 import Iconify from "src/components/iconify";
+import { PERMISSIONS } from "src/constants/permissions";
 import { AccountRow, VerificationStatus } from "src/types/accounts";
 
 type Props = {
@@ -21,10 +22,8 @@ export default function AccountTableRow({
     onVerify
 }: Props) {
     const { user } = useAuthContext();
-    const viewerRole = (user as any)?.role as string | undefined;
-    const canViewDetails =
-        (viewerRole === 'staff_backoffice' &&
-            (row.type === 'consumer' || row.type === 'staff_field'));
+    const currentPermissions = (user as any)?.permissions as string[] | undefined;
+    const canViewDetails = currentPermissions?.includes(PERMISSIONS.ACCOUNTS_READ) ?? false;
 
     const {
         id,
