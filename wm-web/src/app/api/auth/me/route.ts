@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { AccountRepository } from "src/repositories/accountRepository";
 import { AuthorizationService } from "src/services/authorizationService";
 import { TokenService } from "src/services/tokenService";
+import { PERMISSIONS } from "src/constants/permissions";
 
 export const GET = async (req: NextRequest) => {
   const authHeader = req.headers.get("authorization");
@@ -26,6 +27,10 @@ export const GET = async (req: NextRequest) => {
   }
 
   const permissions = await AuthorizationService.resolveAccountPermissions(account.id);
+  const allowedAccountRoles = await AuthorizationService.resolveAllowedAccountRoles(
+    account.id,
+    PERMISSIONS.ACCOUNTS_LIST
+  );
   const roles = await AuthorizationService.getRoleSlugsForAccount(account.id);
   const primaryRole = roles[0] ?? 'unknown';
 
@@ -40,6 +45,7 @@ export const GET = async (req: NextRequest) => {
       verificationStatus: account.verificationStatus,
       permissions,
       permissionsVersion: account.permissionsVersion,
+      allowedAccountRoles,
     },
   });
 };

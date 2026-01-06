@@ -7,6 +7,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 // components
 import Iconify from 'src/components/iconify';
 import { useGetRoles } from 'src/api/roles';
+import { useAuthContext } from 'src/auth/hooks';
 // types
 import { IAccountTableFilters, IAccountTableFilterValue } from 'src/types/accounts';
 
@@ -22,15 +23,26 @@ export default function AccountTableToolbar({
     filters,
     onFilters,
 }: Props) {
+    const { user } = useAuthContext();
     const { roles } = useGetRoles();
+    const allowedAccountRoles = Array.isArray(user?.allowedAccountRoles)
+        ? (user?.allowedAccountRoles as string[])
+        : null;
 
     const typeOptions = useMemo(() => {
-        const base = [{ value: '', label: 'All' }, { value: 'staff', label: 'staff' }];
+        const base: { value: string; label: string }[] = [{ value: '', label: 'All' }];
         if (!roles.length) return base;
-        return base.concat(
-            roles.map((role) => ({ value: role.slug, label: role.slug }))
-        );
-    }, [roles]);
+
+        const allowed =
+            allowedAccountRoles && allowedAccountRoles.length
+                ? roles.filter((role) => allowedAccountRoles.includes(role.slug))
+                : roles;
+
+        const hasStaff = allowed.some((role) => role.slug === 'staff_field' || role.slug === 'staff_backoffice');
+        const options = base.concat(hasStaff ? [{ value: 'staff', label: 'staff' }] : []);
+
+        return options.concat(allowed.map((role) => ({ value: role.slug, label: role.slug })));
+    }, [roles, allowedAccountRoles]);
 
     const handleFilterName = useCallback(
         (event: React.ChangeEvent<HTMLInputElement>) => {
