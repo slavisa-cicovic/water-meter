@@ -64,6 +64,9 @@ export const endpoints = {
     list: '/api/roles',
     permissions: (id: string) => `/api/roles/${id}/permissions`,
   },
+  health: {
+    roleLinks: '/api/health/role-links',
+  },
   permissions: {
     list: '/api/permissions',
   },
