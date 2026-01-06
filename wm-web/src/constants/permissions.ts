@@ -31,6 +31,7 @@ export const PERMISSIONS = {
   JOBS_CREATE: 'jobs:create',
   JOBS_UPDATE: 'jobs:update',
   JOBS_BULK_UPDATE: 'jobs:bulk_update',
+  JOBS_DELETE: 'jobs:delete',
   JOBS_RUN: 'jobs:run',
   JOBS_RUNS_LIST: 'jobs:runs_list',
   ROLES_LIST: 'roles:list',

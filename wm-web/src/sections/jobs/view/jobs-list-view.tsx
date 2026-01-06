@@ -49,6 +49,8 @@ import { JobsTableSkeleton } from '../jobs-skeleton';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { paths } from 'src/routes/paths';
 import { JobsRunHistory } from '../jobs-run-history';
+import { useAuthContext } from 'src/auth/hooks';
+import { PERMISSIONS } from 'src/constants/permissions';
 
 const weekdayOptions = [
   { value: 1, label: 'Monday' },
@@ -102,6 +104,13 @@ const TABLE_HEAD = [
 
 export function JobsListView() {
   const settings = useSettingsContext();
+  const { user } = useAuthContext();
+  const userPermissions = (user?.permissions as string[]) || [];
+  const canCreateJob = userPermissions.includes(PERMISSIONS.JOBS_CREATE);
+  const canEditJob = userPermissions.includes(PERMISSIONS.JOBS_UPDATE);
+  const canRunJob = userPermissions.includes(PERMISSIONS.JOBS_RUN);
+  const canBulkUpdateJobs = userPermissions.includes(PERMISSIONS.JOBS_BULK_UPDATE);
+  const canDeleteJobs = userPermissions.includes(PERMISSIONS.JOBS_DELETE);
   const table = useTable({ defaultRowsPerPage: 25, defaultDense: true, defaultOrderBy: 'name', defaultOrder: 'asc' });
   const [filters, setFilters] = useState(defaultFilters);
 
@@ -307,9 +316,11 @@ export function JobsListView() {
       />
 
       <Stack direction="row" alignItems="center" justifyContent="flex-end" sx={{ mb: 3 }}>
-        <Button variant="contained" onClick={openCreate}>
-          New job
-        </Button>
+        {canCreateJob ? (
+          <Button variant="contained" onClick={openCreate}>
+            New job
+          </Button>
+        ) : null}
       </Stack>
 
       <Card>
@@ -340,50 +351,58 @@ export function JobsListView() {
                 numSelected={table.selected.length}
                 onSelectAllRows={(checked) => table.onSelectAllRows(checked, selectableIds)}
                 actions={[
-                  {
-                    key: 'activate',
-                    node: (
-                      <Tooltip title="Activate" arrow>
-                        <span>
-                          <IconButton
-                            color="success"
-                            onClick={() => handleOpenConfirm('activate')}
-                            disabled={!canActivate}
-                          >
-                            <Iconify icon="eva:checkmark-circle-2-fill" />
-                          </IconButton>
-                        </span>
-                      </Tooltip>
-                    ),
-                  },
-                  {
-                    key: 'deactivate',
-                    node: (
-                      <Tooltip title="Deactivate" arrow>
-                        <span>
-                          <IconButton
-                            color="warning"
-                            onClick={() => handleOpenConfirm('deactivate')}
-                            disabled={!canDeactivate}
-                          >
-                            <Iconify icon="eva:slash-outline" />
-                          </IconButton>
-                        </span>
-                      </Tooltip>
-                    ),
-                  },
-                  {
-                    key: 'delete',
-                    node: (
-                      <Tooltip title="Delete" arrow>
-                        <span>
-                          <IconButton color="error" onClick={() => handleOpenConfirm('delete')}>
-                            <Iconify icon="eva:trash-2-outline" />
-                          </IconButton>
-                        </span>
-                      </Tooltip>
-                    ),
-                  },
+                  ...(canBulkUpdateJobs
+                    ? [
+                        {
+                          key: 'activate',
+                          node: (
+                            <Tooltip title="Activate" arrow>
+                              <span>
+                                <IconButton
+                                  color="success"
+                                  onClick={() => handleOpenConfirm('activate')}
+                                  disabled={!canActivate}
+                                >
+                                  <Iconify icon="eva:checkmark-circle-2-fill" />
+                                </IconButton>
+                              </span>
+                            </Tooltip>
+                          ),
+                        },
+                        {
+                          key: 'deactivate',
+                          node: (
+                            <Tooltip title="Deactivate" arrow>
+                              <span>
+                                <IconButton
+                                  color="warning"
+                                  onClick={() => handleOpenConfirm('deactivate')}
+                                  disabled={!canDeactivate}
+                                >
+                                  <Iconify icon="eva:slash-outline" />
+                                </IconButton>
+                              </span>
+                            </Tooltip>
+                          ),
+                        },
+                      ]
+                    : []),
+                  ...(canDeleteJobs
+                    ? [
+                        {
+                          key: 'delete',
+                          node: (
+                            <Tooltip title="Delete" arrow>
+                              <span>
+                                <IconButton color="error" onClick={() => handleOpenConfirm('delete')}>
+                                  <Iconify icon="eva:trash-2-outline" />
+                                </IconButton>
+                              </span>
+                            </Tooltip>
+                          ),
+                        },
+                      ]
+                    : []),
                 ]}
               />
               <Table size="small" sx={{ minWidth: 960 }}>
@@ -415,6 +434,8 @@ export function JobsListView() {
                             onRun={handleRunNow}
                             onToggleDetails={handleToggleDetails}
                             expanded={expandedJobId === job.id}
+                            canEdit={canEditJob}
+                            canRun={canRunJob}
                           />
                           <TableRow>
                             <TableCell colSpan={columnsCount} sx={{ p: 0, borderBottom: 0 }}>

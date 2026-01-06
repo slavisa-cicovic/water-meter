@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PERMISSIONS } from 'src/constants/permissions';
 import { withPermission } from 'src/services/permissionGuard';
+import { requirePermission } from 'src/services/authPermissionGuard';
 import { JobsService, validateJobInput } from 'src/services/jobsService';
 
 export const GET = withPermission(PERMISSIONS.JOBS_LIST, async (req: NextRequest) => {
@@ -41,7 +42,7 @@ export const POST = withPermission(PERMISSIONS.JOBS_CREATE, async (req: NextRequ
   return NextResponse.json(result.data);
 });
 
-export const PATCH = withPermission(PERMISSIONS.JOBS_BULK_UPDATE, async (req: NextRequest) => {
+export const PATCH = async (req: NextRequest) => {
   const body = await req.json();
   if (!body?.ids || !Array.isArray(body.ids) || !body.action) {
     return NextResponse.json({ success: false, error: 'VALIDATION_FAILED' }, { status: 400 });
@@ -51,10 +52,16 @@ export const PATCH = withPermission(PERMISSIONS.JOBS_BULK_UPDATE, async (req: Ne
     return NextResponse.json({ success: false, error: 'UNSUPPORTED_ACTION' }, { status: 400 });
   }
 
+  const permissionSlug = body.action === 'delete' ? PERMISSIONS.JOBS_DELETE : PERMISSIONS.JOBS_BULK_UPDATE;
+  const guard = await requirePermission(req, permissionSlug);
+  if (!guard.ok) {
+    return guard.response;
+  }
+
   const result = await JobsService.bulkUpdate(body.ids, body.action);
   if (!result.success) {
     return NextResponse.json({ success: false, error: result.error }, { status: 400 });
   }
 
   return NextResponse.json(result.data);
-});
+};

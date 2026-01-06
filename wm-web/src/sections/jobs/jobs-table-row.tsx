@@ -13,6 +13,8 @@ type Props = {
   onToggleDetails: (jobId: string) => void;
   expanded?: boolean;
   selectable?: boolean;
+  canEdit?: boolean;
+  canRun?: boolean;
 };
 
 const formatTime = (hour: number, minute: number) =>
@@ -48,6 +50,8 @@ export function JobsTableRow({
   onToggleDetails,
   expanded = false,
   selectable = true,
+  canEdit = true,
+  canRun = true,
 }: Props) {
   return (
     <TableRow hover>
@@ -81,15 +85,17 @@ export function JobsTableRow({
           </Tooltip>
           <Tooltip title="Run now">
             <span>
-              <IconButton size="small" onClick={() => onRun(row)} disabled={!row.enabled}>
+              <IconButton size="small" onClick={() => onRun(row)} disabled={!row.enabled || !canRun}>
                 <PlayArrowIcon fontSize="small" />
               </IconButton>
             </span>
           </Tooltip>
           <Tooltip title="Edit">
-            <IconButton size="small" onClick={() => onEdit(row)}>
+            <span>
+              <IconButton size="small" onClick={() => onEdit(row)} disabled={!canEdit}>
               <EditIcon fontSize="small" />
             </IconButton>
+            </span>
           </Tooltip>
         </Stack>
       </TableCell>
