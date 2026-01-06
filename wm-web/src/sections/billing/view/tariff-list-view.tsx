@@ -21,6 +21,7 @@ import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
 import EmptyContent from 'src/components/empty-content';
 import Iconify from 'src/components/iconify';
 import { TariffsApi, useGetTariffs } from 'src/api/billing';
+import { useGetSettings } from 'src/api/settings';
 import { RouterLink } from 'src/routes/components';
 import { paths } from 'src/routes/paths';
 import { Tariff } from 'src/types/billings';
@@ -78,6 +79,7 @@ const sortTariffs = (tariffs: Tariff[], orderBy: string, order: 'asc' | 'desc') 
 
 export function TariffListView() {
   const settings = useSettingsContext();
+  const { settings: appSettings } = useGetSettings();
   const [filters, setFilters] = useState(defaultFilters);
   const [confirmAction, setConfirmAction] = useState<'delete' | 'activate' | 'deactivate' | null>(null);
   const table = useTable({ defaultRowsPerPage: 25, defaultDense: true, defaultOrderBy: 'name', defaultOrder: 'asc' });
@@ -268,6 +270,7 @@ export function TariffListView() {
                           row={row}
                           selected={table.selected.includes(row.id)}
                           onSelectRow={() => table.onSelectRow(row.id)}
+                          currency={appSettings?.currency}
                         />
                       ))}
                   <TableNoData notFound={notFound} />

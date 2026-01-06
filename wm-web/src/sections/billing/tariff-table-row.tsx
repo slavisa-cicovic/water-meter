@@ -3,12 +3,14 @@ import Iconify from 'src/components/iconify';
 import { Tariff } from 'src/types/billings';
 import { RouterLink } from 'src/routes/components';
 import { paths } from 'src/routes/paths';
+import { formatCurrencyValue } from 'src/utils/format-currency';
 
 type Props = {
   row: Tariff;
   selected?: boolean;
   onSelectRow?: VoidFunction;
   selectable?: boolean;
+  currency?: string | null;
 };
 
 const toDate = (value?: string | null) => {
@@ -21,7 +23,7 @@ const toDate = (value?: string | null) => {
   return `${yyyy}-${mm}-${dd}`;
 };
 
-export function TariffTableRow({ row, selected, onSelectRow, selectable = true }: Props) {
+export function TariffTableRow({ row, selected, onSelectRow, selectable = true, currency }: Props) {
   const isActive = row.status !== 'inactive';
   return (
     <TableRow hover>
@@ -36,7 +38,7 @@ export function TariffTableRow({ row, selected, onSelectRow, selectable = true }
           </Typography>
         </Stack>
       </TableCell>
-      <TableCell sx={{ width: 120 }}>{row.basePrice}</TableCell>
+      <TableCell sx={{ width: 120 }}>{formatCurrencyValue(row.basePrice, currency)}</TableCell>
       <TableCell sx={{ width: 160 }}>
         {row.greenLimit} / {row.blueLimit}
       </TableCell>

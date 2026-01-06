@@ -14,6 +14,7 @@ import { Invoice } from 'src/types/billings';
 import { RouterLink } from 'src/routes/components';
 import { paths } from 'src/routes/paths';
 import { ReadingsReviewDialog } from 'src/components/billing/readings-review-dialog';
+import { formatCurrencyValue } from 'src/utils/format-currency';
 
 type Props = {
   row: Invoice;
@@ -22,9 +23,18 @@ type Props = {
   selectable?: boolean;
   onReviewed?: VoidFunction;
   isShared?: boolean;
+  currency?: string | null;
 };
 
-export function BillingTableRow({ row, selected, onSelectRow, selectable = true, onReviewed, isShared = false }: Props) {
+export function BillingTableRow({
+  row,
+  selected,
+  onSelectRow,
+  selectable = true,
+  onReviewed,
+  isShared = false,
+  currency,
+}: Props) {
   const toLocalDate = (value?: string | null) => {
     if (!value) return '';
     const date = new Date(value);
@@ -72,7 +82,7 @@ export function BillingTableRow({ row, selected, onSelectRow, selectable = true,
         <TableCell sx={{ width: 160 }}>{row.createdAt?.slice(0, 10) || '-'}</TableCell>
         <TableCell sx={{ width: 160 }}>{row.updatedAt?.slice(0, 10) || '-'}</TableCell>
         <TableCell sx={{ width: 120 }}>{row.consumption}</TableCell>
-        <TableCell sx={{ width: 140 }}>{row.totalAmount}</TableCell>
+        <TableCell sx={{ width: 140 }}>{formatCurrencyValue(row.totalAmount, currency)}</TableCell>
         <TableCell sx={{ width: 120 }}>
           <Chip
             size="small"

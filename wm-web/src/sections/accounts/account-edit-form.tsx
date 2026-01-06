@@ -34,6 +34,7 @@ import Tooltip from '@mui/material/Tooltip';
 import { useRouter } from 'src/routes/hooks';
 import { paths } from 'src/routes/paths';
 import { formatReadingValue, roundReadingValue } from 'src/utils/reading-format';
+import { formatCurrencyValue } from 'src/utils/format-currency';
 // locales
 import { useLocales } from 'src/locales';
 // hooks
@@ -77,6 +78,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
   const mdUp = useResponsive('up', 'md');
   const { user } = useAuthContext();
   const { tariffs, tariffsLoading } = useGetTariffs();
+  const { settings: appSettings } = useGetSettings();
 
   const AccountSchema = Yup.object().shape({
     firstName: Yup.string().required('Required'),
@@ -369,12 +371,12 @@ export default function AccountEditForm({ currentAccount }: Props) {
         xaxis: { categories: billingChartData.categories },
         tooltip: {
           y: {
-            formatter: (value: number) => value.toFixed(2),
+            formatter: (value: number) => formatCurrencyValue(value, appSettings?.currency),
             title: { formatter: () => 'Total' },
           },
         },
       }),
-      [billingChartData.categories]
+      [appSettings?.currency, billingChartData.categories]
     )
   );
 
@@ -396,7 +398,6 @@ export default function AccountEditForm({ currentAccount }: Props) {
     return 'warning';
   };
 
-  const { settings: appSettings } = useGetSettings();
   const effectiveDate = useMemo(() => {
     const now = new Date();
     if (appSettings?.currentDateMode !== 'manual' || !appSettings.currentDateValue) return now;
@@ -641,7 +642,9 @@ export default function AccountEditForm({ currentAccount }: Props) {
                       return (
                         <TableRow key={bucket.key}>
                           <TableCell sx={{ width: 180 }}>{bucket.label}</TableCell>
-                          <TableCell sx={{ width: 120 }}>{bucket.total.toFixed(2)}</TableCell>
+                          <TableCell sx={{ width: 120 }}>
+                            {formatCurrencyValue(bucket.total, appSettings?.currency)}
+                          </TableCell>
                           <TableCell sx={{ width: 120 }}>
                             {status ? (
                               <Chip
@@ -895,7 +898,9 @@ export default function AccountEditForm({ currentAccount }: Props) {
                       <Typography variant="body2" color="text.secondary">
                         {line.description || line.type}
                       </Typography>
-                      <Typography variant="body2">{line.amount}</Typography>
+                      <Typography variant="body2">
+                        {formatCurrencyValue(line.amount, appSettings?.currency)}
+                      </Typography>
                     </Stack>
                   ))}
                 </Stack>

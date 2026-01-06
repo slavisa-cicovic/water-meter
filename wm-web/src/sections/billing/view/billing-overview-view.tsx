@@ -22,6 +22,7 @@ import { TableHeadCustom, TableNoData, TablePaginationCustom, TableSelectedActio
 import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
 import { ConfirmDialog } from 'src/components/custom-dialog';
 import { BillingApi, useGetInvoices } from 'src/api/billing';
+import { useGetSettings } from 'src/api/settings';
 import { RouterLink } from 'src/routes/components';
 import { paths } from 'src/routes/paths';
 import { BillingTableFiltersResult } from '../billing-table-filters-result';
@@ -66,6 +67,7 @@ const TABLE_HEAD = [
 
 export function BillingOverviewView() {
   const settings = useSettingsContext();
+  const { settings: appSettings } = useGetSettings();
   const searchParams = useSearchParams();
   const statusParam = searchParams.get('status') ?? '';
   const reviewParam = searchParams.get('review') ?? '';
@@ -247,6 +249,7 @@ export function BillingOverviewView() {
                         isShared={
                           (sharedByMeterPeriod.get(`${row.meterId || ''}|${row.periodStart || ''}|${row.periodEnd || ''}`) || 0) > 1
                         }
+                        currency={appSettings?.currency}
                       />
                     ))}
                   <TableNoData notFound={notFound} />

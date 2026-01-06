@@ -3,11 +3,13 @@
 import { Alert, Card, CardContent, Container, Stack, Table, TableBody, TableCell, TableContainer, TableRow, Typography } from '@mui/material';
 import { useSettingsContext } from 'src/components/settings';
 import { useGetInvoice } from 'src/api/billing';
+import { useGetSettings } from 'src/api/settings';
 import EmptyContent from 'src/components/empty-content';
 import { useMemo } from 'react';
 import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
 import { paths } from 'src/routes/paths';
 import { formatReadingValue } from 'src/utils/reading-format';
+import { formatCurrencyValue } from 'src/utils/format-currency';
 
 type Props = {
   id: string;
@@ -16,6 +18,7 @@ type Props = {
 export function InvoiceDetailView({ id }: Props) {
   const settings = useSettingsContext();
   const { invoice, invoiceLoading, invoiceError } = useGetInvoice(id);
+  const { settings: appSettings } = useGetSettings();
 
   const readings = useMemo(() => {
     const links = (invoice as any)?.readings || [];
@@ -54,10 +57,16 @@ export function InvoiceDetailView({ id }: Props) {
                   Period: {invoice.periodStart?.slice(0, 10)} → {invoice.periodEnd?.slice(0, 10)}
                 </Typography>
                 <Typography variant="body2">Consumption: {invoice.consumption}</Typography>
-                <Typography variant="body2">Unit price: {invoice.unitPrice}</Typography>
-                <Typography variant="body2">Subtotal: {invoice.subtotal}</Typography>
-                <Typography variant="body2">VAT: {invoice.vatAmount}</Typography>
-                <Typography variant="body2">Total: {invoice.totalAmount}</Typography>
+                <Typography variant="body2">
+                  Unit price: {formatCurrencyValue(invoice.unitPrice, appSettings?.currency)}
+                </Typography>
+                <Typography variant="body2">
+                  Subtotal: {formatCurrencyValue(invoice.subtotal, appSettings?.currency)}
+                </Typography>
+                <Typography variant="body2">VAT: {formatCurrencyValue(invoice.vatAmount, appSettings?.currency)}</Typography>
+                <Typography variant="body2">
+                  Total: {formatCurrencyValue(invoice.totalAmount, appSettings?.currency)}
+                </Typography>
                 <Typography variant="body2">Status: {invoice.status}</Typography>
               </Stack>
             </CardContent>
@@ -76,8 +85,12 @@ export function InvoiceDetailView({ id }: Props) {
                         <TableCell sx={{ width: 160 }}>{line.type}</TableCell>
                         <TableCell>{line.description || '-'}</TableCell>
                         <TableCell sx={{ width: 120 }}>{line.quantity ?? '-'}</TableCell>
-                        <TableCell sx={{ width: 120 }}>{line.unitPrice ?? '-'}</TableCell>
-                        <TableCell sx={{ width: 120 }}>{line.amount}</TableCell>
+                        <TableCell sx={{ width: 120 }}>
+                          {formatCurrencyValue(line.unitPrice, appSettings?.currency)}
+                        </TableCell>
+                        <TableCell sx={{ width: 120 }}>
+                          {formatCurrencyValue(line.amount, appSettings?.currency)}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
