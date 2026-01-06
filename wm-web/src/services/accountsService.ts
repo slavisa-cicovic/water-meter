@@ -17,29 +17,43 @@ import {
 import { AccountRepository } from 'src/repositories/accountRepository';
 import { BillingRepository } from 'src/repositories/billingRepository';
 import { MeterRepository } from 'src/repositories/meterRepository';
-import { AccountRole, Prisma, StaffRole } from '@prisma/client';
+import { Prisma, StaffRole } from '@prisma/client';
 import prisma from 'src/utils/prisma';
 import { AuthorizationService } from './authorizationService';
 import { PERMISSIONS } from 'src/constants/permissions';
 
-const toAccountRole = async (staffRole?: StaffRole) => {
-  if (!staffRole) return AccountRole.staff_field;
+const toAccountRoleSlug = async (staffRole?: StaffRole) => {
+  if (!staffRole) return 'staff_field';
   const role = await prisma.role.findFirst({
     where: { staffRole } as any,
     select: { slug: true },
   });
 
-  if (role && (Object.values(AccountRole) as string[]).includes(role.slug)) {
-    return role.slug as AccountRole;
-  }
+  if (role?.slug) return role.slug;
 
-  return staffRole === 'backoffice' ? AccountRole.staff_backoffice : AccountRole.staff_field;
+  return staffRole === 'backoffice' ? 'staff_backoffice' : 'staff_field';
 };
 
 type AccountWithProfiles = Prisma.AccountGetPayload<{
-  include: { consumerProfile: true; staffProfile: true; verificationLogs: true };
+  include: {
+    consumerProfile: true;
+    staffProfile: true;
+    verificationLogs: true;
+    accountRoleLinks: { include: { role: { select: { slug: true } } } };
+  };
 }> & {
   avatarUrl?: string | null;
+};
+
+const getAccountRoleSlugs = (acct: AccountWithProfiles) => {
+  if (acct.accountRoleLinks?.length) {
+    return acct.accountRoleLinks
+      .map((link) => link.role?.slug)
+      .filter((slug): slug is string => Boolean(slug))
+      .sort();
+  }
+
+  return [];
 };
 
 const mapAccountToRow = (acct: AccountWithProfiles): AccountRow => {
@@ -68,7 +82,9 @@ const mapAccountToRow = (acct: AccountWithProfiles): AccountRow => {
     })),
   };
 
-  if (acct.role === 'consumer') {
+  const roleSlugs = getAccountRoleSlugs(acct);
+  const primaryRole = roleSlugs[0] ?? 'unknown';
+  if (roleSlugs.includes('consumer')) {
     return {
       ...base,
       type: 'consumer',
@@ -77,9 +93,14 @@ const mapAccountToRow = (acct: AccountWithProfiles): AccountRow => {
 
   return {
     ...base,
-    type: acct.role,
+    type: primaryRole,
     ...(acct.avatarUrl ? { avatar: acct.avatarUrl } : {}),
   };
+};
+
+const resolveRoleId = async (slug: string) => {
+  const role = await prisma.role.findUnique({ where: { slug }, select: { id: true } });
+  return role?.id ?? null;
 };
 
 export const AccountsService = {
@@ -90,6 +111,10 @@ export const AccountsService = {
     }
 
     try {
+      const roleId = await resolveRoleId('consumer');
+      if (!roleId) {
+        return { success: false, error: 'ROLE_NOT_FOUND' };
+      }
       const account = await AccountRepository.createConsumer({
         firstName: input.firstName,
         lastName: input.lastName,
@@ -98,6 +123,7 @@ export const AccountsService = {
         address: input.address,
         password: input.password, // TODO: hash password
         householdSize: input.householdSize,
+        roleId,
       });
 
       return {
@@ -108,6 +134,7 @@ export const AccountsService = {
           token: TokenService.issueAccountToken({
             id: account.id,
             role: 'consumer',
+            roles: ['consumer'],
             verificationStatus: account.verificationStatus as VerificationStatus,
             permissionsVersion: account.permissionsVersion,
           }),
@@ -128,7 +155,11 @@ export const AccountsService = {
     }
 
     try {
-      const role = await toAccountRole(input.staffRole);
+      const roleSlug = await toAccountRoleSlug(input.staffRole);
+      const roleId = await resolveRoleId(roleSlug);
+      if (!roleId) {
+        return { success: false, error: 'ROLE_NOT_FOUND' };
+      }
       const account = await AccountRepository.createStaff({
         firstName: input.firstName,
         lastName: input.lastName,
@@ -137,7 +168,7 @@ export const AccountsService = {
         address: input.address,
         password: input.password, // TODO: hash password
         staffRole: input.staffRole,
-        role,
+        roleId,
       });
 
       return {
@@ -147,7 +178,8 @@ export const AccountsService = {
           verificationStatus: account.verificationStatus as VerificationStatus,
           token: TokenService.issueAccountToken({
             id: account.id,
-            role: account.role,
+            role: roleSlug,
+            roles: [roleSlug],
             verificationStatus: account.verificationStatus as VerificationStatus,
             permissionsVersion: account.permissionsVersion,
           }),
@@ -163,7 +195,7 @@ export const AccountsService = {
 
   async verify(
     action: VerificationAction,
-    options: { viewerAccountId?: string } = {}
+    options: { viewerAccountId?: string; permissionSlug?: string } = {}
   ): Promise<{ success: boolean; error?: string; details?: any; data?: VerificationResponse }> {
     const validation = validateVerificationAction(action);
     if (!validation.valid) {
@@ -180,9 +212,10 @@ export const AccountsService = {
       if (options.viewerAccountId) {
         const allowedRoles = await AuthorizationService.resolveAllowedAccountRoles(
           options.viewerAccountId,
-          PERMISSIONS.ACCOUNTS_VERIFY
+          options.permissionSlug ?? PERMISSIONS.ACCOUNTS_VERIFY
         );
-        if (allowedRoles && !allowedRoles.includes(account.role)) {
+        const accountRoles = getAccountRoleSlugs(account);
+        if (allowedRoles && !allowedRoles.some((role) => accountRoles.includes(role))) {
           return { success: false, error: 'FORBIDDEN' };
         }
       }
@@ -208,6 +241,8 @@ export const AccountsService = {
       );
 
       const auditEntry = updated.verificationLogs[0];
+      const roles = await AuthorizationService.getRoleSlugsForAccount(updated.id);
+      const primaryRole = roles[0] ?? 'unknown';
 
       return {
         success: true,
@@ -224,7 +259,8 @@ export const AccountsService = {
           },
           token: TokenService.issueAccountToken({
             id: updated.id,
-            role: updated.role,
+            role: primaryRole,
+            roles,
             verificationStatus: updated.verificationStatus as VerificationStatus,
             permissionsVersion: updated.permissionsVersion,
           }),
@@ -247,16 +283,18 @@ export const AccountsService = {
   } = {}): Promise<{ accounts: AccountRow[]; total: number }> {
     const { viewerAccountId, ...rest } = params;
 
-    const typeRoles: AccountRole[] | null = rest.type
+    const typeRoles: string[] | null = rest.type
       ? rest.type === 'consumer'
-        ? [AccountRole.consumer]
+        ? ['consumer']
         : rest.type === 'staff'
-        ? [AccountRole.staff_field, AccountRole.staff_backoffice]
+        ? ['staff_field', 'staff_backoffice']
         : rest.type === 'admin'
-        ? [AccountRole.admin]
+        ? ['admin']
         : rest.type === 'staff_backoffice'
-        ? [AccountRole.staff_backoffice]
-        : [AccountRole.staff_field]
+        ? ['staff_backoffice']
+        : rest.type === 'staff_field'
+        ? ['staff_field']
+        : [rest.type]
       : null;
 
     const permissionRoles = viewerAccountId
@@ -291,7 +329,8 @@ export const AccountsService = {
         viewerAccountId,
         PERMISSIONS.ACCOUNTS_READ
       );
-      if (allowedRoles && !allowedRoles.includes(acct.role)) {
+      const accountRoles = getAccountRoleSlugs(acct);
+      if (allowedRoles && !allowedRoles.some((role) => accountRoles.includes(role))) {
         return null;
       }
     }
@@ -314,7 +353,8 @@ export const AccountsService = {
         viewerAccountId,
         PERMISSIONS.ACCOUNTS_READ
       );
-      if (allowedRoles && !allowedRoles.includes(acct.role)) {
+      const accountRoles = getAccountRoleSlugs(acct);
+      if (allowedRoles && !allowedRoles.some((role) => accountRoles.includes(role))) {
         return { account: null, error: 'FORBIDDEN' };
       }
     }
@@ -338,7 +378,8 @@ export const AccountsService = {
         options.viewerAccountId,
         PERMISSIONS.ACCOUNTS_UPDATE
       );
-      if (allowedRoles && !allowedRoles.includes(account.role)) {
+      const accountRoles = getAccountRoleSlugs(account);
+      if (allowedRoles && !allowedRoles.some((role) => accountRoles.includes(role))) {
         return { success: false, error: 'FORBIDDEN' };
       }
     } else if (options.viewerId) {
@@ -348,7 +389,8 @@ export const AccountsService = {
     const normalizedTariffId =
       typeof input.tariffId === 'string' ? (input.tariffId.trim() ? input.tariffId.trim() : null) : input.tariffId;
 
-    if (normalizedTariffId !== undefined && account.role !== 'consumer') {
+    const accountRoles = getAccountRoleSlugs(account);
+    if (normalizedTariffId !== undefined && !accountRoles.includes('consumer')) {
       return { success: false, error: 'INVALID_TARIFF_ASSIGNMENT' };
     }
 
@@ -365,11 +407,11 @@ export const AccountsService = {
       address: input.address,
     });
 
-    if (account.role === 'consumer' && normalizedTariffId !== undefined) {
+    if (accountRoles.includes('consumer') && normalizedTariffId !== undefined) {
       await AccountRepository.updateConsumerProfile(id, { tariffId: normalizedTariffId ?? null });
     }
 
-    if (account.role === 'consumer' && input.updateMeterAddress) {
+    if (accountRoles.includes('consumer') && input.updateMeterAddress) {
       const meters = await MeterRepository.listByConsumer(id);
       await Promise.all(meters.map((meter) => MeterRepository.update({ id: meter.id, address: input.address })));
     }

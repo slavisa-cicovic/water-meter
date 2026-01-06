@@ -18,6 +18,9 @@ import { useSettingsContext } from "src/components/settings";
 import { SettingsApi, useGetSettings } from "src/api/settings";
 import { CurrentDateMode, SettingsUpdateInput } from "src/types/settings";
 import { paths } from "src/routes/paths";
+import RoleBasedGuard from "src/auth/guard/role-based-guard";
+import { PERMISSIONS } from "src/constants/permissions";
+import RolePermissionsManager from "../role-permissions-manager";
 
 const formatDateLabel = (value: string | null) => value ?? "-";
 
@@ -193,6 +196,12 @@ export function SettingsView() {
             </CardContent>
           </Card>
       </Box>
+
+      <RoleBasedGuard permissions={[PERMISSIONS.ROLES_UPDATE]} sx={{ mt: 3 }}>
+        <Box sx={{ mt: 3 }}>
+          <RolePermissionsManager />
+        </Box>
+      </RoleBasedGuard>
     </Container>
   );
 }

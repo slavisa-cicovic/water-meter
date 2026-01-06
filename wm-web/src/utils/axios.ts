@@ -62,6 +62,10 @@ export const endpoints = {
   },
   roles: {
     list: '/api/roles',
+    permissions: (id: string) => `/api/roles/${id}/permissions`,
+  },
+  permissions: {
+    list: '/api/permissions',
   },
   notifications: {
     summary: '/api/notifications',

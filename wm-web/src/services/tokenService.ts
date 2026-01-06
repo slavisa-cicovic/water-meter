@@ -1,17 +1,19 @@
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { JWT_EXPIRES_IN, JWT_SECRET } from 'src/config-global';
-import { AccountRole, AccountTokenPayload, VerificationStatus } from 'src/types/accounts';
+import { AccountTokenPayload, VerificationStatus } from 'src/types/accounts';
 
 export const TokenService = {
   issueAccountToken(account: {
     id: string;
-    role: AccountRole;
+    role: string;
+    roles?: string[];
     verificationStatus: VerificationStatus;
     permissionsVersion: number;
   }) {
     const payload: AccountTokenPayload = {
       accountId: account.id,
       role: account.role,
+      ...(account.roles ? { roles: account.roles } : {}),
       verificationStatus: account.verificationStatus,
       permissionsVersion: account.permissionsVersion,
       issuedAt: new Date().toISOString(),

@@ -1,5 +1,4 @@
 import {
-  AccountRole,
   AccountUpdateInput,
   ConsumerRegistrationInput,
   StaffRegistrationInput,
@@ -83,13 +82,6 @@ const validateVerificationStatus = (status: VerificationStatus, errors: Record<s
   }
 };
 
-const validateAccountRole = (role: AccountRole, errors: Record<string, string[]>) => {
-  const allowed: AccountRole[] = ['consumer', 'staff_field', 'staff_backoffice'];
-  if (!allowed.includes(role)) {
-    pushError(errors, 'role', 'Invalid account role');
-  }
-};
-
 export const validateConsumerRegistration = (input: ConsumerRegistrationInput): ValidationResult => {
   const errors: Record<string, string[]> = {};
 
@@ -147,5 +139,3 @@ export const validateAccountUpdate = (input: AccountUpdateInput): ValidationResu
 
   return { valid: Object.keys(errors).length === 0, errors };
 };
-
-export { validateAccountRole };

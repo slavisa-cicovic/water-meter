@@ -7,13 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum AccountRole {
-  admin
-  consumer
-  staff_field
-  staff_backoffice
-}
-
 enum VerificationStatus {
   pending
   verified
@@ -134,7 +127,6 @@ model Account {
   phone              String?             @unique
   address            String
   passwordHash       String
-  role               AccountRole
   permissionsVersion Int                 @default(1)
   verificationStatus VerificationStatus   @default(pending)
   createdAt          DateTime            @default(now())
@@ -149,6 +141,7 @@ model Account {
   invoices         Invoice[]
   invoiceOverrideLogs InvoiceOverrideLog[]
   accountRoleLinks AccountRoleLink[]
+  rolePermissionAuditLogs RolePermissionAuditLog[]
 }
 
 model ConsumerProfile {
@@ -194,6 +187,7 @@ model Role {
 
   rolePermissions RolePermission[]
   accountRoleLinks AccountRoleLink[]
+  rolePermissionAuditLogs RolePermissionAuditLog[]
 }
 
 model Permission {
@@ -220,6 +214,21 @@ model RolePermission {
 
   @@id([roleId, permissionId])
   @@index([permissionId])
+}
+
+model RolePermissionAuditLog {
+  id        String   @id @default(uuid())
+  actorId   String
+  roleId    String
+  before    Json
+  after     Json
+  createdAt DateTime @default(now())
+
+  actor Account @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  role  Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@index([actorId])
+  @@index([roleId])
 }
 
 model AccountRoleLink {
@@ -296,7 +305,7 @@ model ReadingEdit {
   id          String      @id @default(uuid())
   readingId   String
   accountId   String
-  editorRole  AccountRole
+  editorRole  String
   value       Decimal     @db.Decimal(12, 2)
   reason      String?     @db.Text
   editedAt    DateTime    @default(now())

@@ -26,6 +26,8 @@ export const GET = async (req: NextRequest) => {
   }
 
   const permissions = await AuthorizationService.resolveAccountPermissions(account.id);
+  const roles = await AuthorizationService.getRoleSlugsForAccount(account.id);
+  const primaryRole = roles[0] ?? 'unknown';
 
   return NextResponse.json({
     user: {
@@ -33,7 +35,8 @@ export const GET = async (req: NextRequest) => {
       firstName: account.firstName,
       lastName: account.lastName,
       email: account.email,
-      role: account.role,
+      role: primaryRole,
+      roles,
       verificationStatus: account.verificationStatus,
       permissions,
       permissionsVersion: account.permissionsVersion,

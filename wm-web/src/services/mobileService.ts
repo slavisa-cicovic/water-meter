@@ -10,9 +10,10 @@ import {
   MobileStaffMetersData,
 } from "src/types/mobile";
 import { validateMobileProfileUpdate } from "src/validation/mobile";
-import { AccountRole, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { ReadingsService } from "src/services/readingsService";
 import { Reading, ReadingCreateInput } from "src/types/readings";
+import { AuthorizationService } from "src/services/authorizationService";
 
 type ServiceResult<T> = { success: true; data: T } | { success: false; error: string; details?: Record<string, string[]> };
 
@@ -142,8 +143,9 @@ export const MobileService = {
     return { success: true, data: { hasIssuedInvoice } };
   },
 
-  async getStaffMeters(role: AccountRole): Promise<ServiceResult<MobileStaffMetersData>> {
-    if (role !== "staff_field") {
+  async getStaffMeters(accountId: string): Promise<ServiceResult<MobileStaffMetersData>> {
+    const roles = await AuthorizationService.getRoleSlugsForAccount(accountId);
+    if (!roles.includes("staff_field")) {
       return { success: false, error: "FORBIDDEN" };
     }
     const meters = await MobileRepository.listMetersWithConsumersForField();
@@ -152,10 +154,10 @@ export const MobileService = {
 
   async getReadingContext(
     accountId: string,
-    role: AccountRole,
     meterId?: string
   ): Promise<ServiceResult<MobileReadingContext>> {
-    if (role === "staff_field") {
+    const roles = await AuthorizationService.getRoleSlugsForAccount(accountId);
+    if (roles.includes("staff_field")) {
       if (!meterId) {
         const meters = await MobileRepository.listMetersForField();
         return { success: true, data: { meter: null, previousPaidValue: 0, meters } };

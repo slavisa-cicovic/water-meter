@@ -1,5 +1,4 @@
 import prisma from 'src/utils/prisma';
-import { AccountRole } from '@prisma/client';
 
 export const AuthorizationService = {
   async resolveAccountPermissions(accountId: string) {
@@ -47,16 +46,27 @@ export const AuthorizationService = {
       select: { conditions: true },
     });
 
-    const allowedRoles = new Set<AccountRole>();
+    const allowedRoles = new Set<string>();
+    let hasUnrestricted = false;
     for (const rolePermission of rolePermissions) {
-      const conditions = rolePermission.conditions as { accountRoles?: AccountRole[] } | null;
-      if (conditions?.accountRoles?.length) {
-        for (const role of conditions.accountRoles) {
+      const conditions = rolePermission.conditions as
+        | { accounts?: { visibility?: { allowedRoles?: string[] } }; accountRoles?: string[] }
+        | null;
+      const allowedRoleSlugs =
+        conditions?.accounts?.visibility?.allowedRoles ??
+        conditions?.accountRoles?.map((role) => role.toString());
+      if (!allowedRoleSlugs || allowedRoleSlugs.length === 0) {
+        hasUnrestricted = true;
+        continue;
+      }
+      if (allowedRoleSlugs.length) {
+        for (const role of allowedRoleSlugs) {
           allowedRoles.add(role);
         }
       }
     }
 
+    if (hasUnrestricted) return null;
     return allowedRoles.size ? Array.from(allowedRoles) : null;
   },
 
@@ -66,22 +76,16 @@ export const AuthorizationService = {
       select: { roleId: true },
     });
 
-    if (roleLinks.length) {
-      return roleLinks.map((link) => link.roleId);
-    }
+    return roleLinks.map((link) => link.roleId);
+  },
 
-    const account = await prisma.account.findUnique({
-      where: { id: accountId },
-      select: { role: true },
+  async getRoleSlugsForAccount(accountId: string) {
+    const roleLinks = await prisma.accountRoleLink.findMany({
+      where: { accountId },
+      orderBy: { role: { slug: 'asc' } },
+      select: { role: { select: { slug: true } } },
     });
 
-    if (!account) return [];
-
-    const role = await prisma.role.findUnique({
-      where: { slug: account.role },
-      select: { id: true },
-    });
-
-    return role ? [role.id] : [];
+    return roleLinks.map((link) => link.role.slug).filter((slug): slug is string => Boolean(slug));
   },
 };

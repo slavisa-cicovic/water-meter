@@ -94,7 +94,8 @@ export const MetersService = {
 
     const account = await AccountRepository.findById(input.accountId);
     if (!account) return { success: false, error: 'ACCOUNT_NOT_FOUND' };
-    if (account.role !== 'consumer') return { success: false, error: 'CONSUMER_ONLY' };
+    const accountRoles = account.accountRoleLinks?.map((link) => link.role?.slug).filter(Boolean) ?? [];
+    if (!accountRoles.includes('consumer')) return { success: false, error: 'CONSUMER_ONLY' };
 
     try {
       await MeterRepository.addConsumerLink(input.meterId, input.accountId);

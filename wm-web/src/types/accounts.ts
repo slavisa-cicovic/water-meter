@@ -1,6 +1,6 @@
 export type VerificationStatus = 'pending' | 'verified' | 'rejected';
 
-export type AccountRole = 'admin' | 'consumer' | 'staff_field' | 'staff_backoffice';
+export type AccountRole = string;
 
 export type StaffRole = 'field' | 'backoffice';
 
@@ -28,13 +28,13 @@ export type BaseAccount = {
 };
 
 export type ConsumerAccount = BaseAccount & {
-  role: 'consumer';
+  role: string;
   householdSize: number;
   avatar?: never;
 };
 
 export type StaffAccount = BaseAccount & {
-  role: 'admin' | 'staff_field' | 'staff_backoffice';
+  role: string;
   staffRole: StaffRole;
   avatar?: string;
 };
@@ -90,6 +90,7 @@ export type AccountUpdateInput = {
 export type AccountTokenPayload = {
   accountId: string;
   role: AccountRole;
+  roles?: string[];
   verificationStatus: VerificationStatus;
   permissionsVersion: number;
   issuedAt: string;
@@ -97,7 +98,7 @@ export type AccountTokenPayload = {
 
 type BaseAccountRow = {
   id: string;
-  type: AccountRole;
+  type: string;
   verificationStatus: VerificationStatus;
   createdAt?: string;
   updatedAt?: string;
@@ -115,12 +116,12 @@ type BaseAccountRow = {
 };
 
 export type ConsumerAccountRow = BaseAccountRow & {
-  type: 'consumer';
+  type: string;
   avatar?: never;
 };
 
 export type NonConsumerAccountRow = BaseAccountRow & {
-  type: Exclude<AccountRole, 'consumer'>;
+  type: string;
   avatar?: string;
 };
 

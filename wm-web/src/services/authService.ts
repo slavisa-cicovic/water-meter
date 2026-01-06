@@ -31,13 +31,16 @@ export const AuthService = {
     }
 
     const permissions = await AuthorizationService.resolveAccountPermissions(account.id);
+    const roles = await AuthorizationService.getRoleSlugsForAccount(account.id);
+    const primaryRole = roles[0] ?? "unknown";
 
     return NextResponse.json({
       success: true,
       data: {
         accessToken: TokenService.issueAccountToken({
           id: account.id,
-          role: account.role,
+          role: primaryRole,
+          roles,
           verificationStatus: account.verificationStatus as VerificationStatus,
           permissionsVersion: account.permissionsVersion,
         }),
@@ -47,7 +50,8 @@ export const AuthService = {
           lastName: account.lastName,
           email: account.email,
           address: account.address,
-          role: account.role,
+          role: primaryRole,
+          roles,
           verificationStatus: account.verificationStatus,
           permissions,
           permissionsVersion: account.permissionsVersion,

@@ -1,16 +1,36 @@
-import { AccountRole, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import prisma from "src/utils/prisma";
 import { MobileAccountMeter, MobileProfileUpdateInput } from "src/types/mobile";
 
 type AccountBase = Prisma.AccountGetPayload<{
-  select: { id: true; firstName: true; lastName: true; email: true; address: true; role: true };
+  select: {
+    id: true;
+    firstName: true;
+    lastName: true;
+    email: true;
+    address: true;
+    accountRoleLinks: { select: { role: { select: { slug: true } } } };
+  };
 }>;
+
+const getAccountRoleSlugs = (account: AccountBase) =>
+  account.accountRoleLinks
+    .map((link) => link.role.slug)
+    .filter((slug): slug is string => Boolean(slug))
+    .sort();
 
 export const MobileRepository = {
   async findAccountBase(accountId: string): Promise<AccountBase | null> {
     return prisma.account.findUnique({
       where: { id: accountId },
-      select: { id: true, firstName: true, lastName: true, email: true, address: true, role: true },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        address: true,
+        accountRoleLinks: { select: { role: { select: { slug: true } } } },
+      },
     });
   },
 
@@ -309,8 +329,8 @@ export const MobileRepository = {
     const account = await this.findAccountBase(accountId);
     if (!account) return null;
 
-    const meter =
-      account.role === AccountRole.consumer ? await this.findMeterForConsumer(accountId) : null;
+    const roles = getAccountRoleSlugs(account);
+    const meter = roles.includes("consumer") ? await this.findMeterForConsumer(accountId) : null;
 
     return { ...account, meter };
   },
@@ -324,7 +344,14 @@ export const MobileRepository = {
           lastName: input.lastName,
           email: input.email,
         },
-        select: { id: true, firstName: true, lastName: true, email: true, address: true, role: true },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          address: true,
+          accountRoleLinks: { select: { role: { select: { slug: true } } } },
+        },
       });
     } catch (error: unknown) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {

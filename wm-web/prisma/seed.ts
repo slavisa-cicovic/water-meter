@@ -1,6 +1,15 @@
-import { AccountRole, PrismaClient, StaffRole, VerificationStatus } from '@prisma/client';
+import { PrismaClient, StaffRole, VerificationStatus } from '@prisma/client';
 
 const prisma = new PrismaClient();
+let roleIdBySlug = new Map<string, string>();
+
+const requireRoleId = (slug: string) => {
+  const roleId = roleIdBySlug.get(slug);
+  if (!roleId) {
+    throw new Error(`Missing role id for slug ${slug}`);
+  }
+  return roleId;
+};
 
 type ConsumerSeed = {
   firstName: string;
@@ -38,6 +47,12 @@ const admins: AdminSeed[] = [
     firstName: 'System',
     lastName: 'Admin',
     email: 'admin@example.com',
+    password: 'password123',
+  },
+  {
+    firstName: 'Super',
+    lastName: 'Admin',
+    email: 'super.admin@example.com',
     password: 'password123',
   },
   {
@@ -167,8 +182,10 @@ async function seedConsumers() {
         phone: c.phone,
         address: c.address,
         passwordHash: c.password, // intentionally plain text per current choice
-        role: AccountRole.consumer,
         verificationStatus: c.verificationStatus,
+        accountRoleLinks: {
+          create: { roleId: requireRoleId('consumer') },
+        },
         consumerProfile: {
           create: {
             householdSize: c.householdSize,
@@ -192,15 +209,18 @@ async function seedConsumers() {
 
 async function seedAdmins() {
   for (const a of admins) {
+    const roleSlug = a.email === 'super.admin@example.com' ? 'super_admin' : 'admin';
     const account = await prisma.account.create({
       data: {
         firstName: a.firstName,
         lastName: a.lastName,
         email: a.email,
         passwordHash: a.password,
-        role: AccountRole.admin,
         address: 'HQ',
         verificationStatus: 'verified',
+        accountRoleLinks: {
+          create: { roleId: requireRoleId(roleSlug) },
+        },
         verificationLogs: {
           create: {
             reviewerId,
@@ -236,8 +256,10 @@ async function seedBulkConsumers() {
         email: c.email,
         address: c.address,
         passwordHash: c.password,
-        role: AccountRole.consumer,
         verificationStatus: c.verificationStatus,
+        accountRoleLinks: {
+          create: { roleId: requireRoleId('consumer') },
+        },
         consumerProfile: {
           create: {
             householdSize: c.householdSize,
@@ -281,8 +303,10 @@ async function seedExtraStaffField(count = 3) {
         email: s.email,
         address: s.address,
         passwordHash: s.password,
-        role: 'staff_field',
         verificationStatus: s.verificationStatus,
+        accountRoleLinks: {
+          create: { roleId: requireRoleId('staff_field') },
+        },
         staffProfile: {
           create: {
             staffRole: s.staffRole,
@@ -306,6 +330,7 @@ async function seedExtraStaffField(count = 3) {
 
 async function seedStaff() {
   for (const s of staff) {
+    const roleSlug = s.staffRole === 'backoffice' ? 'staff_backoffice' : 'staff_field';
     const account = await prisma.account.create({
       data: {
         firstName: s.firstName,
@@ -314,8 +339,10 @@ async function seedStaff() {
         phone: s.phone,
         address: s.address,
         passwordHash: s.password, // intentionally plain text per current choice
-        role: s.staffRole === 'backoffice' ? ('staff_backoffice' as AccountRole) : ('staff_field' as AccountRole),
         verificationStatus: s.verificationStatus,
+        accountRoleLinks: {
+          create: { roleId: requireRoleId(roleSlug) },
+        },
         staffProfile: {
           create: {
             staffRole: s.staffRole,
@@ -352,6 +379,7 @@ const permissions: PermissionSeed[] = [
   { slug: 'accounts:read', name: 'Read account', resource: 'accounts', action: 'read' },
   { slug: 'accounts:update', name: 'Update account', resource: 'accounts', action: 'update' },
   { slug: 'accounts:verify', name: 'Verify account', resource: 'accounts', action: 'verify' },
+  { slug: 'accounts:reject', name: 'Reject account', resource: 'accounts', action: 'reject' },
   { slug: 'meters:list', name: 'List meters', resource: 'meters', action: 'list' },
   { slug: 'meters:read', name: 'Read meter', resource: 'meters', action: 'read' },
   { slug: 'meters:create', name: 'Create meter', resource: 'meters', action: 'create' },
@@ -380,6 +408,8 @@ const permissions: PermissionSeed[] = [
   { slug: 'jobs:run', name: 'Run job', resource: 'jobs', action: 'run' },
   { slug: 'jobs:runs_list', name: 'List job runs', resource: 'jobs', action: 'runs_list' },
   { slug: 'roles:list', name: 'List roles', resource: 'roles', action: 'list' },
+  { slug: 'roles:create', name: 'Create role', resource: 'roles', action: 'create' },
+  { slug: 'roles:update', name: 'Update role permissions', resource: 'roles', action: 'update' },
   { slug: 'mobile_profile:read', name: 'Read mobile profile', resource: 'mobile_profile', action: 'read' },
   { slug: 'mobile_profile:update', name: 'Update mobile profile', resource: 'mobile_profile', action: 'update' },
   { slug: 'mobile_readings:context', name: 'Read mobile reading context', resource: 'mobile_readings', action: 'context' },
@@ -395,8 +425,9 @@ const permissions: PermissionSeed[] = [
 async function seedRbac() {
   const roleData = [
     { slug: 'admin', name: 'Admin', isSystem: true },
-    { slug: 'staff_backoffice', name: 'Staff Backoffice', isSystem: true, staffRole: 'backoffice' },
-    { slug: 'staff_field', name: 'Staff Field', isSystem: true, staffRole: 'field' },
+    { slug: 'super_admin', name: 'Super Admin', isSystem: true },
+    { slug: 'staff_backoffice', name: 'Staff Backoffice', isSystem: true, staffRole: StaffRole.backoffice },
+    { slug: 'staff_field', name: 'Staff Field', isSystem: true, staffRole: StaffRole.field },
     { slug: 'consumer', name: 'Consumer', isSystem: true },
   ];
 
@@ -413,9 +444,13 @@ async function seedRbac() {
   );
 
   const roleBySlug = new Map(roles.map((role) => [role.slug, role]));
+  roleIdBySlug = new Map(roles.map((role) => [role.slug, role.id]));
   const permissionBySlug = new Map(permissionsCreated.map((permission) => [permission.slug, permission]));
 
-  const adminPermissions = permissions.map((permission) => permission.slug);
+  const adminPermissions = permissions
+    .map((permission) => permission.slug)
+    .filter((slug) => !['roles:create', 'roles:update'].includes(slug));
+  const superAdminPermissions = permissions.map((permission) => permission.slug);
   const backofficePermissions = [
     'settings:read',
     'accounts:list',
@@ -445,24 +480,28 @@ async function seedRbac() {
     'roles:list',
   ];
 
-  const accountPermissions = ['accounts:list', 'accounts:read', 'accounts:update', 'accounts:verify'];
-  const rolePermissionConditions: Record<string, Record<string, { accountRoles: AccountRole[] }>> = {
+  const accountPermissions = ['accounts:list', 'accounts:read', 'accounts:update', 'accounts:verify', 'accounts:reject'];
+  const rolePermissionConditions: Record<
+    string,
+    Record<string, { accounts: { visibility: { allowedRoles: string[] } } }>
+  > = {
     admin: Object.fromEntries(
       accountPermissions.map((permission) => [
         permission,
-        { accountRoles: [AccountRole.admin, AccountRole.staff_backoffice] },
+        { accounts: { visibility: { allowedRoles: ['admin', 'staff_backoffice'] } } },
       ])
     ),
     staff_backoffice: Object.fromEntries(
       accountPermissions.map((permission) => [
         permission,
-        { accountRoles: [AccountRole.consumer, AccountRole.staff_field, AccountRole.staff_backoffice] },
+        { accounts: { visibility: { allowedRoles: ['consumer', 'staff_field', 'staff_backoffice'] } } },
       ])
     ),
   };
 
   const rolePermissions = [
     { roleSlug: 'admin', permissionSlugs: adminPermissions },
+    { roleSlug: 'super_admin', permissionSlugs: superAdminPermissions },
     { roleSlug: 'staff_backoffice', permissionSlugs: backofficePermissions },
     {
       roleSlug: 'staff_field',
@@ -511,19 +550,6 @@ async function seedRbac() {
     }
   }
 
-  const accounts = await prisma.account.findMany({ select: { id: true, role: true } });
-  const accountRoles = accounts
-    .map((account) => {
-      const role = roleBySlug.get(account.role);
-      if (!role) return null;
-      return { accountId: account.id, roleId: role.id };
-    })
-    .filter((entry): entry is { accountId: string; roleId: string } => Boolean(entry));
-
-  if (accountRoles.length) {
-    await prisma.accountRoleLink.createMany({ data: accountRoles });
-  }
-
   console.log('Seeded RBAC roles, permissions, and account role mappings');
 }
 
@@ -531,7 +557,7 @@ const pad2 = (value: number) => String(value).padStart(2, '0');
 
 async function seedMeters() {
   const consumerAccounts = await prisma.account.findMany({
-    where: { role: AccountRole.consumer },
+    where: { accountRoleLinks: { some: { role: { slug: 'consumer' } } } },
     orderBy: { email: 'asc' },
     take: 55,
     select: { id: true, email: true, address: true },
@@ -606,12 +632,12 @@ async function seedReadings() {
   });
 
   const readers = await prisma.account.findMany({
-    where: { role: { in: [AccountRole.consumer, AccountRole.staff_field] } },
+    where: { accountRoleLinks: { some: { role: { slug: { in: ['consumer', 'staff_field'] } } } } },
     orderBy: { createdAt: 'asc' },
   });
 
   const staffBackoffice = await prisma.account.findFirst({
-    where: { role: AccountRole.staff_backoffice },
+    where: { accountRoleLinks: { some: { role: { slug: 'staff_backoffice' } } } },
   });
 
   if (!meters.length || !readers.length) {
@@ -698,7 +724,7 @@ async function seedReadings() {
             data: {
               readingId: reading.id,
               accountId: staffBackoffice.id,
-              editorRole: staffBackoffice.role,
+              editorRole: 'staff_backoffice',
               value: baseValue + extra + 10,
               reason: 'Corrected OCR value',
             },
@@ -852,12 +878,12 @@ async function seedInvoices() {
 
 async function main() {
   await clearData();
+  await seedRbac();
   await seedAdmins();
   await seedConsumers();
   await seedBulkConsumers();
   await seedStaff();
   await seedExtraStaffField();
-  await seedRbac();
   await seedMeters();
   await seedReadings();
   await seedTariffs();

@@ -15,11 +15,7 @@ export const GET = withPermission(
   PERMISSIONS.MOBILE_READINGS_CONTEXT,
   async (req: NextRequest, _ctx, guard) => {
   const meterId = req.nextUrl.searchParams.get("meterId") ?? undefined;
-  const result = await MobileService.getReadingContext(
-    guard.payload.accountId,
-    guard.payload.role,
-    meterId
-  );
+  const result = await MobileService.getReadingContext(guard.payload.accountId, meterId);
   if (!result.success) {
     return NextResponse.json({ success: false, error: result.error }, { status: 500 });
   }

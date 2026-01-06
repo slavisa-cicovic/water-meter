@@ -21,13 +21,19 @@ export default function RoleBasedGuard({ hasContent, roles, permissions, childre
   const { user, loading } = useAuthContext();
 
   const currentRole = user?.role;
+  const currentRoles = Array.isArray(user?.roles)
+    ? (user?.roles as string[])
+    : currentRole
+    ? [currentRole]
+    : [];
   const currentPermissions = user?.permissions as string[] | undefined;
 
   if (loading) {
     return null;
   }
 
-  const hasRoleAccess = typeof roles === 'undefined' || roles.includes(currentRole);
+  const hasRoleAccess =
+    typeof roles === 'undefined' || roles.some((role) => currentRoles.includes(role));
   const hasPermissionAccess =
     typeof permissions === 'undefined' ||
     permissions.some((permission) => currentPermissions?.includes(permission));

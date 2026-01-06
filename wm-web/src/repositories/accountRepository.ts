@@ -1,4 +1,4 @@
-import { AccountRole, Prisma, PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import prisma from "src/utils/prisma";
 import { StaffRole, VerificationStatus } from "src/types/accounts";
 
@@ -10,7 +10,7 @@ type ListParams = {
   status?: VerificationStatus;
   page?: number;
   pageSize?: number;
-  allowedRoles?: AccountRole[];
+  allowedRoles?: string[];
 };
 
 export const AccountRepository = {
@@ -22,6 +22,7 @@ export const AccountRepository = {
     address: string;
     password: string;
     householdSize: number;
+    roleId: string;
   }) {
     return prisma.account.create({
       data: {
@@ -31,7 +32,9 @@ export const AccountRepository = {
         phone: data.phone,
         address: data.address,
         passwordHash: data.password,
-        role: "consumer",
+        accountRoleLinks: {
+          create: { roleId: data.roleId },
+        },
         consumerProfile: {
           create: {
             householdSize: data.householdSize,
@@ -49,7 +52,7 @@ export const AccountRepository = {
     address: string;
     password: string;
     staffRole: StaffRole;
-    role: AccountRole;
+    roleId: string;
   }) {
     return prisma.account.create({
       data: {
@@ -59,7 +62,9 @@ export const AccountRepository = {
         phone: data.phone,
         address: data.address,
         passwordHash: data.password,
-        role: data.role,
+        accountRoleLinks: {
+          create: { roleId: data.roleId },
+        },
         staffProfile: {
           create: {
             staffRole: data.staffRole,
@@ -76,6 +81,9 @@ export const AccountRepository = {
         consumerProfile: true,
         staffProfile: true,
         verificationLogs: true,
+        accountRoleLinks: {
+          include: { role: { select: { slug: true } } },
+        },
       },
     });
   },
@@ -168,12 +176,22 @@ export const AccountRepository = {
       : undefined;
 
     const where: any = {
-      ...(searchFilter && searchFilter),
       ...(status && { verificationStatus: status }),
     };
 
+    const andFilters: any[] = [];
+    if (searchFilter) {
+      andFilters.push(searchFilter);
+    }
+
     if (allowedRoles && allowedRoles.length) {
-      where.role = { in: allowedRoles };
+      andFilters.push({
+        accountRoleLinks: { some: { role: { slug: { in: allowedRoles } } } },
+      });
+    }
+
+    if (andFilters.length) {
+      where.AND = andFilters;
     }
 
     const orderByClause =
@@ -187,7 +205,7 @@ export const AccountRepository = {
         : orderBy === "verificationStatus"
         ? [{ verificationStatus: order }]
         : orderBy === "type"
-        ? [{ role: order }]
+        ? [{ createdAt: order }]
         : [{ createdAt: order }];
 
     const [total, accounts] = await Promise.all([
@@ -197,6 +215,7 @@ export const AccountRepository = {
           consumerProfile: true,
           staffProfile: true,
           verificationLogs: true,
+          accountRoleLinks: { include: { role: { select: { slug: true } } } },
         },
         where,
         orderBy: orderByClause,
