@@ -23,11 +23,11 @@ Format all currency values based on `settings.currency` (e.g. `120,00 RSD` for R
 - `[h]` on hold
 
 ## Tasks
-1. `[ ]` Inventory all currency displays in `wm-web` (tables, cards, charts, forms).
-2. `[ ]` Add a shared formatter utility that uses `Intl.NumberFormat` with `settings.currency`.
-3. `[ ]` Ensure `settings.currency` is available where formatting occurs (context/store/hooks).
-4. `[ ]` Replace inline/legacy formatting with the shared formatter.
-5. `[ ]` Verify locale/format rules:
+1. `[d]` Inventory all currency displays in `wm-web` (tables, cards, charts, forms).
+2. `[d]` Add a shared formatter utility that uses `Intl.NumberFormat` with `settings.currency`.
+3. `[d]` Ensure `settings.currency` is available where formatting occurs (context/store/hooks).
+4. `[d]` Replace inline/legacy formatting with the shared formatter.
+5. `[d]` Verify locale/format rules:
    - `RSD` -> `120,00 RSD`
    - `USD` -> `$120.00`
-6. `[ ]` Manual smoke check across affected views.
+6. `[d]` Manual smoke check across affected views.
