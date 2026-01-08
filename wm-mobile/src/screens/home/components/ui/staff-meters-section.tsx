@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { MobileStaffMeter } from "@src/api/types/mobile";
+import { useTranslation } from "@src/hooks/use-translation";
 
 type StaffMetersSectionProps = {
   meters: MobileStaffMeter[];
@@ -19,6 +20,7 @@ export default function StaffMetersSection({
   onRefresh,
   onSelectMeter,
 }: StaffMetersSectionProps) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState("");
 
   const sortedMeters = useMemo(() => {
@@ -49,13 +51,18 @@ export default function StaffMetersSection({
     });
   }, [meters, query]);
 
+  const formatConsumerCount = (count: number) =>
+    `${count} ${count === 1 ? t("home.staff.consumer") : t("home.staff.consumers")}`;
+
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Consumers</Text>
+        <Text style={styles.sectionTitle}>{t("home.staff.title")}</Text>
         <View style={styles.sectionActions}>
           <TouchableOpacity style={styles.refreshButton} onPress={onRefresh} disabled={loading}>
-            <Text style={styles.refreshText}>{loading ? "Refreshing..." : "Refresh"}</Text>
+            <Text style={styles.refreshText}>
+              {loading ? t("home.common.refreshing") : t("home.common.refresh")}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -63,31 +70,33 @@ export default function StaffMetersSection({
         style={styles.searchInput}
         value={query}
         onChangeText={setQuery}
-        placeholder="Search by meter, address, or consumer"
+        placeholder={t("home.staff.searchPlaceholder")}
         placeholderTextColor="#a8b3d1"
         autoCapitalize="none"
       />
 
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
-      {loading ? <Text style={styles.helperText}>Loading consumers...</Text> : null}
+      {loading ? <Text style={styles.helperText}>{t("home.staff.loading")}</Text> : null}
       {!loading && !error && sortedMeters.length === 0 ? (
-        <Text style={styles.helperText}>No consumers available.</Text>
+        <Text style={styles.helperText}>{t("home.staff.empty")}</Text>
       ) : null}
 
       {sortedMeters.map((meter) => (
         <TouchableOpacity key={meter.id} style={styles.card} onPress={() => onSelectMeter(meter.id)}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardTitle}>{meter.serialNumber}</Text>
-            <Text style={styles.cardBadge}>{meter.consumerCount} consumers</Text>
+            <Text style={styles.cardBadge}>{formatConsumerCount(meter.consumerCount)}</Text>
           </View>
-          <Text style={styles.cardMeta}>{meter.address ?? "Address not set"}</Text>
+          <Text style={styles.cardMeta}>{meter.address ?? t("home.staff.addressMissing")}</Text>
           {meter.consumers.map((consumer) => (
             <View key={consumer.id} style={styles.consumerRow}>
               <Text style={styles.consumerName}>
                 {consumer.firstName} {consumer.lastName}
               </Text>
               {consumer.householdSize ? (
-                <Text style={styles.consumerMeta}>Household {consumer.householdSize}</Text>
+                <Text style={styles.consumerMeta}>
+                  {t("home.staff.household")} {consumer.householdSize}
+                </Text>
               ) : null}
             </View>
           ))}

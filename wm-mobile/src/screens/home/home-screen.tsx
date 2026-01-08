@@ -15,9 +15,11 @@ import BillingSection from "@src/screens/home/components/ui/billing-section";
 import StaffMetersSection from "@src/screens/home/components/ui/staff-meters-section";
 import ScrollScreen from "@src/components/layout/scroll-screen";
 import { useRouter } from "expo-router";
+import { useTranslation } from "@src/hooks/use-translation";
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const user = useAuthStore((state) => state.user);
   const refreshNotifications = useNotificationsStore((state) => state.refreshNotifications);
   const [meterInfo, setMeterInfo] = useState<MobileAccountData["meter"] | null>(null);
@@ -30,7 +32,7 @@ export default function HomeScreen() {
   const [staffMeters, setStaffMeters] = useState<MobileStaffMeter[]>([]);
   const [staffLoading, setStaffLoading] = useState(false);
   const [staffError, setStaffError] = useState<string | null>(null);
-  const displayName = user ? `${user.firstName} ${user.lastName}`.trim() : "Field operator";
+  const displayName = user ? `${user.firstName} ${user.lastName}`.trim() : t("home.fallback.operator");
   const isConsumer = user?.role === "consumer";
   const isStaffField = user?.role === "staff_field";
   const currentYear = useMemo(() => new Date().getFullYear(), []);
@@ -131,22 +133,28 @@ export default function HomeScreen() {
     }, [loadAccount, loadBilling, loadConsumption, loadStaffMeters, refreshNotifications])
   );
 
+  const formatShared = (value?: boolean) => {
+    if (value === true) return t("home.shared.yes");
+    if (value === false) return t("home.shared.no");
+    return "-";
+  };
+
   return (
-    <ScrollScreen title="Dashboard" contentContainerStyle={styles.content}>
+    <ScrollScreen title={t("home.title")} contentContainerStyle={styles.content}>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
+          <Text style={styles.sectionTitle}>{t("home.section.account")}</Text>
           <View style={styles.infoCard}>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Name</Text>
+              <Text style={styles.infoLabel}>{t("home.label.name")}</Text>
               <Text style={styles.infoValue}>{displayName}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Email</Text>
+              <Text style={styles.infoLabel}>{t("home.label.email")}</Text>
               <Text style={styles.infoValue}>{user?.email ?? "-"}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Address</Text>
+              <Text style={styles.infoLabel}>{t("home.label.address")}</Text>
               <Text style={styles.infoValue}>{user?.address ?? "-"}</Text>
             </View>
           </View>
@@ -154,18 +162,18 @@ export default function HomeScreen() {
 
         {isConsumer ? (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Meter</Text>
+            <Text style={styles.sectionTitle}>{t("home.section.meter")}</Text>
             <View style={styles.infoCard}>
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Serial number</Text>
+                <Text style={styles.infoLabel}>{t("home.label.serialNumber")}</Text>
                 <Text style={styles.infoValue}>{meterInfo?.serialNumber ?? "-"}</Text>
               </View>
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Shared</Text>
+                <Text style={styles.infoLabel}>{t("home.label.shared")}</Text>
                 <Text style={styles.infoValue}>{formatShared(meterInfo?.shared)}</Text>
               </View>
               <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Status</Text>
+                <Text style={styles.infoLabel}>{t("home.label.status")}</Text>
                 <Text style={styles.infoValue}>{meterInfo?.status ?? "-"}</Text>
               </View>
             </View>
@@ -215,12 +223,6 @@ export default function HomeScreen() {
     </ScrollScreen>
   );
 }
-
-const formatShared = (value?: boolean) => {
-  if (value === true) return "Yes";
-  if (value === false) return "No";
-  return "-";
-};
 
 
 const styles = StyleSheet.create({

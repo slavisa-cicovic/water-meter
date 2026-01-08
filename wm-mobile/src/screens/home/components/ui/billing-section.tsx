@@ -4,6 +4,7 @@ import BillingChart from "@src/screens/home/components/ui/billing-chart";
 import BillingTable from "@src/screens/home/components/ui/billing-table";
 import YearPicker from "@src/screens/home/components/ui/year-picker";
 import { TABLE_BODY_HEIGHT } from "@src/screens/home/utils/layout";
+import { useTranslation } from "@src/hooks/use-translation";
 
 type BillingSectionProps = {
   data: MobileBillingData | null;
@@ -28,14 +29,18 @@ export default function BillingSection({
   onYearChange,
   onRefresh,
 }: BillingSectionProps) {
+  const { t } = useTranslation();
+
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Billing</Text>
+        <Text style={styles.sectionTitle}>{t("home.billing.title")}</Text>
         <View style={styles.sectionActions}>
           <YearPicker value={selectedYear} minYear={minYear} maxYear={maxYear} onChange={onYearChange} />
           <TouchableOpacity style={styles.refreshButton} onPress={onRefresh} disabled={refreshing}>
-            <Text style={styles.refreshText}>{refreshing ? "Refreshing..." : "Refresh"}</Text>
+            <Text style={styles.refreshText}>
+              {refreshing ? t("home.common.refreshing") : t("home.common.refresh")}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -44,13 +49,17 @@ export default function BillingSection({
           style={[styles.tabButton, tab === "chart" ? styles.tabButtonActive : null]}
           onPress={() => onTabChange("chart")}
         >
-          <Text style={[styles.tabText, tab === "chart" ? styles.tabTextActive : null]}>Chart</Text>
+          <Text style={[styles.tabText, tab === "chart" ? styles.tabTextActive : null]}>
+            {t("home.common.chart")}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tabButton, tab === "table" ? styles.tabButtonActive : null]}
           onPress={() => onTabChange("table")}
         >
-          <Text style={[styles.tabText, tab === "table" ? styles.tabTextActive : null]}>Table</Text>
+          <Text style={[styles.tabText, tab === "table" ? styles.tabTextActive : null]}>
+            {t("home.common.table")}
+          </Text>
         </TouchableOpacity>
       </View>
 

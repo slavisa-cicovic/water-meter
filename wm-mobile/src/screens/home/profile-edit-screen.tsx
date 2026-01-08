@@ -5,7 +5,7 @@ import { useAuthStore } from "@src/state/auth-store";
 import { MobileService } from "@src/services/mobile.service";
 import ScrollScreen from "@src/components/layout/scroll-screen";
 import SubmitButton from "@src/components/ui/submit-button";
-import LanguageToggle from "@src/screens/auth/components/ui/language-toggle";
+import LanguageToggle from "@src/screens/home/components/ui/language-toggle";
 import { normalizeLocale } from "@src/constants/translations";
 import { useLocaleStore } from "@src/state/locale-store";
 import { useTranslation } from "@src/hooks/use-translation";
@@ -62,7 +62,7 @@ export default function ProfileEditScreen() {
 
   const handleSave = async () => {
     if (!user || !accessToken) {
-      Alert.alert("Profile unavailable", "Please log in again.");
+      Alert.alert(t("profile.alert.unavailableTitle"), t("profile.alert.unavailableMessage"));
       return;
     }
 
@@ -74,7 +74,7 @@ export default function ProfileEditScreen() {
     };
 
     if (!trimmed.firstName || !trimmed.lastName || !trimmed.email) {
-      Alert.alert("Missing info", "First name, last name, and email are required.");
+      Alert.alert(t("profile.alert.missingTitle"), t("profile.alert.missingMessage"));
       return;
     }
 
@@ -83,13 +83,13 @@ export default function ProfileEditScreen() {
     setSaving(false);
 
     if (!result.success) {
-      Alert.alert("Update failed", result.message);
+      Alert.alert(t("profile.alert.updateFailedTitle"), result.message);
       return;
     }
 
-    Alert.alert("Profile updated", "Changes saved.", [
+    Alert.alert(t("profile.alert.updatedTitle"), t("profile.alert.updatedMessage"), [
       {
-        text: "OK",
+        text: t("common.ok"),
         onPress: () => {
           router.replace("/home");
         },
@@ -98,29 +98,29 @@ export default function ProfileEditScreen() {
   };
 
   return (
-    <ScrollScreen title="Profile" contentContainerStyle={styles.content}>
+    <ScrollScreen title={t("profile.title")} contentContainerStyle={styles.content}>
         <View style={styles.card}>
           <FormField
-            label="First name"
+            label={t("profile.firstNameLabel")}
             value={form.firstName}
             onChange={(value) => setForm((prev) => ({ ...prev, firstName: value }))}
-            placeholder="Enter first name"
+            placeholder={t("profile.firstNamePlaceholder")}
             iconName="account-outline"
             returnKeyType="next"
           />
           <FormField
-            label="Last name"
+            label={t("profile.lastNameLabel")}
             value={form.lastName}
             onChange={(value) => setForm((prev) => ({ ...prev, lastName: value }))}
-            placeholder="Enter last name"
+            placeholder={t("profile.lastNamePlaceholder")}
             iconName="account-outline"
             returnKeyType="next"
           />
           <FormField
-            label="Email"
+            label={t("profile.emailLabel")}
             value={form.email}
             onChange={(value) => setForm((prev) => ({ ...prev, email: value }))}
-            placeholder="Enter email"
+            placeholder={t("profile.emailPlaceholder")}
             iconName="email-outline"
             keyboardType="email-address"
             returnKeyType="done"
@@ -137,8 +137,8 @@ export default function ProfileEditScreen() {
 
         <View style={styles.actions}>
           <SubmitButton
-            label="Save changes"
-            loadingLabel="Saving..."
+            label={t("profile.save")}
+            loadingLabel={t("profile.saving")}
             loading={saving}
             disabled={saving || !isDirty}
             onPress={handleSave}

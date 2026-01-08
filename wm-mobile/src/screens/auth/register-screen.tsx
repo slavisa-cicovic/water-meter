@@ -8,6 +8,7 @@ import SubmitButton from "@src/components/ui/submit-button";
 import AuthScreenLayout from "@src/screens/auth/components/layout/auth-screen-layout";
 import AuthField from "@src/screens/auth/components/ui/auth-field";
 import AuthHeader from "@src/screens/auth/components/ui/auth-header";
+import { useTranslation } from "@src/hooks/use-translation";
 
 const initialForm = {
   firstName: "",
@@ -21,6 +22,7 @@ const initialForm = {
 
 export default function RegisterScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -34,11 +36,11 @@ export default function RegisterScreen() {
     password: useRef<TextInput | null>(null),
   };
 
-  const formErrors = useMemo(() => validateForm(form), [form]);
+  const formErrors = useMemo(() => validateForm(form, t), [form, t]);
 
   const onSubmit = async () => {
     if (Object.keys(formErrors).length > 0) {
-      Alert.alert("Please fix the highlighted fields.");
+      Alert.alert(t("auth.login.validationError"));
       return;
     }
 
@@ -54,7 +56,7 @@ export default function RegisterScreen() {
 
     setLoading(false);
     if (result.success) {
-      setMessage("Registered. Await verification to submit readings.");
+      setMessage(t("auth.register.success"));
       return;
     }
     setMessage(result.message);
@@ -62,10 +64,10 @@ export default function RegisterScreen() {
 
   return (
     <AuthScreenLayout paddingBottom={140}>
-      <AuthHeader title="Create Account" subtitle="Fill in your details to get started." />
+      <AuthHeader title={t("auth.register.title")} subtitle={t("auth.register.subtitle")} />
 
         <AuthField
-          label="First Name"
+          label={t("auth.register.firstNameLabel")}
           value={form.firstName}
           onChange={(value) => setForm({ ...form, firstName: value })}
           iconName="account-outline"
@@ -75,7 +77,7 @@ export default function RegisterScreen() {
           error={formErrors.firstName}
         />
         <AuthField
-          label="Last Name"
+          label={t("auth.register.lastNameLabel")}
           value={form.lastName}
           onChange={(value) => setForm({ ...form, lastName: value })}
           iconName="account-outline"
@@ -85,7 +87,7 @@ export default function RegisterScreen() {
           error={formErrors.lastName}
         />
         <AuthField
-          label="Address"
+          label={t("auth.register.addressLabel")}
           value={form.address}
           onChange={(value) => setForm({ ...form, address: value })}
           iconName="home-outline"
@@ -95,7 +97,7 @@ export default function RegisterScreen() {
           error={formErrors.address}
         />
         <AuthField
-          label="Household Size"
+          label={t("auth.register.householdSizeLabel")}
           value={form.householdSize}
           onChange={(value) => setForm({ ...form, householdSize: value })}
           keyboardType="numeric"
@@ -106,7 +108,7 @@ export default function RegisterScreen() {
           error={formErrors.householdSize}
         />
         <AuthField
-          label="Email or Username"
+          label={t("auth.register.identifierLabel")}
           value={form.identifier}
           onChange={(value) => setForm({ ...form, identifier: value })}
           keyboardType="default"
@@ -117,7 +119,7 @@ export default function RegisterScreen() {
           error={formErrors.identifier}
         />
         <AuthField
-          label="Phone"
+          label={t("auth.register.phoneLabel")}
           value={form.phone}
           onChange={(value) => setForm({ ...form, phone: value })}
           keyboardType="phone-pad"
@@ -128,7 +130,7 @@ export default function RegisterScreen() {
           error={formErrors.phone}
         />
         <AuthField
-          label="Password"
+          label={t("auth.register.passwordLabel")}
           value={form.password}
           onChange={(value) => setForm({ ...form, password: value })}
           secureTextEntry
@@ -140,12 +142,17 @@ export default function RegisterScreen() {
 
         <ApiFeedback message={message} />
 
-        <SubmitButton label="Sign Up" loadingLabel="Submitting..." loading={loading} onPress={onSubmit} />
+        <SubmitButton
+          label={t("auth.register.submit")}
+          loadingLabel={t("auth.register.loading")}
+          loading={loading}
+          onPress={onSubmit}
+        />
 
-        <LinkButton label="Back to Login" onPress={() => router.push("/login")} />
+        <LinkButton label={t("auth.register.backToLogin")} onPress={() => router.push("/login")} />
 
         <Text style={styles.hint}>
-          If this identifier/phone is already registered, we&apos;ll ask you to confirm instead of creating a new account.
+          {t("auth.register.hint")}
         </Text>
     </AuthScreenLayout>
   );
@@ -154,18 +161,19 @@ export default function RegisterScreen() {
 const isEmail = (value: string) => /\S+@\S+\.\S+/.test(value.trim());
 const isPhone = (value: string) => /^[0-9+()\-\s]{6,}$/.test(value.trim());
 
-const validateForm = (form: typeof initialForm) => {
+const validateForm = (form: typeof initialForm, t: (key: string) => string) => {
   const errors: Record<string, string> = {};
-  if (!form.firstName.trim()) errors.firstName = "Required";
-  if (!form.lastName.trim()) errors.lastName = "Required";
-  if (!form.address.trim()) errors.address = "Required";
+  if (!form.firstName.trim()) errors.firstName = t("validation.required");
+  if (!form.lastName.trim()) errors.lastName = t("validation.required");
+  if (!form.address.trim()) errors.address = t("validation.required");
   const household = Number(form.householdSize);
-  if (!Number.isInteger(household) || household < 1) errors.householdSize = "Must be 1 or more";
-  if (!form.identifier.trim()) errors.identifier = "Required";
-  if (form.identifier.includes("@") && !isEmail(form.identifier)) errors.identifier = "Invalid email";
-  if (!form.phone.trim()) errors.phone = "Required";
-  if (!isPhone(form.phone)) errors.phone = "Invalid phone";
-  if (!form.password || form.password.length < 8) errors.password = "Min 8 characters";
+  if (!Number.isInteger(household) || household < 1) errors.householdSize = t("validation.householdMin");
+  if (!form.identifier.trim()) errors.identifier = t("validation.required");
+  if (form.identifier.includes("@") && !isEmail(form.identifier))
+    errors.identifier = t("validation.invalidEmail");
+  if (!form.phone.trim()) errors.phone = t("validation.required");
+  if (!isPhone(form.phone)) errors.phone = t("validation.invalidPhone");
+  if (!form.password || form.password.length < 8) errors.password = t("validation.min8");
   return errors;
 };
 

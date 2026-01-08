@@ -9,6 +9,7 @@ import AuthScreenLayout from "@src/screens/auth/components/layout/auth-screen-la
 import AuthField from "@src/screens/auth/components/ui/auth-field";
 import AuthHeader from "@src/screens/auth/components/ui/auth-header";
 import AuthHero from "@src/screens/auth/components/ui/auth-hero";
+import { useTranslation } from "@src/hooks/use-translation";
 
 const initialForm = {
   identifier: "",
@@ -16,15 +17,16 @@ const initialForm = {
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const formErrors = useMemo(() => validateForm(form), [form]);
+  const formErrors = useMemo(() => validateForm(form, t), [form, t]);
 
   const onSubmit = async () => {
     if (Object.keys(formErrors).length > 0) {
-      Alert.alert("Please enter your email or phone.");
+      Alert.alert(t("auth.forgot.validationError"));
       return;
     }
 
@@ -35,7 +37,7 @@ export default function ForgotPasswordScreen() {
     setLoading(false);
 
     if (result.success) {
-      setMessage("If the account exists, you'll receive reset instructions.");
+      setMessage(t("auth.forgot.success"));
       return;
     }
 
@@ -45,13 +47,13 @@ export default function ForgotPasswordScreen() {
   return (
     <AuthScreenLayout paddingBottom={100}>
       <AuthHero />
-      <AuthHeader title="Forgot Password" subtitle="Enter your email or phone to reset your password." />
+      <AuthHeader title={t("auth.forgot.title")} subtitle={t("auth.forgot.subtitle")} />
 
       <AuthField
-        label="Email or Phone"
+        label={t("auth.forgot.identifierLabel")}
         value={form.identifier}
         onChange={(value) => setForm({ identifier: value })}
-        placeholder="Enter your email or phone"
+        placeholder={t("auth.forgot.identifierPlaceholder")}
         keyboardType="default"
         iconName="account-outline"
         error={formErrors.identifier}
@@ -60,19 +62,19 @@ export default function ForgotPasswordScreen() {
       <ApiFeedback message={message} />
 
       <SubmitButton
-        label="Send Reset Link"
-        loadingLabel="Sending..."
+        label={t("auth.forgot.submit")}
+        loadingLabel={t("auth.forgot.loading")}
         loading={loading}
         onPress={onSubmit}
       />
 
-      <LinkButton label="Back to Login" onPress={() => router.push("/login")} />
+      <LinkButton label={t("auth.forgot.backToLogin")} onPress={() => router.push("/login")} />
     </AuthScreenLayout>
   );
 }
 
-const validateForm = (form: typeof initialForm) => {
+const validateForm = (form: typeof initialForm, t: (key: string) => string) => {
   const errors: Record<string, string> = {};
-  if (!form.identifier.trim()) errors.identifier = "Required";
+  if (!form.identifier.trim()) errors.identifier = t("validation.required");
   return errors;
 };
