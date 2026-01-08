@@ -5,6 +5,7 @@ import { AppState } from "react-native";
 import { MobileService } from "@src/services/mobile.service";
 import { useAuthStore } from "@src/state/auth-store";
 import { useNotificationsStore } from "@src/state/notifications-store";
+import { useTranslation } from "@src/hooks/use-translation";
 
 export default function TabsLayout() {
   const user = useAuthStore((state) => state.user);
@@ -13,6 +14,7 @@ export default function TabsLayout() {
   const hasIssuedInvoice = useNotificationsStore((state) => state.hasIssuedInvoice);
   const refreshNotifications = useNotificationsStore((state) => state.refreshNotifications);
   const setHasIssuedInvoice = useNotificationsStore((state) => state.setHasIssuedInvoice);
+  const { t } = useTranslation();
 
   useEffect(() => {
     let active = true;
@@ -96,7 +98,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: "Home",
+          title: t("tabs.home"),
           tabBarIcon: ({ focused, size }) => (
             <MaterialCommunityIcons
               name="home-outline"
@@ -109,7 +111,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="readings"
         options={{
-          title: "Read meter",
+          title: t("tabs.readings"),
           tabBarIcon: ({ focused, size }) => (
             <MaterialCommunityIcons
               name="meter-gas-outline"
@@ -123,7 +125,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="payment"
         options={{
-          title: "Payment",
+          title: t("tabs.payment"),
           tabBarIcon: ({ focused, size }) => (
             <MaterialCommunityIcons
               name="credit-card-outline"
@@ -145,7 +147,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="send-message"
         options={{
-          title: "Message",
+          title: t("tabs.message"),
           tabBarIcon: ({ focused, size }) => (
             <MaterialCommunityIcons
               name="message-text-outline"
@@ -158,7 +160,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile-edit"
         options={{
-          title: "Profile",
+          title: t("tabs.profile"),
           tabBarIcon: ({ focused, size }) => (
             <MaterialCommunityIcons
               name="account-circle-outline"
