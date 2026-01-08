@@ -12,21 +12,27 @@ import {
   MobileStaffMetersData,
 } from "@src/api/types/mobile";
 import { useAuthStore } from "@src/state/auth-store";
-import { normalizeLocale } from "@src/constants/translations";
+import { defaultLocale, normalizeLocale, translations } from "@src/constants/translations";
 import { useLocaleStore } from "@src/state/locale-store";
 
 type ServiceResult<T> =
   | { success: true; data: T }
   | { success: false; message: string; details?: Record<string, string[]> };
 
-const ERROR_MESSAGES: Record<string, string> = {
-  UNAUTHORIZED: "Please log in again.",
-  INVALID_TOKEN: "Please log in again.",
-  VALIDATION_FAILED: "Please check your details.",
-  ACCOUNT_EXISTS: "Email is already in use.",
-  NOT_FOUND: "Account not found.",
-  READER_FORBIDDEN: "You are not allowed to submit readings.",
-  ACCOUNT_MISMATCH: "Please log in again.",
+const ERROR_MESSAGE_KEYS: Record<string, string> = {
+  UNAUTHORIZED: "errors.unauthorized",
+  INVALID_TOKEN: "errors.invalidToken",
+  VALIDATION_FAILED: "errors.validationFailed",
+  ACCOUNT_EXISTS: "errors.accountExists",
+  NOT_FOUND: "errors.notFound",
+  READER_FORBIDDEN: "errors.readerForbidden",
+  ACCOUNT_MISMATCH: "errors.accountMismatch",
+  FORBIDDEN: "errors.readerForbidden",
+};
+
+const translate = (key: string, fallback: string) => {
+  const locale = useLocaleStore.getState().locale;
+  return translations[locale]?.[key] ?? translations[defaultLocale]?.[key] ?? fallback;
 };
 
 const updateAuthUser = (data: MobileAccountData) => {
@@ -53,13 +59,15 @@ export const MobileService = {
     try {
       const res = await MobileApi.getAccount();
       if (!res.success) {
-        const message = (res.error && ERROR_MESSAGES[res.error]) || "Unable to load account.";
+        const message = res.error
+          ? translate(ERROR_MESSAGE_KEYS[res.error] || "errors.loadAccount", "Unable to load account.")
+          : translate("errors.loadAccount", "Unable to load account.");
         return { success: false, message, details: res.details };
       }
 
       const data = res.data as MobileAccountData | undefined;
       if (!data) {
-        return { success: false, message: "Invalid account response." };
+        return { success: false, message: translate("errors.invalidAccountResponse", "Invalid account response.") };
       }
 
       updateAuthUser(data);
@@ -67,8 +75,11 @@ export const MobileService = {
       return { success: true, data };
     } catch (error: any) {
       const message = error?.response?.data?.error
-        ? ERROR_MESSAGES[error.response.data.error] || "Unable to load account."
-        : "Unable to load account.";
+        ? translate(
+            ERROR_MESSAGE_KEYS[error.response.data.error] || "errors.loadAccount",
+            "Unable to load account."
+          )
+        : translate("errors.loadAccount", "Unable to load account.");
       return { success: false, message };
     }
   },
@@ -77,13 +88,15 @@ export const MobileService = {
     try {
       const res = await MobileApi.updateProfile(input);
       if (!res.success) {
-        const message = (res.error && ERROR_MESSAGES[res.error]) || "Unable to update profile.";
+        const message = res.error
+          ? translate(ERROR_MESSAGE_KEYS[res.error] || "errors.updateProfile", "Unable to update profile.")
+          : translate("errors.updateProfile", "Unable to update profile.");
         return { success: false, message, details: res.details };
       }
 
       const data = res.data as MobileAccountData | undefined;
       if (!data) {
-        return { success: false, message: "Invalid profile response." };
+        return { success: false, message: translate("errors.invalidProfileResponse", "Invalid profile response.") };
       }
 
       updateAuthUser(data);
@@ -91,8 +104,11 @@ export const MobileService = {
       return { success: true, data };
     } catch (error: any) {
       const message = error?.response?.data?.error
-        ? ERROR_MESSAGES[error.response.data.error] || "Unable to update profile."
-        : "Unable to update profile.";
+        ? translate(
+            ERROR_MESSAGE_KEYS[error.response.data.error] || "errors.updateProfile",
+            "Unable to update profile."
+          )
+        : translate("errors.updateProfile", "Unable to update profile.");
       return { success: false, message };
     }
   },
@@ -101,20 +117,28 @@ export const MobileService = {
     try {
       const res = await MobileApi.getConsumption(year);
       if (!res.success) {
-        const message = (res.error && ERROR_MESSAGES[res.error]) || "Unable to load consumption.";
+        const message = res.error
+          ? translate(ERROR_MESSAGE_KEYS[res.error] || "errors.loadConsumption", "Unable to load consumption.")
+          : translate("errors.loadConsumption", "Unable to load consumption.");
         return { success: false, message, details: res.details };
       }
 
       const data = res.data as MobileConsumptionData | undefined;
       if (!data) {
-        return { success: false, message: "Invalid consumption response." };
+        return {
+          success: false,
+          message: translate("errors.invalidConsumptionResponse", "Invalid consumption response."),
+        };
       }
 
       return { success: true, data };
     } catch (error: any) {
       const message = error?.response?.data?.error
-        ? ERROR_MESSAGES[error.response.data.error] || "Unable to load consumption."
-        : "Unable to load consumption.";
+        ? translate(
+            ERROR_MESSAGE_KEYS[error.response.data.error] || "errors.loadConsumption",
+            "Unable to load consumption."
+          )
+        : translate("errors.loadConsumption", "Unable to load consumption.");
       return { success: false, message };
     }
   },
@@ -123,20 +147,25 @@ export const MobileService = {
     try {
       const res = await MobileApi.getBilling(year);
       if (!res.success) {
-        const message = (res.error && ERROR_MESSAGES[res.error]) || "Unable to load billing.";
+        const message = res.error
+          ? translate(ERROR_MESSAGE_KEYS[res.error] || "errors.loadBilling", "Unable to load billing.")
+          : translate("errors.loadBilling", "Unable to load billing.");
         return { success: false, message, details: res.details };
       }
 
       const data = res.data as MobileBillingData | undefined;
       if (!data) {
-        return { success: false, message: "Invalid billing response." };
+        return { success: false, message: translate("errors.invalidBillingResponse", "Invalid billing response.") };
       }
 
       return { success: true, data };
     } catch (error: any) {
       const message = error?.response?.data?.error
-        ? ERROR_MESSAGES[error.response.data.error] || "Unable to load billing."
-        : "Unable to load billing.";
+        ? translate(
+            ERROR_MESSAGE_KEYS[error.response.data.error] || "errors.loadBilling",
+            "Unable to load billing."
+          )
+        : translate("errors.loadBilling", "Unable to load billing.");
       return { success: false, message };
     }
   },
@@ -145,20 +174,24 @@ export const MobileService = {
     try {
       const res = await MobileApi.getReadingContext(meterId);
       if (!res.success) {
-        const message = (res.error && ERROR_MESSAGES[res.error]) || "Unable to load reading data.";
+        const message = res.error
+          ? translate(ERROR_MESSAGE_KEYS[res.error] || "errors.loadReadingData", "Unable to load reading data.")
+          : translate("errors.loadReadingData", "Unable to load reading data.");
         return { success: false, message, details: res.details };
       }
 
       const data = res.data as MobileReadingContext | undefined;
       if (!data) {
-        return { success: false, message: "Invalid reading response." };
+        return { success: false, message: translate("errors.invalidReadingResponse", "Invalid reading response.") };
       }
 
       return { success: true, data };
     } catch (error: unknown) {
       const apiError = error as { response?: { data?: { error?: string } } };
       const code = apiError.response?.data?.error;
-      const message = code ? ERROR_MESSAGES[code] || "Unable to load reading data." : "Unable to load reading data.";
+      const message = code
+        ? translate(ERROR_MESSAGE_KEYS[code] || "errors.loadReadingData", "Unable to load reading data.")
+        : translate("errors.loadReadingData", "Unable to load reading data.");
       return { success: false, message };
     }
   },
@@ -167,20 +200,24 @@ export const MobileService = {
     try {
       const res = await MobileApi.createReading(input);
       if (!res.success) {
-        const message = (res.error && ERROR_MESSAGES[res.error]) || "Unable to submit reading.";
+        const message = res.error
+          ? translate(ERROR_MESSAGE_KEYS[res.error] || "errors.submitReading", "Unable to submit reading.")
+          : translate("errors.submitReading", "Unable to submit reading.");
         return { success: false, message, details: res.details };
       }
 
       const data = res.data as MobileReadingResult | undefined;
       if (!data?.reading) {
-        return { success: false, message: "Invalid reading response." };
+        return { success: false, message: translate("errors.invalidReadingResponse", "Invalid reading response.") };
       }
 
       return { success: true, data };
     } catch (error: unknown) {
       const apiError = error as { response?: { data?: { error?: string } } };
       const code = apiError.response?.data?.error;
-      const message = code ? ERROR_MESSAGES[code] || "Unable to submit reading." : "Unable to submit reading.";
+      const message = code
+        ? translate(ERROR_MESSAGE_KEYS[code] || "errors.submitReading", "Unable to submit reading.")
+        : translate("errors.submitReading", "Unable to submit reading.");
       return { success: false, message };
     }
   },
@@ -189,13 +226,15 @@ export const MobileService = {
     try {
       const res = await MobileApi.getPayment();
       if (!res.success) {
-        const message = (res.error && ERROR_MESSAGES[res.error]) || "Unable to load payment details.";
+        const message = res.error
+          ? translate(ERROR_MESSAGE_KEYS[res.error] || "errors.loadPayment", "Unable to load payment details.")
+          : translate("errors.loadPayment", "Unable to load payment details.");
         return { success: false, message, details: res.details };
       }
 
       const data = res.data as MobilePaymentData | undefined;
       if (!data) {
-        return { success: false, message: "Invalid payment response." };
+        return { success: false, message: translate("errors.invalidPaymentResponse", "Invalid payment response.") };
       }
 
       return { success: true, data };
@@ -203,8 +242,8 @@ export const MobileService = {
       const apiError = error as { response?: { data?: { error?: string } } };
       const code = apiError.response?.data?.error;
       const message = code
-        ? ERROR_MESSAGES[code] || "Unable to load payment details."
-        : "Unable to load payment details.";
+        ? translate(ERROR_MESSAGE_KEYS[code] || "errors.loadPayment", "Unable to load payment details.")
+        : translate("errors.loadPayment", "Unable to load payment details.");
       return { success: false, message };
     }
   },
@@ -213,13 +252,15 @@ export const MobileService = {
     try {
       const res = await MobileApi.payInvoice(invoiceId);
       if (!res.success) {
-        const message = (res.error && ERROR_MESSAGES[res.error]) || "Unable to submit payment.";
+        const message = res.error
+          ? translate(ERROR_MESSAGE_KEYS[res.error] || "errors.submitPayment", "Unable to submit payment.")
+          : translate("errors.submitPayment", "Unable to submit payment.");
         return { success: false, message, details: res.details };
       }
 
       const data = res.data as { updated: number } | undefined;
       if (!data) {
-        return { success: false, message: "Invalid payment response." };
+        return { success: false, message: translate("errors.invalidPaymentResponse", "Invalid payment response.") };
       }
 
       return { success: true, data };
@@ -227,8 +268,8 @@ export const MobileService = {
       const apiError = error as { response?: { data?: { error?: string } } };
       const code = apiError.response?.data?.error;
       const message = code
-        ? ERROR_MESSAGES[code] || "Unable to submit payment."
-        : "Unable to submit payment.";
+        ? translate(ERROR_MESSAGE_KEYS[code] || "errors.submitPayment", "Unable to submit payment.")
+        : translate("errors.submitPayment", "Unable to submit payment.");
       return { success: false, message };
     }
   },
@@ -237,13 +278,18 @@ export const MobileService = {
     try {
       const res = await MobileApi.getNotifications();
       if (!res.success) {
-        const message = (res.error && ERROR_MESSAGES[res.error]) || "Unable to load notifications.";
+        const message = res.error
+          ? translate(ERROR_MESSAGE_KEYS[res.error] || "errors.loadNotifications", "Unable to load notifications.")
+          : translate("errors.loadNotifications", "Unable to load notifications.");
         return { success: false, message, details: res.details };
       }
 
       const data = res.data as MobileNotificationsData | undefined;
       if (!data) {
-        return { success: false, message: "Invalid notifications response." };
+        return {
+          success: false,
+          message: translate("errors.invalidNotificationsResponse", "Invalid notifications response."),
+        };
       }
 
       return { success: true, data };
@@ -251,8 +297,8 @@ export const MobileService = {
       const apiError = error as { response?: { data?: { error?: string } } };
       const code = apiError.response?.data?.error;
       const message = code
-        ? ERROR_MESSAGES[code] || "Unable to load notifications."
-        : "Unable to load notifications.";
+        ? translate(ERROR_MESSAGE_KEYS[code] || "errors.loadNotifications", "Unable to load notifications.")
+        : translate("errors.loadNotifications", "Unable to load notifications.");
       return { success: false, message };
     }
   },
@@ -261,20 +307,24 @@ export const MobileService = {
     try {
       const res = await MobileApi.getStaffMeters();
       if (!res.success) {
-        const message = (res.error && ERROR_MESSAGES[res.error]) || "Unable to load meters.";
+        const message = res.error
+          ? translate(ERROR_MESSAGE_KEYS[res.error] || "errors.loadStaffMeters", "Unable to load meters.")
+          : translate("errors.loadStaffMeters", "Unable to load meters.");
         return { success: false, message, details: res.details };
       }
 
       const data = res.data as MobileStaffMetersData | undefined;
       if (!data) {
-        return { success: false, message: "Invalid meters response." };
+        return { success: false, message: translate("errors.invalidMetersResponse", "Invalid meters response.") };
       }
 
       return { success: true, data };
     } catch (error: unknown) {
       const apiError = error as { response?: { data?: { error?: string } } };
       const code = apiError.response?.data?.error;
-      const message = code ? ERROR_MESSAGES[code] || "Unable to load meters." : "Unable to load meters.";
+      const message = code
+        ? translate(ERROR_MESSAGE_KEYS[code] || "errors.loadStaffMeters", "Unable to load meters.")
+        : translate("errors.loadStaffMeters", "Unable to load meters.");
       return { success: false, message };
     }
   },
