@@ -8,7 +8,8 @@ vi.mock('src/locales/use-locales', () => ({
   default: () => ({
     allLangs: [
       { label: 'English', value: 'en', icon: 'flagpack:gb-nir' },
-      { label: 'Serbian', value: 'sr', icon: 'flagpack:rs' },
+      { label: 'Srpski (latinica)', value: 'sr-Latn', icon: 'flagpack:rs' },
+      { label: 'Srpski (cirilica)', value: 'sr-Cyrl', icon: 'flagpack:rs' },
     ],
     currentLang: { label: 'English', value: 'en', icon: 'flagpack:gb-nir' },
     onChangeLang: onChangeLangMock,
@@ -27,9 +28,8 @@ describe('LanguagePopover', () => {
     render(<LanguagePopover />);
 
     await userEvent.click(screen.getByLabelText(/language/i));
-    await userEvent.click(await screen.findByRole('menuitem', { name: /serbian/i }));
+    await userEvent.click(await screen.findByRole('menuitem', { name: /srpski \\(latinica\\)/i }));
 
-    expect(onChangeLangMock).toHaveBeenCalledWith('sr');
+    expect(onChangeLangMock).toHaveBeenCalledWith('sr-Latn');
   });
 });
-

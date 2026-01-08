@@ -18,8 +18,9 @@ export default function useLocales() {
   const settings = useSettingsContext();
 
   const langStorage = localStorageGetItem('i18nextLng');
+  const normalizedLang = langStorage === 'sr' ? 'sr-Latn' : langStorage;
 
-  const currentLang = allLangs.find((lang) => lang.value === langStorage) || defaultLang;
+  const currentLang = allLangs.find((lang) => lang.value === normalizedLang) || defaultLang;
 
   const onChangeLang = useCallback(
     (newlang: string) => {

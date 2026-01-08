@@ -10,10 +10,13 @@ import { defaultLang } from './config-lang';
 //
 import translationEn from './langs/en.json';
 import translationSr from './langs/sr.json';
+import translationSrCyrl from './langs/sr-Cyrl.json';
+import translationSrLatn from './langs/sr-Latn.json';
 
 // ----------------------------------------------------------------------
 
-const lng = localStorageGetItem('i18nextLng', defaultLang.value);
+const storedLng = localStorageGetItem('i18nextLng', defaultLang.value);
+const lng = storedLng === 'sr' ? 'sr-Latn' : storedLng;
 
 i18n
   .use(LanguageDetector)
@@ -22,9 +25,12 @@ i18n
     resources: {
       en: { translations: translationEn },
       sr: { translations: translationSr },
+      'sr-Latn': { translations: translationSrLatn },
+      'sr-Cyrl': { translations: translationSrCyrl },
     },
     lng,
-    fallbackLng: lng,
+    fallbackLng: defaultLang.value,
+    supportedLngs: ['en', 'sr', 'sr-Latn', 'sr-Cyrl'],
     debug: false,
     ns: ['translations'],
     defaultNS: 'translations',

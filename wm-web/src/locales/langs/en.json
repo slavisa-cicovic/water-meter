@@ -1,5 +1,7 @@
 {
   "app": {
     "title": "Water Meter"
-  }
+  },
+  "noData": "No data",
+  "dense": "Dense"
 }

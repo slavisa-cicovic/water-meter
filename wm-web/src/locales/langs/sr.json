@@ -1,5 +1,7 @@
 {
   "app": {
     "title": "Vodomer"
-  }
+  },
+  "noData": "Nema podataka",
+  "dense": "Kompaktno"
 }
