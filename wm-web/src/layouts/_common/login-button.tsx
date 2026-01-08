@@ -1,6 +1,9 @@
+'use client';
+
 // @mui
 import { Theme, SxProps } from '@mui/material/styles';
 import Button from '@mui/material/Button';
+import { useTranslation } from 'react-i18next';
 // routes
 import { RouterLink } from 'src/routes/components';
 // config
@@ -13,9 +16,11 @@ type Props = {
 };
 
 export default function LoginButton({ sx }: Props) {
+  const { t } = useTranslation();
+
   return (
     <Button component={RouterLink} href={PATH_AFTER_LOGIN} variant="outlined" sx={{ mr: 1, ...sx }}>
-      Login
+      {t('header.actions.login')}
     </Button>
   );
 }

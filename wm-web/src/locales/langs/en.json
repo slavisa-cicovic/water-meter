@@ -2,6 +2,16 @@
   "app": {
     "title": "Water Meter"
   },
+  "header": {
+    "nav": {
+      "home": "Home",
+      "docs": "Docs"
+    },
+    "actions": {
+      "purchase": "Purchase Now",
+      "login": "Login"
+    }
+  },
   "landing": {
     "hero": {
       "overline": "Water Meter",

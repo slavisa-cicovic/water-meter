@@ -2,6 +2,16 @@
   "app": {
     "title": "Vodomer"
   },
+  "header": {
+    "nav": {
+      "home": "Pocetna",
+      "docs": "Dokumentacija"
+    },
+    "actions": {
+      "purchase": "Kupite sada",
+      "login": "Prijava"
+    }
+  },
   "landing": {
     "hero": {
       "overline": "Vodomer",

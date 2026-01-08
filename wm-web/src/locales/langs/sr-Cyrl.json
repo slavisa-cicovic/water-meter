@@ -2,6 +2,16 @@
   "app": {
     "title": "Водомер"
   },
+  "header": {
+    "nav": {
+      "home": "Почетна",
+      "docs": "Документација"
+    },
+    "actions": {
+      "purchase": "Купите сада",
+      "login": "Пријава"
+    }
+  },
   "landing": {
     "hero": {
       "overline": "Водомер",

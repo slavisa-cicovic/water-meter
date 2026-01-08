@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import Fade from '@mui/material/Fade';
 import Stack from '@mui/material/Stack';
 import Portal from '@mui/material/Portal';
+import { useTranslation } from 'react-i18next';
 // hooks
 import { useBoolean } from 'src/hooks/use-boolean';
 // routes
@@ -23,6 +24,7 @@ type NavListProps = {
 };
 
 export default function NavList({ item, offsetTop }: NavListProps) {
+  const { t } = useTranslation();
   const pathname = usePathname();
 
   const nav = useBoolean();
@@ -46,10 +48,23 @@ export default function NavList({ item, offsetTop }: NavListProps) {
     }
   };
 
+  const localizedItem = {
+    ...item,
+    title: item.titleKey ? t(item.titleKey) : item.title,
+    children: item.children?.map((child) => ({
+      ...child,
+      subheader: child.subheaderKey ? t(child.subheaderKey) : child.subheader,
+      items: child.items.map((subItem) => ({
+        ...subItem,
+        title: subItem.titleKey ? t(subItem.titleKey) : subItem.title,
+      })),
+    })),
+  };
+
   return (
     <>
       <NavItem
-        item={item}
+        item={localizedItem}
         offsetTop={offsetTop}
         active={active}
         open={nav.value}
@@ -58,7 +73,7 @@ export default function NavList({ item, offsetTop }: NavListProps) {
         onMouseLeave={nav.onFalse}
       />
 
-      {!!children && nav.value && (
+      {!!localizedItem.children && nav.value && (
         <Portal>
           <Fade in={nav.value}>
             <StyledMenu
@@ -66,7 +81,7 @@ export default function NavList({ item, offsetTop }: NavListProps) {
               onMouseLeave={nav.onFalse}
               sx={{ display: 'flex' }}
             >
-              {children.map((list) => (
+              {localizedItem.children.map((list) => (
                 <NavSubList
                   key={list.subheader}
                   subheader={list.subheader}

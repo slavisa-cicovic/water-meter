@@ -4,12 +4,15 @@ import { ListItemButtonProps } from '@mui/material/ListItemButton';
 
 export type NavItemProps = {
   title: string;
+  titleKey?: string;
   path: string;
   icon?: React.ReactElement;
   children?: {
     subheader: string;
+    subheaderKey?: string;
     items: {
       title: string;
+      titleKey?: string;
       path: string;
     }[];
   }[];

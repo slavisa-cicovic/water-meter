@@ -1,3 +1,5 @@
+'use client';
+
 // @mui
 import AppBar from '@mui/material/AppBar';
 import Badge, { badgeClasses } from '@mui/material/Badge';
@@ -16,6 +18,7 @@ import { bgBlur } from 'src/theme/css';
 import pkg from 'package.json';
 import Label from 'src/components/label';
 import Logo from 'src/components/logo';
+import { useTranslation } from 'react-i18next';
 //
 import { HEADER } from '../config-layout';
 import { navConfig } from './config-navigation';
@@ -27,6 +30,7 @@ import { LanguagePopover, LoginButton, SettingsButton } from '../_common';
 
 export default function Header() {
   const theme = useTheme();
+  const { t } = useTranslation();
 
   const offsetTop = useOffSetTop(HEADER.H_DESKTOP);
 
@@ -74,7 +78,7 @@ export default function Header() {
 
           <Stack alignItems="center" direction={{ xs: 'row', md: 'row-reverse' }}>
             <Button variant="contained" target="_blank" rel="noopener" href='paths.minimalUI'>
-              Purchase Now
+              {t('header.actions.purchase')}
             </Button>
             <LoginButton />
             <SettingsButton
