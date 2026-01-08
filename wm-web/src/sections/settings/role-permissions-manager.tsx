@@ -137,6 +137,11 @@ export default function RolePermissionsManager() {
     }));
   }, []);
 
+  const handleCancel = useCallback(() => {
+    setDraftPermissions(initialPermissions);
+    setSaveError(null);
+  }, [initialPermissions]);
+
   const handleSave = useCallback(async () => {
     if (!selectedRole) return;
     setSaving(true);
@@ -258,9 +263,6 @@ export default function RolePermissionsManager() {
                       {selectedRole?.slug}
                     </Typography>
                   </Box>
-                  <Button variant="contained" onClick={handleSave} disabled={!hasDraftChanges || saving}>
-                    Save changes
-                  </Button>
                 </Stack>
                 {saveError ? <Alert severity="error">{saveError}</Alert> : null}
 
@@ -324,6 +326,15 @@ export default function RolePermissionsManager() {
                       </AccordionDetails>
                     </Accordion>
                   ))}
+                </Stack>
+
+                <Stack direction="row" spacing={1} justifyContent="flex-end">
+                  <Button variant="outlined" onClick={handleCancel} disabled={!hasDraftChanges || saving}>
+                    Cancel
+                  </Button>
+                  <Button variant="contained" onClick={handleSave} disabled={!hasDraftChanges || saving}>
+                    Save
+                  </Button>
                 </Stack>
               </Stack>
             </Box>

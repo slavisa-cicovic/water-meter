@@ -158,7 +158,7 @@ export default function TranslationManager() {
 
           <Stack direction="row" spacing={1} justifyContent="flex-end">
             <Button variant="outlined" onClick={handleReset} disabled={!hasChanges || saving}>
-              Reset
+              Cancel
             </Button>
             <Button
               variant="contained"
