@@ -22,11 +22,13 @@ import { useAuthStore } from "@src/state/auth-store";
 import { MobileReadingContext } from "@src/api/types/mobile";
 import { useMeterOcr } from "@src/hooks/use-meter-ocr";
 import { useMeterBarcode } from "@src/hooks/use-meter-barcode";
+import { useTranslation } from "@src/hooks/use-translation";
 
 export default function ReadingsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const user = useAuthStore((state) => state.user);
+  const { t } = useTranslation();
   const [context, setContext] = useState<MobileReadingContext | null>(null);
   const [contextError, setContextError] = useState<string | null>(null);
   const [loadingContext, setLoadingContext] = useState(true);
@@ -142,7 +144,7 @@ export default function ReadingsScreen() {
         setRecognizedValue(null);
         setInputValue("");
         setSelectedBoxId(null);
-        Alert.alert("OCR failed", "Unable to recognize the meter value. Please enter it manually.");
+        Alert.alert(t("readings.alert.ocrFailedTitle"), t("readings.alert.ocrFailedValueMessage"));
         return;
       }
 
@@ -155,14 +157,14 @@ export default function ReadingsScreen() {
       setInputValue("");
       setSelectedBoxId(null);
       setShowCandidatePicker(false);
-      Alert.alert("OCR failed", "Unable to process the photo. Please enter the value manually.");
+      Alert.alert(t("readings.alert.ocrFailedTitle"), t("readings.alert.ocrFailedPhotoMessage"));
     }
   };
 
   const handleTakePhoto = async () => {
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert("Camera access", "Camera permission is required to take a photo.");
+      Alert.alert(t("readings.alert.cameraAccessTitle"), t("readings.alert.cameraAccessMessage"));
       return;
     }
 
@@ -174,7 +176,7 @@ export default function ReadingsScreen() {
 
     const filename = asset.fileName ?? asset.uri.split("/").pop() ?? "meter-photo.jpg";
     const timestamp = new Date().toLocaleString();
-    const sender = user ? `${user.firstName} ${user.lastName}`.trim() : "Unknown user";
+    const sender = user ? `${user.firstName} ${user.lastName}`.trim() : t("readings.watermark.unknownUser");
 
     setSourceUri(asset.uri);
     setShowCandidatePicker(false);
@@ -191,7 +193,7 @@ export default function ReadingsScreen() {
   const handlePickFromGallery = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert("Gallery access", "Photo library permission is required to pick a photo.");
+      Alert.alert(t("readings.alert.galleryAccessTitle"), t("readings.alert.galleryAccessMessage"));
       return;
     }
 
@@ -203,7 +205,7 @@ export default function ReadingsScreen() {
 
     const filename = asset.fileName ?? asset.uri.split("/").pop() ?? "meter-photo.jpg";
     const timestamp = new Date().toLocaleString();
-    const sender = user ? `${user.firstName} ${user.lastName}`.trim() : "Unknown user";
+    const sender = user ? `${user.firstName} ${user.lastName}`.trim() : t("readings.watermark.unknownUser");
 
     setSourceUri(asset.uri);
     setShowCandidatePicker(false);
@@ -219,11 +221,11 @@ export default function ReadingsScreen() {
 
   const handleSubmit = async () => {
     if (!user) {
-      Alert.alert("Session expired", "Please log in again.");
+      Alert.alert(t("readings.alert.sessionExpiredTitle"), t("readings.alert.sessionExpiredMessage"));
       return;
     }
     if (!meter) {
-      Alert.alert("Meter unavailable", "No meter assigned to this account.");
+      Alert.alert(t("readings.alert.meterUnavailableTitle"), t("readings.alert.meterUnavailableMessage"));
       return;
     }
 
@@ -231,7 +233,7 @@ export default function ReadingsScreen() {
     const parsed = Number.parseFloat(normalizedInput);
     const normalizedValue = Math.round(parsed * 100) / 100;
     if (!Number.isFinite(normalizedValue) || normalizedValue < 0) {
-      Alert.alert("Invalid value", "Please enter a valid meter reading (e.g. 00000.00).");
+      Alert.alert(t("readings.alert.invalidValueTitle"), t("readings.alert.invalidValueMessage"));
       return;
     }
 
@@ -268,13 +270,13 @@ export default function ReadingsScreen() {
     setSubmitting(false);
 
     if (!result.success) {
-      Alert.alert("Submit failed", result.message);
+      Alert.alert(t("readings.alert.submitFailedTitle"), result.message);
       return;
     }
 
-    Alert.alert("Success", "Reading submitted successfully.", [
+    Alert.alert(t("readings.alert.successTitle"), t("readings.alert.successMessage"), [
       {
-        text: "OK",
+        text: t("common.ok"),
         onPress: () => {
           router.replace("/home");
         },
@@ -283,11 +285,11 @@ export default function ReadingsScreen() {
   };
 
   return (
-    <ScrollScreen title="Read meter" contentContainerStyle={styles.content} keyboardAvoiding>
+    <ScrollScreen title={t("readings.title")} contentContainerStyle={styles.content} keyboardAvoiding>
       <Modal transparent animationType="fade" visible={showPreview} onRequestClose={closePreview}>
         <GestureHandlerRootView style={styles.previewBackdrop}>
           <TouchableOpacity style={styles.previewClose} onPress={closePreview}>
-            <Text style={styles.previewCloseText}>Close</Text>
+            <Text style={styles.previewCloseText}>{t("common.close")}</Text>
           </TouchableOpacity>
           {sourceUri ? (
             <GestureDetector
@@ -320,14 +322,12 @@ export default function ReadingsScreen() {
       >
         <View style={styles.pickerBackdrop}>
           <View style={styles.pickerCard}>
-            <Text style={styles.pickerTitle}>Select detected text</Text>
-            <Text style={styles.pickerSubtitle}>
-              Review OCR results and barcode scan output.
-            </Text>
+            <Text style={styles.pickerTitle}>{t("readings.selectDetectedTitle")}</Text>
+            <Text style={styles.pickerSubtitle}>{t("readings.selectDetectedSubtitle")}</Text>
             <ScrollView style={styles.pickerList} contentContainerStyle={styles.pickerListContent}>
               {sortedBarcodes.length > 0 ? (
                 <View style={styles.pickerSection}>
-                  <Text style={styles.pickerSectionTitle}>Barcode</Text>
+                  <Text style={styles.pickerSectionTitle}>{t("readings.section.barcode")}</Text>
                   {sortedBarcodes.map((code, index) => (
                     <View key={`${code}-${index}`} style={styles.pickerItem}>
                       <Text style={styles.pickerItemText}>{code}</Text>
@@ -336,17 +336,20 @@ export default function ReadingsScreen() {
                 </View>
               ) : null}
               {sortedCandidates.length === 0 && sortedBarcodes.length === 0 ? (
-                <Text style={styles.helperText}>No OCR candidates or barcodes found.</Text>
+                <Text style={styles.helperText}>{t("readings.emptyCandidates")}</Text>
               ) : (
                 <View style={styles.pickerSection}>
-                  <Text style={styles.pickerSectionTitle}>OCR candidates</Text>
+                  <Text style={styles.pickerSectionTitle}>{t("readings.section.ocrCandidates")}</Text>
                   {sortedCandidates.map((candidate) => (
                     <TouchableOpacity
                       key={candidate.id}
                       style={styles.pickerItem}
                       onPress={() => {
                         if (candidate.value === null) {
-                          Alert.alert("Invalid selection", "This text does not match the meter format.");
+                          Alert.alert(
+                            t("readings.alert.invalidSelectionTitle"),
+                            t("readings.alert.invalidSelectionMessage")
+                          );
                           return;
                         }
                         setRecognizedValue(candidate.value);
@@ -364,46 +367,46 @@ export default function ReadingsScreen() {
               )}
             </ScrollView>
             <TouchableOpacity style={styles.pickerClose} onPress={() => setShowCandidatePicker(false)}>
-              <Text style={styles.pickerCloseText}>Close</Text>
+              <Text style={styles.pickerCloseText}>{t("common.close")}</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
       {isStaffField && !routeMeterId ? (
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Select meter</Text>
+          <Text style={styles.sectionTitle}>{t("readings.staff.selectMeterTitle")}</Text>
           {contextError ? <Text style={styles.errorText}>{contextError}</Text> : null}
-          {loadingContext ? <Text style={styles.helperText}>Loading meter...</Text> : null}
+          {loadingContext ? <Text style={styles.helperText}>{t("readings.staff.loadingMeter")}</Text> : null}
           {!loadingContext && !contextError ? (
             <>
-              <Text style={styles.helperText}>Please select meter first.</Text>
+              <Text style={styles.helperText}>{t("readings.staff.selectMeterHint")}</Text>
               <TouchableOpacity style={styles.backButton} onPress={() => router.replace("/home")}>
-                <Text style={styles.backButtonText}>Back to Home</Text>
+                <Text style={styles.backButtonText}>{t("readings.staff.backToHome")}</Text>
               </TouchableOpacity>
             </>
           ) : null}
         </View>
       ) : (
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Meter capture</Text>
+          <Text style={styles.sectionTitle}>{t("readings.section.capture")}</Text>
           <View style={styles.meterMeta}>
             <Text style={styles.meterMetaText}>
-              Meter: {meter?.serialNumber ?? "Not linked"}
+              {t("readings.meter.label")}: {meter?.serialNumber ?? t("readings.meter.notLinked")}
             </Text>
             <Text style={styles.meterMetaText}>
-              Barcode: {sortedBarcodes[0] ?? "Not detected"}
+              {t("readings.meter.barcode")}: {sortedBarcodes[0] ?? t("readings.meter.notDetected")}
             </Text>
           </View>
-          <Text style={styles.label}>Previous paid reading</Text>
+          <Text style={styles.label}>{t("readings.meter.previousPaid")}</Text>
           <Text style={styles.value}>{previousPaidValue}</Text>
           {contextError ? <Text style={styles.errorText}>{contextError}</Text> : null}
-          {loadingContext ? <Text style={styles.helperText}>Loading reading data...</Text> : null}
+          {loadingContext ? <Text style={styles.helperText}>{t("readings.loadingReadingData")}</Text> : null}
 
           <TouchableOpacity style={styles.cameraButton} onPress={handleTakePhoto}>
-            <Text style={styles.cameraButtonText}>Open camera</Text>
+            <Text style={styles.cameraButtonText}>{t("readings.action.openCamera")}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.galleryButton} onPress={handlePickFromGallery}>
-            <Text style={styles.galleryButtonText}>Choose from gallery</Text>
+            <Text style={styles.galleryButtonText}>{t("readings.action.chooseGallery")}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -467,21 +470,21 @@ export default function ReadingsScreen() {
                 ) : null}
               </View>
             ) : (
-              <Text style={styles.placeholderText}>No photo captured yet</Text>
+              <Text style={styles.placeholderText}>{t("readings.placeholder.noPhoto")}</Text>
             )}
           </TouchableOpacity>
 
-          <Text style={styles.label}>Recognized value</Text>
+          <Text style={styles.label}>{t("readings.label.recognizedValue")}</Text>
           <TextInput
             style={[styles.input, styles.inputReadOnly]}
             value={recognizedValue !== null ? formatReadingValue(recognizedValue) : ""}
             editable={false}
-            placeholder="Waiting for photo"
+            placeholder={t("readings.placeholder.waitingPhoto")}
             placeholderTextColor="#a8b3d1"
           />
-          {recognizing ? <Text style={styles.helperText}>Recognizing text...</Text> : null}
+          {recognizing ? <Text style={styles.helperText}>{t("readings.status.recognizing")}</Text> : null}
           {ocrCandidates.length > 0 ? (
-            <Text style={styles.helperText}>Use the OCR results list to pick the correct reading.</Text>
+            <Text style={styles.helperText}>{t("readings.status.ocrHint")}</Text>
           ) : null}
           {sourceUri ? (
             <View style={styles.ocrActions}>
@@ -490,24 +493,26 @@ export default function ReadingsScreen() {
                 onPress={() => runRecognition(sourceUri)}
                 disabled={recognizing}
               >
-                <Text style={styles.retryButtonText}>{recognizing ? "Recognizing..." : "Try OCR again"}</Text>
+                <Text style={styles.retryButtonText}>
+                  {recognizing ? t("readings.action.recognizing") : t("readings.action.tryAgain")}
+                </Text>
               </TouchableOpacity>
             </View>
           ) : null}
 
-          <Text style={styles.label}>Your value</Text>
+          <Text style={styles.label}>{t("readings.label.yourValue")}</Text>
           <TextInput
             style={styles.input}
             value={inputValue}
             onChangeText={setInputValue}
-            placeholder="Enter meter value (00000.00)"
+            placeholder={t("readings.placeholder.enterValue")}
             placeholderTextColor="#a8b3d1"
             keyboardType="decimal-pad"
           />
 
           <SubmitButton
-            label="Submit reading"
-            loadingLabel="Submitting..."
+            label={t("readings.action.submit")}
+            loadingLabel={t("readings.action.submitting")}
             loading={submitting}
             disabled={!meter || !inputValue.trim()}
             onPress={handleSubmit}
