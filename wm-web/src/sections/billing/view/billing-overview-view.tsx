@@ -25,6 +25,7 @@ import { BillingApi, useGetInvoices } from 'src/api/billing';
 import { useGetSettings } from 'src/api/settings';
 import { RouterLink } from 'src/routes/components';
 import { paths } from 'src/routes/paths';
+import { useLocales } from 'src/locales';
 import { BillingTableFiltersResult } from '../billing-table-filters-result';
 import { BillingTableRow } from '../billing-table-row';
 import { BillingTableSkeleton } from '../billing-skeleton';
@@ -53,19 +54,8 @@ const defaultFilters: IBillingTableFilters = {
   createdEnd: defaultCreatedEnd,
 };
 
-const TABLE_HEAD = [
-  { id: 'account', label: 'Account', minWidth: 200 },
-  { id: 'meter', label: 'Meter', minWidth: 200 },
-  { id: 'period', label: 'Period', minWidth: 200, disableSort: true },
-  { id: 'createdAt', label: 'Created', width: 120 },
-  { id: 'updatedAt', label: 'Updated', width: 120 },
-  { id: 'consumption', label: 'Consumption', width: 120 },
-  { id: 'totalAmount', label: 'Total', width: 140 },
-  { id: 'status', label: 'Status', width: 120 },
-  { id: '', label: 'Actions', align: 'right', width: 120, disableSort: true },
-];
-
 export function BillingOverviewView() {
+  const { t } = useLocales();
   const settings = useSettingsContext();
   const { settings: appSettings } = useGetSettings();
   const searchParams = useSearchParams();
@@ -78,6 +68,20 @@ export function BillingOverviewView() {
   }));
   const [confirmOpen, setConfirmOpen] = useState(false);
   const table = useTable({ defaultRowsPerPage: 25, defaultDense: true, defaultOrderBy: 'createdAt', defaultOrder: 'desc' });
+  const TABLE_HEAD = useMemo(
+    () => [
+      { id: 'account', label: t('billing.table.account'), minWidth: 200 },
+      { id: 'meter', label: t('billing.table.meter'), minWidth: 200 },
+      { id: 'period', label: t('billing.table.period'), minWidth: 200, disableSort: true },
+      { id: 'createdAt', label: t('billing.table.created'), width: 120 },
+      { id: 'updatedAt', label: t('billing.table.updated'), width: 120 },
+      { id: 'consumption', label: t('billing.table.consumption'), width: 120 },
+      { id: 'totalAmount', label: t('billing.table.total'), width: 140 },
+      { id: 'status', label: t('billing.table.status'), width: 120 },
+      { id: '', label: t('billing.table.actions'), align: 'right', width: 120, disableSort: true },
+    ],
+    [t]
+  );
 
   useEffect(() => {
     setFilters((prev) => {
@@ -151,11 +155,11 @@ export function BillingOverviewView() {
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
       <CustomBreadcrumbs
-        heading="Billing Overview"
-        description="Back-office billing overview with invoice status and totals."
+        heading={t('billing.overview.title')}
+        description={t('billing.overview.description')}
         links={[
-          { name: 'App', href: paths.dashboard.root },
-          { name: 'Billing', href: paths.dashboard.billing.root },
+          { name: t('sidebar.app'), href: paths.dashboard.root },
+          { name: t('sidebar.billing'), href: paths.dashboard.billing.root },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
@@ -178,7 +182,7 @@ export function BillingOverviewView() {
           {invoicesError && (
             <EmptyContent
               filled
-              title="Failed to load invoices."
+              title={t('billing.overview.loadError')}
               action={
                 <Button
                   component={RouterLink}
@@ -186,14 +190,14 @@ export function BillingOverviewView() {
                   startIcon={<Iconify icon="eva:arrow-ios-back-fill" width={16} />}
                   sx={{ mt: 3 }}
                 >
-                  Back to dashboard
+                  {t('billing.overview.backToDashboard')}
                 </Button>
               }
               sx={{ py: 6 }}
             />
           )}
 
-          {!invoicesLoading && invoicesEmpty && <Alert severity="info">No invoices found.</Alert>}
+          {!invoicesLoading && invoicesEmpty && <Alert severity="info">{t('billing.overview.empty')}</Alert>}
 
           {!invoicesLoading && !invoicesError && invoices && invoices.length > 0 && (
             <TableContainer sx={{ position: 'relative' }}>
@@ -206,14 +210,14 @@ export function BillingOverviewView() {
                   {
                     key: 'confirm',
                     node: (
-                      <Tooltip title="Confirm invoices" arrow>
-                          <IconButton
-                            color="primary"
-                            onClick={handleOpenConfirm}
-                            disabled={!table.selected.length}
-                          >
-                            <Iconify icon="eva:checkmark-circle-2-fill" />
-                          </IconButton>
+                      <Tooltip title={t('billing.actions.confirmInvoices')} arrow>
+                        <IconButton
+                          color="primary"
+                          onClick={handleOpenConfirm}
+                          disabled={!table.selected.length}
+                        >
+                          <Iconify icon="eva:checkmark-circle-2-fill" />
+                        </IconButton>
                       </Tooltip>
                     ),
                   },
@@ -273,11 +277,11 @@ export function BillingOverviewView() {
       <ConfirmDialog
         open={confirmOpen}
         onClose={handleCloseConfirm}
-        title="Confirm invoices"
-        content={`You are about to confirm ${table.selected.length} invoice(s). This action cannot be undone.`}
+        title={t('billing.confirm.title')}
+        content={t('billing.confirm.body', { count: table.selected.length })}
         action={
           <Button variant="contained" color="primary" onClick={handleConfirmSelected}>
-            Confirm
+            {t('billing.actions.confirm')}
           </Button>
         }
       />

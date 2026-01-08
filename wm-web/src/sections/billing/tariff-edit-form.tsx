@@ -16,6 +16,7 @@ import { paths } from 'src/routes/paths';
 import { TariffsApi } from 'src/api/billing';
 import { Tariff } from 'src/types/billings';
 import { useMemo } from 'react';
+import { useLocales } from 'src/locales';
 
 type Props = {
   currentTariff?: Tariff;
@@ -24,20 +25,27 @@ type Props = {
 const toDateInput = (value?: string) => (value ? value.slice(0, 10) : '');
 
 export function TariffEditForm({ currentTariff }: Props) {
+  const { t } = useLocales();
   const router = useRouter();
   const isCreate = !currentTariff;
 
   const TariffSchema = Yup.object().shape({
-    name: Yup.string().required('Required'),
-    basePrice: Yup.number().min(0, 'Must be >= 0').required('Required'),
-    greenLimit: Yup.number().integer().min(0, 'Must be >= 0').required('Required'),
-    blueLimit: Yup.number().integer().min(0, 'Must be >= 0').required('Required'),
-    blueMultiplier: Yup.number().min(0, 'Must be >= 0').required('Required'),
-    redMultiplier: Yup.number().min(0, 'Must be >= 0').required('Required'),
-    validFrom: Yup.string().required('Required'),
+    name: Yup.string().required(t('validation.required')),
+    basePrice: Yup.number().min(0, t('validation.min', { min: 0 })).required(t('validation.required')),
+    greenLimit: Yup.number()
+      .integer()
+      .min(0, t('validation.min', { min: 0 }))
+      .required(t('validation.required')),
+    blueLimit: Yup.number()
+      .integer()
+      .min(0, t('validation.min', { min: 0 }))
+      .required(t('validation.required')),
+    blueMultiplier: Yup.number().min(0, t('validation.min', { min: 0 })).required(t('validation.required')),
+    redMultiplier: Yup.number().min(0, t('validation.min', { min: 0 })).required(t('validation.required')),
+    validFrom: Yup.string().required(t('validation.required')),
     validTo: Yup.string().nullable(),
     groupCode: Yup.string().nullable(),
-    status: Yup.string().oneOf(['active', 'inactive']).required('Required'),
+    status: Yup.string().oneOf(['active', 'inactive']).required(t('validation.required')),
   });
 
   const defaultValues = useMemo(
@@ -109,31 +117,39 @@ export function TariffEditForm({ currentTariff }: Props) {
       <Grid container spacing={3}>
         <Grid>
           <Card>
-            <CardHeader title={isCreate ? 'Create tariff' : 'Tariff details'} />
+            <CardHeader title={isCreate ? t('billing.tariffs.form.createTitle') : t('billing.tariffs.form.detailTitle')} />
             <CardContent>
               <Stack spacing={2}>
-                <RHFTextField name="name" label="Name" />
-                <RHFTextField name="groupCode" label="Group code (optional)" />
+                <RHFTextField name="name" label={t('billing.tariffs.form.fields.name')} />
+                <RHFTextField name="groupCode" label={t('billing.tariffs.form.fields.groupCode')} />
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                  <RHFTextField name="basePrice" label="Base price" type="number" />
-                  <RHFTextField name="greenLimit" label="Green limit" type="number" />
-                  <RHFTextField name="blueLimit" label="Blue limit" type="number" />
+                  <RHFTextField name="basePrice" label={t('billing.tariffs.form.fields.basePrice')} type="number" />
+                  <RHFTextField name="greenLimit" label={t('billing.tariffs.form.fields.greenLimit')} type="number" />
+                  <RHFTextField name="blueLimit" label={t('billing.tariffs.form.fields.blueLimit')} type="number" />
                 </Stack>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                  <RHFTextField name="blueMultiplier" label="Blue multiplier" type="number" />
-                  <RHFTextField name="redMultiplier" label="Red multiplier" type="number" />
+                  <RHFTextField
+                    name="blueMultiplier"
+                    label={t('billing.tariffs.form.fields.blueMultiplier')}
+                    type="number"
+                  />
+                  <RHFTextField
+                    name="redMultiplier"
+                    label={t('billing.tariffs.form.fields.redMultiplier')}
+                    type="number"
+                  />
                 </Stack>
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                   <RHFTextField
                     name="validFrom"
-                    label="Valid from"
+                    label={t('billing.tariffs.form.fields.validFrom')}
                     type="date"
                     slotProps={{ inputLabel: { shrink: true } }}
                     sx={{ flex: 1 }}
                   />
                   <RHFTextField
                     name="validTo"
-                    label="Valid to"
+                    label={t('billing.tariffs.form.fields.validTo')}
                     type="date"
                     slotProps={{ inputLabel: { shrink: true } }}
                     sx={{ flex: 1 }}
@@ -141,22 +157,22 @@ export function TariffEditForm({ currentTariff }: Props) {
                 </Stack>
                 <TextField
                   select
-                  label="Status"
+                  label={t('billing.tariffs.form.fields.status')}
                   value={methods.getValues('status')}
                   onChange={(event) =>
                     methods.setValue('status', event.target.value as 'active' | 'inactive')
                   }
                 >
-                  <MenuItem value="active">active</MenuItem>
-                  <MenuItem value="inactive">inactive</MenuItem>
+                  <MenuItem value="active">{t('billing.tariffs.status.active')}</MenuItem>
+                  <MenuItem value="inactive">{t('billing.tariffs.status.inactive')}</MenuItem>
                 </TextField>
               </Stack>
               <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 3 }}>
                 <Button variant="outlined" onClick={handleCancel}>
-                  Cancel
+                  {t('billing.tariffs.form.cancel')}
                 </Button>
                 <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-                  {isCreate ? 'Create tariff' : 'Save changes'}
+                  {isCreate ? t('billing.tariffs.form.create') : t('billing.tariffs.form.saveChanges')}
                 </LoadingButton>
               </Stack>
             </CardContent>

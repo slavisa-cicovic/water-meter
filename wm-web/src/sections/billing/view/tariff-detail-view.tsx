@@ -10,25 +10,27 @@ import EmptyContent from 'src/components/empty-content';
 import Button from '@mui/material/Button';
 import Iconify from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
+import { useLocales } from 'src/locales';
 
 type Props = {
   id: string;
 };
 
 export function TariffDetailView({ id }: Props) {
+  const { t } = useLocales();
   const settings = useSettingsContext();
   const { tariff, tariffLoading, tariffError } = useGetTariff(id);
 
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
       <CustomBreadcrumbs
-        heading="Tariff details"
-        description="Review and update tariff settings."
+        heading={t('billing.tariffs.detail.title')}
+        description={t('billing.tariffs.detail.description')}
         links={[
-          { name: 'App', href: paths.dashboard.root },
-          { name: 'Billing', href: paths.dashboard.billing.root },
-          { name: 'Tariffs', href: paths.dashboard.billing.tariffs.root },
-          { name: 'Detail' },
+          { name: t('sidebar.app'), href: paths.dashboard.root },
+          { name: t('sidebar.billing'), href: paths.dashboard.billing.root },
+          { name: t('billing.tariffs.title'), href: paths.dashboard.billing.tariffs.root },
+          { name: t('billing.tariffs.breadcrumbs.detail') },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
@@ -36,7 +38,7 @@ export function TariffDetailView({ id }: Props) {
       {tariffError && (
         <EmptyContent
           filled
-          title="Failed to load tariff."
+          title={t('billing.tariffs.detail.loadError')}
           action={
             <Button
               component={RouterLink}
@@ -44,7 +46,7 @@ export function TariffDetailView({ id }: Props) {
               startIcon={<Iconify icon="eva:arrow-ios-back-fill" width={16} />}
               sx={{ mt: 3 }}
             >
-              Back to tariffs
+              {t('billing.tariffs.detail.backToTariffs')}
             </Button>
           }
           sx={{ py: 6 }}

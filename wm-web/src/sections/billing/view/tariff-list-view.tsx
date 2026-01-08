@@ -30,22 +30,12 @@ import { TariffTableRow } from '../tariff-table-row';
 import { TariffTableSkeleton } from '../tariff-skeleton';
 import { TariffTableToolbar, ITariffTableFilters, ITariffTableFilterValue } from '../tariff-table-toolbar';
 import { ConfirmDialog } from 'src/components/custom-dialog';
+import { useLocales } from 'src/locales';
 
 const defaultFilters: ITariffTableFilters = {
   search: '',
   status: '',
 };
-
-const TABLE_HEAD = [
-  { id: 'name', label: 'Name', minWidth: 200 },
-  { id: 'basePrice', label: 'Base price', width: 120 },
-  { id: 'limits', label: 'Limits', width: 160, disableSort: true },
-  { id: 'multipliers', label: 'Multipliers', width: 160, disableSort: true },
-  { id: 'validFrom', label: 'Valid from', width: 120 },
-  { id: 'validTo', label: 'Valid to', width: 120 },
-  { id: 'status', label: 'Status', width: 80 },
-  { id: '', label: 'Actions', align: 'right', width: 80, disableSort: true },
-];
 
 const filterTariffs = (tariffs: Tariff[], filters: ITariffTableFilters) => {
   let data = tariffs;
@@ -78,11 +68,25 @@ const sortTariffs = (tariffs: Tariff[], orderBy: string, order: 'asc' | 'desc') 
 };
 
 export function TariffListView() {
+  const { t } = useLocales();
   const settings = useSettingsContext();
   const { settings: appSettings } = useGetSettings();
   const [filters, setFilters] = useState(defaultFilters);
   const [confirmAction, setConfirmAction] = useState<'delete' | 'activate' | 'deactivate' | null>(null);
   const table = useTable({ defaultRowsPerPage: 25, defaultDense: true, defaultOrderBy: 'name', defaultOrder: 'asc' });
+  const TABLE_HEAD = useMemo(
+    () => [
+      { id: 'name', label: t('billing.tariffs.table.name'), minWidth: 200 },
+      { id: 'basePrice', label: t('billing.tariffs.table.basePrice'), width: 120 },
+      { id: 'limits', label: t('billing.tariffs.table.limits'), width: 160, disableSort: true },
+      { id: 'multipliers', label: t('billing.tariffs.table.multipliers'), width: 160, disableSort: true },
+      { id: 'validFrom', label: t('billing.tariffs.table.validFrom'), width: 120 },
+      { id: 'validTo', label: t('billing.tariffs.table.validTo'), width: 120 },
+      { id: 'status', label: t('billing.tariffs.table.status'), width: 80 },
+      { id: '', label: t('billing.tariffs.table.actions'), align: 'right', width: 80, disableSort: true },
+    ],
+    [t]
+  );
 
   const { tariffs, tariffsLoading, tariffsError, tariffsEmpty, mutate } = useGetTariffs();
 
@@ -108,6 +112,11 @@ export function TariffListView() {
   );
   const canActivate = selectedTariffs.some((tariff) => tariff.status !== 'active');
   const canDeactivate = selectedTariffs.some((tariff) => tariff.status === 'active');
+  const actionLabels: Record<'delete' | 'activate' | 'deactivate', string> = {
+    delete: t('billing.tariffs.actionVerbs.delete'),
+    activate: t('billing.tariffs.actionVerbs.activate'),
+    deactivate: t('billing.tariffs.actionVerbs.deactivate'),
+  };
 
   const handleFilters = useCallback(
     (name: string, value: ITariffTableFilterValue) => {
@@ -141,19 +150,19 @@ export function TariffListView() {
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
       <CustomBreadcrumbs
-        heading="Tariffs"
-        description="Manage tariff definitions and activation state."
+        heading={t('billing.tariffs.title')}
+        description={t('billing.tariffs.description')}
         links={[
-          { name: 'App', href: paths.dashboard.root },
-          { name: 'Billing', href: paths.dashboard.billing.root },
-          { name: 'Tariffs', href: paths.dashboard.billing.tariffs.root },
+          { name: t('sidebar.app'), href: paths.dashboard.root },
+          { name: t('sidebar.billing'), href: paths.dashboard.billing.root },
+          { name: t('billing.tariffs.title'), href: paths.dashboard.billing.tariffs.root },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
       <Stack direction="row" alignItems="center" justifyContent="flex-end" sx={{ mb: 3 }}>
         <Button variant="contained" component={RouterLink} href={paths.dashboard.billing.tariffs.new}>
-          New tariff
+          {t('billing.tariffs.actions.new')}
         </Button>
       </Stack>
 
@@ -174,7 +183,7 @@ export function TariffListView() {
           {tariffsError && (
             <EmptyContent
               filled
-              title="Failed to load tariffs."
+              title={t('billing.tariffs.loadError')}
               action={
                 <Button
                   component={RouterLink}
@@ -182,14 +191,14 @@ export function TariffListView() {
                   startIcon={<Iconify icon="eva:arrow-ios-back-fill" width={16} />}
                   sx={{ mt: 3 }}
                 >
-                  Back to dashboard
+                  {t('billing.tariffs.backToDashboard')}
                 </Button>
               }
               sx={{ py: 6 }}
             />
           )}
 
-          {!tariffsLoading && tariffsEmpty && <Alert severity="info">No tariffs found.</Alert>}
+          {!tariffsLoading && tariffsEmpty && <Alert severity="info">{t('billing.tariffs.empty')}</Alert>}
 
           {!tariffsLoading && !tariffsError && tariffs && tariffs.length > 0 && (
             <TableContainer sx={{ position: 'relative' }}>
@@ -202,7 +211,7 @@ export function TariffListView() {
                   {
                     key: 'activate',
                     node: (
-                      <Tooltip title="Activate" arrow>
+                      <Tooltip title={t('billing.tariffs.actions.activate')} arrow>
                         <span>
                           <IconButton
                             color="success"
@@ -218,7 +227,7 @@ export function TariffListView() {
                   {
                     key: 'deactivate',
                     node: (
-                      <Tooltip title="Deactivate" arrow>
+                      <Tooltip title={t('billing.tariffs.actions.deactivate')} arrow>
                         <span>
                           <IconButton
                             color="warning"
@@ -234,7 +243,7 @@ export function TariffListView() {
                   {
                     key: 'delete',
                     node: (
-                      <Tooltip title="Delete" arrow>
+                      <Tooltip title={t('billing.tariffs.actions.delete')} arrow>
                         <span>
                           <IconButton color="error" onClick={() => handleOpenConfirm('delete')}>
                             <Iconify icon="eva:trash-2-outline" />
@@ -294,11 +303,15 @@ export function TariffListView() {
       <ConfirmDialog
         open={Boolean(confirmAction)}
         onClose={handleCloseConfirm}
-        title="Confirm action"
-        content={confirmAction ? `You are about to ${confirmAction} ${table.selected.length} tariff(s).` : ''}
+        title={t('billing.tariffs.confirm.title')}
+        content={
+          confirmAction
+            ? t('billing.tariffs.confirm.body', { action: actionLabels[confirmAction], count: table.selected.length })
+            : ''
+        }
         action={
           <Button variant="contained" color="primary" onClick={handleConfirmAction}>
-            Confirm
+            {t('billing.tariffs.confirm.confirm')}
           </Button>
         }
       />

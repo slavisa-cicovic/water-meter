@@ -332,8 +332,195 @@
       }
     }
   },
+  "billing": {
+    "overview": {
+      "title": "Преглед наплате",
+      "description": "Back office преглед наплате са статусима фактура и укупним износима.",
+      "loadError": "Неуспешно учитавање фактура.",
+      "backToDashboard": "Назад на dashboard",
+      "empty": "Нема фактура."
+    },
+    "table": {
+      "account": "Налог",
+      "meter": "Водомер",
+      "period": "Период",
+      "created": "Креиран",
+      "updated": "Ажуриран",
+      "consumption": "Потрошња",
+      "total": "Укупно",
+      "status": "Статус",
+      "actions": "Акције"
+    },
+    "filters": {
+      "searchLabel": "Претрага",
+      "statusLabel": "Статус",
+      "reviewLabel": "Провера",
+      "createdFrom": "Креиран од",
+      "createdTo": "Креиран до",
+      "all": "Сви",
+      "searchTag": "Претрага: {{value}}",
+      "statusTag": "Статус: {{value}}",
+      "reviewTag": "Провера: {{value}}",
+      "createdFromTag": "Креиран од: {{value}}",
+      "createdToTag": "Креиран до: {{value}}",
+      "results": "Резултати: {{count}}",
+      "reset": "Ресет"
+    },
+    "status": {
+      "draft": "Нацрт",
+      "confirmed": "Потврђено",
+      "issued": "Издато",
+      "paid": "Плаћено",
+      "void": "Сторнирано"
+    },
+    "reviewFlags": {
+      "noFlags": "Без ознака",
+      "invalidReading": "Неисправно очитавање",
+      "noReading": "Нема очитавања",
+      "noPreviousReading": "Нема претходног очитавања",
+      "noHouseholdSize": "Нема броја чланова"
+    },
+    "actions": {
+      "confirmInvoices": "Потврди фактуре",
+      "confirm": "Потврди",
+      "invoiceDetail": "Детаљи фактуре"
+    },
+    "confirm": {
+      "title": "Потврди фактуре",
+      "body": "Управо ћете потврдити {{count}} фактура. Ова акција се не може опозвати."
+    },
+    "reviewDialog": {
+      "title": "Измена очитавања",
+      "consumer": "Потрошач",
+      "previousReading": "Претходно очитавање",
+      "currentReading": "Тренутно очитавање",
+      "fields": {
+        "value": "Вредност",
+        "readAt": "Очитано",
+        "editReason": "Разлог измене",
+        "householdSize": "Број чланова"
+      },
+      "helpers": {
+        "consumptionMin": "Потрошња мора бити већа од 0.",
+        "readAt": "Мора бити сада или раније.",
+        "householdSizeMin": "Мора бити веће од 0."
+      },
+      "errors": {
+        "consumptionMin": "Потрошња мора бити већа од 0.",
+        "editReasonRequired": "Разлог измене је обавезан.",
+        "householdSizeMin": "Број чланова мора бити већи од 0.",
+        "readAtFuture": "Време очитавања не може бити у будућности.",
+        "readAtAfterPrevious": "Време очитавања мора бити после претходног очитавања.",
+        "saveFailed": "Неуспешно чување провере."
+      },
+      "actions": {
+        "cancel": "Откажи",
+        "save": "Сачувај"
+      }
+    },
+    "tariffs": {
+      "title": "Тарифе",
+      "description": "Управљајте тарифама и њиховим статусом.",
+      "loadError": "Неуспешно учитавање тарифа.",
+      "backToDashboard": "Назад на dashboard",
+      "empty": "Нема тарифа.",
+      "table": {
+        "name": "Назив",
+        "basePrice": "Основна цена",
+        "limits": "Лимити",
+        "multipliers": "Множиоци",
+        "validFrom": "Важи од",
+        "validTo": "Важи до",
+        "status": "Статус",
+        "actions": "Акције"
+      },
+      "filters": {
+        "searchLabel": "Претрага",
+        "statusLabel": "Статус",
+        "all": "Сви",
+        "searchTag": "Претрага: {{value}}",
+        "statusTag": "Статус: {{value}}",
+        "results": "Резултати: {{count}}",
+        "reset": "Ресет"
+      },
+      "status": {
+        "active": "Активна",
+        "inactive": "Неактивна"
+      },
+      "actions": {
+        "new": "Нова тарифа",
+        "activate": "Активирај",
+        "deactivate": "Деактивирај",
+        "delete": "Обриши",
+        "detail": "Детаљи тарифе"
+      },
+      "actionVerbs": {
+        "activate": "активирати",
+        "deactivate": "деактивирати",
+        "delete": "обрисати"
+      },
+      "confirm": {
+        "title": "Потврда акције",
+        "body": "Управо ћете {{action}} {{count}} тарифа.",
+        "confirm": "Потврди"
+      },
+      "form": {
+        "createTitle": "Креирај тарифу",
+        "detailTitle": "Детаљи тарифе",
+        "fields": {
+          "name": "Назив",
+          "groupCode": "Групни код (опционо)",
+          "basePrice": "Основна цена",
+          "greenLimit": "Зелени лимит",
+          "blueLimit": "Плави лимит",
+          "blueMultiplier": "Плави множилац",
+          "redMultiplier": "Црвени множилац",
+          "validFrom": "Важи од",
+          "validTo": "Важи до",
+          "status": "Статус"
+        },
+        "cancel": "Откажи",
+        "create": "Креирај тарифу",
+        "saveChanges": "Сачувај измене"
+      },
+      "create": {
+        "title": "Нова тарифа",
+        "description": "Креирајте нову тарифу."
+      },
+      "detail": {
+        "title": "Детаљи тарифе",
+        "description": "Преглед и измена подешавања тарифе.",
+        "loadError": "Неуспешно учитавање тарифе.",
+        "backToTariffs": "Назад на тарифе"
+      },
+      "breadcrumbs": {
+        "new": "Ново",
+        "detail": "Детаљи"
+      }
+    },
+    "invoice": {
+      "title": "Детаљи фактуре",
+      "description": "Детаљна фактура са очитавањима, снимком тарифе и ставкама.",
+      "loadError": "Неуспешно учитавање фактуре.",
+      "loading": "Учитавање фактуре...",
+      "summary": "Резиме",
+      "account": "Налог",
+      "meter": "Водомер",
+      "period": "Период",
+      "consumption": "Потрошња",
+      "unitPrice": "Цена по јединици",
+      "subtotal": "Међузбир",
+      "vat": "ПДВ",
+      "total": "Укупно",
+      "status": "Статус",
+      "lineItems": "Ставке",
+      "readings": "Очитавања",
+      "tariffSnapshot": "Снимак тарифе"
+    }
+  },
   "validation": {
-    "required": "Обавезно"
+    "required": "Обавезно",
+    "min": "Мора бити >= {{min}}"
   },
   "landing": {
     "hero": {

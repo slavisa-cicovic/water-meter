@@ -1,5 +1,6 @@
 import { Chip, Stack } from '@mui/material';
 import { IBillingTableFilters, IBillingTableFilterValue } from './billing-table-toolbar';
+import { useLocales } from 'src/locales';
 
 type Props = {
   filters: IBillingTableFilters;
@@ -18,39 +19,49 @@ export function BillingTableFiltersResult({
   results,
   sx,
 }: Props) {
+  const { t } = useLocales();
   const chips: Array<{ key: string; label: string; onDelete: VoidFunction }> = [];
 
   if (filters.search) {
-    chips.push({ key: 'search', label: `Search: ${filters.search}`, onDelete: () => onFilters('search', '') });
+    chips.push({
+      key: 'search',
+      label: t('billing.filters.searchTag', { value: filters.search }),
+      onDelete: () => onFilters('search', ''),
+    });
   }
   if (filters.status) {
-    chips.push({ key: 'status', label: `Status: ${filters.status}`, onDelete: () => onFilters('status', '') });
+    const statusLabel = t(`billing.status.${filters.status}`, { defaultValue: filters.status });
+    chips.push({
+      key: 'status',
+      label: t('billing.filters.statusTag', { value: statusLabel }),
+      onDelete: () => onFilters('status', ''),
+    });
   }
   if (filters.review) {
     const reviewLabels: Record<string, string> = {
-      no_flags: 'no flags',
-      invalid_reading: 'invalid_reading',
-      no_reading: 'no_reading',
-      no_previous_reading: 'no_previous_reading',
-      no_household_size: 'no_household_size',
+      no_flags: t('billing.reviewFlags.noFlags'),
+      invalid_reading: t('billing.reviewFlags.invalidReading'),
+      no_reading: t('billing.reviewFlags.noReading'),
+      no_previous_reading: t('billing.reviewFlags.noPreviousReading'),
+      no_household_size: t('billing.reviewFlags.noHouseholdSize'),
     };
     chips.push({
       key: 'review',
-      label: `Review: ${reviewLabels[filters.review] || filters.review}`,
+      label: t('billing.filters.reviewTag', { value: reviewLabels[filters.review] || filters.review }),
       onDelete: () => onFilters('review', ''),
     });
   }
   if (filters.createdStart && filters.createdStart !== defaultFilters?.createdStart) {
     chips.push({
       key: 'createdStart',
-      label: `Created from: ${filters.createdStart}`,
+      label: t('billing.filters.createdFromTag', { value: filters.createdStart }),
       onDelete: () => onFilters('createdStart', ''),
     });
   }
   if (filters.createdEnd && filters.createdEnd !== defaultFilters?.createdEnd) {
     chips.push({
       key: 'createdEnd',
-      label: `Created to: ${filters.createdEnd}`,
+      label: t('billing.filters.createdToTag', { value: filters.createdEnd }),
       onDelete: () => onFilters('createdEnd', ''),
     });
   }
@@ -60,8 +71,8 @@ export function BillingTableFiltersResult({
       {chips.map((chip) => (
         <Chip key={chip.key} label={chip.label} onDelete={chip.onDelete} />
       ))}
-      <Chip label={`Results: ${results}`} variant="outlined" />
-      <Chip label="Reset" color="primary" onClick={onResetFilters} />
+      <Chip label={t('billing.filters.results', { count: results })} variant="outlined" />
+      <Chip label={t('billing.filters.reset')} color="primary" onClick={onResetFilters} />
     </Stack>
   );
 }

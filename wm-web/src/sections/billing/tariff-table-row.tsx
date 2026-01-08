@@ -4,6 +4,7 @@ import { Tariff } from 'src/types/billings';
 import { RouterLink } from 'src/routes/components';
 import { paths } from 'src/routes/paths';
 import { formatCurrencyValue } from 'src/utils/format-currency';
+import { useLocales } from 'src/locales';
 
 type Props = {
   row: Tariff;
@@ -24,6 +25,7 @@ const toDate = (value?: string | null) => {
 };
 
 export function TariffTableRow({ row, selected, onSelectRow, selectable = true, currency }: Props) {
+  const { t } = useLocales();
   const isActive = row.status !== 'inactive';
   return (
     <TableRow hover>
@@ -48,7 +50,7 @@ export function TariffTableRow({ row, selected, onSelectRow, selectable = true, 
       <TableCell sx={{ width: 120 }}>{toDate(row.validFrom)}</TableCell>
       <TableCell sx={{ width: 120 }}>{row.validTo ? toDate(row.validTo) : '-'}</TableCell>
       <TableCell sx={{ width: 80 }}>
-        <Tooltip title={isActive ? 'Active' : 'Inactive'}>
+        <Tooltip title={isActive ? t('billing.tariffs.status.active') : t('billing.tariffs.status.inactive')}>
           <span>
             <Iconify
               icon={isActive ? 'eva:checkmark-circle-2-fill' : 'eva:slash-outline'}
@@ -59,7 +61,7 @@ export function TariffTableRow({ row, selected, onSelectRow, selectable = true, 
         </Tooltip>
       </TableCell>
       <TableCell align="right" sx={{ width: 80 }}>
-        <Tooltip title="Tariff detail">
+        <Tooltip title={t('billing.tariffs.actions.detail')}>
           <IconButton size="small" component={RouterLink} href={paths.dashboard.billing.tariffs.details(row.id)}>
             <Iconify icon="eva:eye-fill" width={16} />
           </IconButton>

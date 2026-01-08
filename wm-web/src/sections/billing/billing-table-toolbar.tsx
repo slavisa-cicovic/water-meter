@@ -2,6 +2,7 @@ import React, { useCallback } from 'react';
 import Stack from '@mui/material/Stack';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
+import { useLocales } from 'src/locales';
 
 export type IBillingTableFilterValue = string;
 
@@ -19,6 +20,7 @@ type Props = {
 };
 
 export function BillingTableToolbar({ filters, onFilters }: Props) {
+  const { t } = useLocales();
   const handleChange = useCallback(
     (name: keyof IBillingTableFilters) => (event: React.ChangeEvent<HTMLInputElement>) => {
       onFilters(name, event.target.value);
@@ -35,29 +37,41 @@ export function BillingTableToolbar({ filters, onFilters }: Props) {
     >
       <Stack direction="row" alignItems="center" spacing={2} flexGrow={1} sx={{ width: 1 }}>
         <TextField
-          label="Search"
+          label={t('billing.filters.searchLabel')}
           value={filters.search}
           onChange={handleChange('search')}
           sx={{ flexGrow: 1, minWidth: 220 }}
         />
-        <TextField select label="Status" value={filters.status} onChange={handleChange('status')} sx={{ minWidth: 160 }}>
-          <MenuItem value="">All</MenuItem>
-          <MenuItem value="draft">draft</MenuItem>
-          <MenuItem value="confirmed">confirmed</MenuItem>
-          <MenuItem value="issued">issued</MenuItem>
-          <MenuItem value="paid">paid</MenuItem>
-          <MenuItem value="void">void</MenuItem>
-        </TextField>
-        <TextField select label="Review" value={filters.review} onChange={handleChange('review')} sx={{ minWidth: 200 }}>
-          <MenuItem value="">All</MenuItem>
-          <MenuItem value="no_flags">no flags</MenuItem>
-          <MenuItem value="invalid_reading">invalid_reading</MenuItem>
-          <MenuItem value="no_reading">no_reading</MenuItem>
-          <MenuItem value="no_previous_reading">no_previous_reading</MenuItem>
-          <MenuItem value="no_household_size">no_household_size</MenuItem>
+        <TextField
+          select
+          label={t('billing.filters.statusLabel')}
+          value={filters.status}
+          onChange={handleChange('status')}
+          sx={{ minWidth: 160 }}
+        >
+          <MenuItem value="">{t('billing.filters.all')}</MenuItem>
+          <MenuItem value="draft">{t('billing.status.draft')}</MenuItem>
+          <MenuItem value="confirmed">{t('billing.status.confirmed')}</MenuItem>
+          <MenuItem value="issued">{t('billing.status.issued')}</MenuItem>
+          <MenuItem value="paid">{t('billing.status.paid')}</MenuItem>
+          <MenuItem value="void">{t('billing.status.void')}</MenuItem>
         </TextField>
         <TextField
-          label="Created from"
+          select
+          label={t('billing.filters.reviewLabel')}
+          value={filters.review}
+          onChange={handleChange('review')}
+          sx={{ minWidth: 200 }}
+        >
+          <MenuItem value="">{t('billing.filters.all')}</MenuItem>
+          <MenuItem value="no_flags">{t('billing.reviewFlags.noFlags')}</MenuItem>
+          <MenuItem value="invalid_reading">{t('billing.reviewFlags.invalidReading')}</MenuItem>
+          <MenuItem value="no_reading">{t('billing.reviewFlags.noReading')}</MenuItem>
+          <MenuItem value="no_previous_reading">{t('billing.reviewFlags.noPreviousReading')}</MenuItem>
+          <MenuItem value="no_household_size">{t('billing.reviewFlags.noHouseholdSize')}</MenuItem>
+        </TextField>
+        <TextField
+          label={t('billing.filters.createdFrom')}
           type="date"
           value={filters.createdStart}
           onChange={handleChange('createdStart')}
@@ -65,7 +79,7 @@ export function BillingTableToolbar({ filters, onFilters }: Props) {
           sx={{ minWidth: 160 }}
         />
         <TextField
-          label="Created to"
+          label={t('billing.filters.createdTo')}
           type="date"
           value={filters.createdEnd}
           onChange={handleChange('createdEnd')}

@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { BillingApi } from 'src/api/billing';
 import { Invoice } from 'src/types/billings';
+import { useLocales } from 'src/locales';
 
 type Props = {
   open: boolean;
@@ -31,6 +32,7 @@ const toLocalDateTimeInput = (value: Date) => {
 };
 
 export function ReadingsReviewDialog({ open, onClose, invoice, isShared = false, onReviewed }: Props) {
+  const { t } = useLocales();
   const [prevValue, setPrevValue] = useState('0');
   const [prevReadAt, setPrevReadAt] = useState('');
   const [currentValue, setCurrentValue] = useState('0');
@@ -75,21 +77,21 @@ export function ReadingsReviewDialog({ open, onClose, invoice, isShared = false,
     setReviewError('');
 
     if (!Number.isFinite(consumption) || consumption <= 0) {
-      setConsumptionError('Consumption must be greater than 0.');
+      setConsumptionError(t('billing.reviewDialog.errors.consumptionMin'));
       hasError = true;
     } else {
       setConsumptionError('');
     }
 
     if (!editReason.trim()) {
-      setEditReasonError('Edit reason is required.');
+      setEditReasonError(t('billing.reviewDialog.errors.editReasonRequired'));
       hasError = true;
     } else {
       setEditReasonError('');
     }
 
     if (isShared && (!Number.isFinite(householdNumeric) || householdNumeric <= 0)) {
-      setHouseholdSizeError('Household size must be greater than 0.');
+      setHouseholdSizeError(t('billing.reviewDialog.errors.householdSizeMin'));
       hasError = true;
     } else {
       setHouseholdSizeError('');
@@ -100,9 +102,9 @@ export function ReadingsReviewDialog({ open, onClose, invoice, isShared = false,
       currentReadAtDate > now ||
       (prevReadAt && currentReadAtDate < prevReadAtDate)
     ) {
-      let message = 'Current read time cannot be in the future.';
+      let message = t('billing.reviewDialog.errors.readAtFuture');
       if (prevReadAt && currentReadAtDate < prevReadAtDate) {
-        message = 'Current read time must be after previous read time.';
+        message = t('billing.reviewDialog.errors.readAtAfterPrevious');
       }
       setCurrentReadAtError(message);
       hasError = true;
@@ -123,7 +125,7 @@ export function ReadingsReviewDialog({ open, onClose, invoice, isShared = false,
       if (onReviewed) onReviewed();
       onClose();
     } catch (error) {
-      setReviewError('Failed to save review.');
+      setReviewError(t('billing.reviewDialog.errors.saveFailed'));
     } finally {
       setReviewSaving(false);
     }
@@ -133,12 +135,12 @@ export function ReadingsReviewDialog({ open, onClose, invoice, isShared = false,
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Edit readings</DialogTitle>
+      <DialogTitle>{t('billing.reviewDialog.title')}</DialogTitle>
       <DialogContent>
         {invoice.account && (
           <Stack spacing={0.5} mb={2}>
             <Typography variant="overline" color="text.secondary">
-              Consumer
+              {t('billing.reviewDialog.consumer')}
             </Typography>
             <Typography variant="subtitle2">
               {invoice.account.firstName} {invoice.account.lastName}
@@ -150,10 +152,10 @@ export function ReadingsReviewDialog({ open, onClose, invoice, isShared = false,
         )}
         {invoice.account && <Divider sx={{ mb: 2 }} />}
         <Stack spacing={2} mt={1}>
-          <Typography variant="subtitle2">Previous reading</Typography>
+          <Typography variant="subtitle2">{t('billing.reviewDialog.previousReading')}</Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextField
-              label="Value"
+              label={t('billing.reviewDialog.fields.value')}
               type="number"
               value={prevValue}
               onChange={(event) => setPrevValue(event.target.value)}
@@ -162,7 +164,7 @@ export function ReadingsReviewDialog({ open, onClose, invoice, isShared = false,
               fullWidth
             />
             <TextField
-              label="Read at"
+              label={t('billing.reviewDialog.fields.readAt')}
               type="datetime-local"
               value={prevReadAt}
               onChange={(event) => setPrevReadAt(event.target.value)}
@@ -171,49 +173,49 @@ export function ReadingsReviewDialog({ open, onClose, invoice, isShared = false,
             />
           </Stack>
 
-          <Typography variant="subtitle2">Current reading</Typography>
+          <Typography variant="subtitle2">{t('billing.reviewDialog.currentReading')}</Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextField
-              label="Value"
+              label={t('billing.reviewDialog.fields.value')}
               type="number"
               value={currentValue}
               onChange={(event) => setCurrentValue(event.target.value)}
               inputProps={{ step: '0.01' }}
               slotProps={{ inputLabel: { shrink: true } }}
               error={Boolean(consumptionError)}
-              helperText={consumptionError || 'Consumption must be greater than 0.'}
+              helperText={consumptionError || t('billing.reviewDialog.helpers.consumptionMin')}
               fullWidth
             />
             <TextField
-              label="Read at"
+              label={t('billing.reviewDialog.fields.readAt')}
               type="datetime-local"
               value={currentReadAt}
               onChange={(event) => setCurrentReadAt(event.target.value)}
               slotProps={{ inputLabel: { shrink: true } }}
               error={Boolean(currentReadAtError)}
-              helperText={currentReadAtError || 'Must be now or earlier.'}
+              helperText={currentReadAtError || t('billing.reviewDialog.helpers.readAt')}
               fullWidth
             />
           </Stack>
 
           <TextField
-            label="Edit reason"
+            label={t('billing.reviewDialog.fields.editReason')}
             value={editReason}
             onChange={(event) => setEditReason(event.target.value)}
             error={Boolean(editReasonError)}
-            helperText={editReasonError || 'Required'}
+            helperText={editReasonError || t('validation.required')}
             multiline
             minRows={2}
             fullWidth
           />
           {isShared && (
             <TextField
-              label="Household size"
+              label={t('billing.reviewDialog.fields.householdSize')}
               type="number"
               value={householdSize}
               onChange={(event) => setHouseholdSize(event.target.value)}
               error={Boolean(householdSizeError)}
-              helperText={householdSizeError || 'Must be greater than 0.'}
+              helperText={householdSizeError || t('billing.reviewDialog.helpers.householdSizeMin')}
               fullWidth
             />
           )}
@@ -226,10 +228,10 @@ export function ReadingsReviewDialog({ open, onClose, invoice, isShared = false,
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={reviewSaving}>
-          Cancel
+          {t('billing.reviewDialog.actions.cancel')}
         </Button>
         <Button variant="contained" onClick={handleSaveReview} disabled={reviewSaving}>
-          Save
+          {t('billing.reviewDialog.actions.save')}
         </Button>
       </DialogActions>
     </Dialog>

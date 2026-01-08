@@ -10,15 +10,18 @@ import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
 import { paths } from 'src/routes/paths';
 import { formatReadingValue } from 'src/utils/reading-format';
 import { formatCurrencyValue } from 'src/utils/format-currency';
+import { useLocales } from 'src/locales';
 
 type Props = {
   id: string;
 };
 
 export function InvoiceDetailView({ id }: Props) {
+  const { t } = useLocales();
   const settings = useSettingsContext();
   const { invoice, invoiceLoading, invoiceError } = useGetInvoice(id);
   const { settings: appSettings } = useGetSettings();
+  const statusLabel = invoice ? t(`billing.status.${invoice.status}`, { defaultValue: invoice.status }) : '';
 
   const readings = useMemo(() => {
     const links = (invoice as any)?.readings || [];
@@ -32,42 +35,52 @@ export function InvoiceDetailView({ id }: Props) {
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
       <CustomBreadcrumbs
-        heading="Invoice Detail"
-        description="Detailed invoice with readings, tariff snapshot, and line items."
+        heading={t('billing.invoice.title')}
+        description={t('billing.invoice.description')}
         links={[
-          { name: 'App', href: paths.dashboard.root },
-          { name: 'Billing', href: paths.dashboard.billing.root },
+          { name: t('sidebar.app'), href: paths.dashboard.root },
+          { name: t('sidebar.billing'), href: paths.dashboard.billing.root },
           { name: id },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      {invoiceError && <EmptyContent filled title="Failed to load invoice." sx={{ py: 6 }} />}
-      {invoiceLoading && <Alert severity="info">Loading invoice...</Alert>}
+      {invoiceError && <EmptyContent filled title={t('billing.invoice.loadError')} sx={{ py: 6 }} />}
+      {invoiceLoading && <Alert severity="info">{t('billing.invoice.loading')}</Alert>}
 
       {invoice && (
         <Stack spacing={3}>
           <Card>
             <CardContent>
               <Stack spacing={1}>
-                <Typography variant="subtitle2">Summary</Typography>
-                <Typography variant="body2">Account: {invoice.accountId}</Typography>
-                <Typography variant="body2">Meter: {invoice.meterId || '-'}</Typography>
+                <Typography variant="subtitle2">{t('billing.invoice.summary')}</Typography>
                 <Typography variant="body2">
-                  Period: {invoice.periodStart?.slice(0, 10)} → {invoice.periodEnd?.slice(0, 10)}
-                </Typography>
-                <Typography variant="body2">Consumption: {invoice.consumption}</Typography>
-                <Typography variant="body2">
-                  Unit price: {formatCurrencyValue(invoice.unitPrice, appSettings?.currency)}
+                  {t('billing.invoice.account')}: {invoice.accountId}
                 </Typography>
                 <Typography variant="body2">
-                  Subtotal: {formatCurrencyValue(invoice.subtotal, appSettings?.currency)}
+                  {t('billing.invoice.meter')}: {invoice.meterId || '-'}
                 </Typography>
-                <Typography variant="body2">VAT: {formatCurrencyValue(invoice.vatAmount, appSettings?.currency)}</Typography>
                 <Typography variant="body2">
-                  Total: {formatCurrencyValue(invoice.totalAmount, appSettings?.currency)}
+                  {t('billing.invoice.period')}: {invoice.periodStart?.slice(0, 10)} → {invoice.periodEnd?.slice(0, 10)}
                 </Typography>
-                <Typography variant="body2">Status: {invoice.status}</Typography>
+                <Typography variant="body2">
+                  {t('billing.invoice.consumption')}: {invoice.consumption}
+                </Typography>
+                <Typography variant="body2">
+                  {t('billing.invoice.unitPrice')}: {formatCurrencyValue(invoice.unitPrice, appSettings?.currency)}
+                </Typography>
+                <Typography variant="body2">
+                  {t('billing.invoice.subtotal')}: {formatCurrencyValue(invoice.subtotal, appSettings?.currency)}
+                </Typography>
+                <Typography variant="body2">
+                  {t('billing.invoice.vat')}: {formatCurrencyValue(invoice.vatAmount, appSettings?.currency)}
+                </Typography>
+                <Typography variant="body2">
+                  {t('billing.invoice.total')}: {formatCurrencyValue(invoice.totalAmount, appSettings?.currency)}
+                </Typography>
+                <Typography variant="body2">
+                  {t('billing.invoice.status')}: {statusLabel}
+                </Typography>
               </Stack>
             </CardContent>
           </Card>
@@ -75,7 +88,7 @@ export function InvoiceDetailView({ id }: Props) {
           <Card>
             <CardContent>
               <Typography variant="subtitle2" gutterBottom>
-                Line items
+                {t('billing.invoice.lineItems')}
               </Typography>
               <TableContainer>
                 <Table size="small">
@@ -102,7 +115,7 @@ export function InvoiceDetailView({ id }: Props) {
           <Card>
             <CardContent>
               <Typography variant="subtitle2" gutterBottom>
-                Readings
+                {t('billing.invoice.readings')}
               </Typography>
               <TableContainer>
                 <Table size="small">
@@ -123,7 +136,7 @@ export function InvoiceDetailView({ id }: Props) {
           <Card>
             <CardContent>
               <Typography variant="subtitle2" gutterBottom>
-                Tariff snapshot
+                {t('billing.invoice.tariffSnapshot')}
               </Typography>
               <TableContainer>
                 <Table size="small">

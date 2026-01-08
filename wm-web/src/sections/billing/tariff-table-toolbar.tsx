@@ -2,6 +2,7 @@ import React, { useCallback } from 'react';
 import Stack from '@mui/material/Stack';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
+import { useLocales } from 'src/locales';
 
 export type ITariffTableFilterValue = string;
 
@@ -16,6 +17,7 @@ type Props = {
 };
 
 export function TariffTableToolbar({ filters, onFilters }: Props) {
+  const { t } = useLocales();
   const handleChange = useCallback(
     (name: keyof ITariffTableFilters) => (event: React.ChangeEvent<HTMLInputElement>) => {
       onFilters(name, event.target.value);
@@ -32,15 +34,21 @@ export function TariffTableToolbar({ filters, onFilters }: Props) {
     >
       <Stack direction="row" alignItems="center" spacing={2} flexGrow={1} sx={{ width: 1 }}>
         <TextField
-          label="Search"
+          label={t('billing.tariffs.filters.searchLabel')}
           value={filters.search}
           onChange={handleChange('search')}
           sx={{ flexGrow: 1, minWidth: 220 }}
         />
-        <TextField select label="Status" value={filters.status} onChange={handleChange('status')} sx={{ minWidth: 160 }}>
-          <MenuItem value="">All</MenuItem>
-          <MenuItem value="active">active</MenuItem>
-          <MenuItem value="inactive">inactive</MenuItem>
+        <TextField
+          select
+          label={t('billing.tariffs.filters.statusLabel')}
+          value={filters.status}
+          onChange={handleChange('status')}
+          sx={{ minWidth: 160 }}
+        >
+          <MenuItem value="">{t('billing.tariffs.filters.all')}</MenuItem>
+          <MenuItem value="active">{t('billing.tariffs.status.active')}</MenuItem>
+          <MenuItem value="inactive">{t('billing.tariffs.status.inactive')}</MenuItem>
         </TextField>
       </Stack>
     </Stack>

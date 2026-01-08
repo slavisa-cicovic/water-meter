@@ -15,6 +15,7 @@ import { RouterLink } from 'src/routes/components';
 import { paths } from 'src/routes/paths';
 import { ReadingsReviewDialog } from 'src/components/billing/readings-review-dialog';
 import { formatCurrencyValue } from 'src/utils/format-currency';
+import { useLocales } from 'src/locales';
 
 type Props = {
   row: Invoice;
@@ -35,6 +36,7 @@ export function BillingTableRow({
   isShared = false,
   currency,
 }: Props) {
+  const { t } = useLocales();
   const toLocalDate = (value?: string | null) => {
     if (!value) return '';
     const date = new Date(value);
@@ -48,6 +50,21 @@ export function BillingTableRow({
   const periodStart = toLocalDate(row.periodStart);
   const period = periodStart || periodEnd ? `${periodStart} → ${periodEnd}`.trim() : '';
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const statusLabel = t(`billing.status.${row.status}`, { defaultValue: row.status });
+  const reviewFlagLabel = (flag: string) => {
+    switch (flag) {
+      case 'invalid_reading':
+        return t('billing.reviewFlags.invalidReading');
+      case 'no_reading':
+        return t('billing.reviewFlags.noReading');
+      case 'no_previous_reading':
+        return t('billing.reviewFlags.noPreviousReading');
+      case 'no_household_size':
+        return t('billing.reviewFlags.noHouseholdSize');
+      default:
+        return flag;
+    }
+  };
 
   const handleOpenReviewDialog = () => {
     setReviewDialogOpen(true);
@@ -86,7 +103,7 @@ export function BillingTableRow({
         <TableCell sx={{ width: 120 }}>
           <Chip
             size="small"
-            label={row.status}
+            label={statusLabel}
             color={
               row.status === 'paid'
                 ? 'success'
@@ -108,7 +125,7 @@ export function BillingTableRow({
                   <Stack spacing={0.5} sx={{ py: 0.5 }}>
                     {row.reviewFlags.map((flag) => (
                       <Typography key={flag} variant="caption" display="block">
-                        {flag}
+                        {reviewFlagLabel(flag)}
                       </Typography>
                     ))}
                   </Stack>
@@ -119,7 +136,7 @@ export function BillingTableRow({
                 </IconButton>
               </Tooltip>
             )}
-            <Tooltip title="Invoice detail">
+            <Tooltip title={t('billing.actions.invoiceDetail')}>
               <IconButton size="small" component={RouterLink} href={paths.dashboard.billing.invoice(row.id)}>
                 <Iconify icon="eva:eye-fill" width={16} />
               </IconButton>

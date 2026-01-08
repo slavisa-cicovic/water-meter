@@ -332,8 +332,195 @@
       }
     }
   },
+  "billing": {
+    "overview": {
+      "title": "Pregled naplate",
+      "description": "Back office pregled naplate sa statusima faktura i ukupnim iznosima.",
+      "loadError": "Neuspesno ucitavanje faktura.",
+      "backToDashboard": "Nazad na dashboard",
+      "empty": "Nema faktura."
+    },
+    "table": {
+      "account": "Nalog",
+      "meter": "Vodomer",
+      "period": "Period",
+      "created": "Kreiran",
+      "updated": "Azuriran",
+      "consumption": "Potrosnja",
+      "total": "Ukupno",
+      "status": "Status",
+      "actions": "Akcije"
+    },
+    "filters": {
+      "searchLabel": "Pretraga",
+      "statusLabel": "Status",
+      "reviewLabel": "Provera",
+      "createdFrom": "Kreiran od",
+      "createdTo": "Kreiran do",
+      "all": "Svi",
+      "searchTag": "Pretraga: {{value}}",
+      "statusTag": "Status: {{value}}",
+      "reviewTag": "Provera: {{value}}",
+      "createdFromTag": "Kreiran od: {{value}}",
+      "createdToTag": "Kreiran do: {{value}}",
+      "results": "Rezultati: {{count}}",
+      "reset": "Reset"
+    },
+    "status": {
+      "draft": "Nacrt",
+      "confirmed": "Potvrdjeno",
+      "issued": "Izdato",
+      "paid": "Placeno",
+      "void": "Stornirano"
+    },
+    "reviewFlags": {
+      "noFlags": "Bez oznaka",
+      "invalidReading": "Neispravno ocitavanje",
+      "noReading": "Nema ocitavanja",
+      "noPreviousReading": "Nema prethodnog ocitavanja",
+      "noHouseholdSize": "Nema broja clanova"
+    },
+    "actions": {
+      "confirmInvoices": "Potvrdi fakture",
+      "confirm": "Potvrdi",
+      "invoiceDetail": "Detalji fakture"
+    },
+    "confirm": {
+      "title": "Potvrdi fakture",
+      "body": "Upravo cete potvrditi {{count}} faktura. Ova akcija se ne moze opozvati."
+    },
+    "reviewDialog": {
+      "title": "Izmena ocitavanja",
+      "consumer": "Potrosac",
+      "previousReading": "Prethodno ocitavanje",
+      "currentReading": "Trenutno ocitavanje",
+      "fields": {
+        "value": "Vrednost",
+        "readAt": "Ocitano",
+        "editReason": "Razlog izmene",
+        "householdSize": "Broj clanova"
+      },
+      "helpers": {
+        "consumptionMin": "Potrosnja mora biti veca od 0.",
+        "readAt": "Mora biti sada ili ranije.",
+        "householdSizeMin": "Mora biti vece od 0."
+      },
+      "errors": {
+        "consumptionMin": "Potrosnja mora biti veca od 0.",
+        "editReasonRequired": "Razlog izmene je obavezan.",
+        "householdSizeMin": "Broj clanova mora biti veci od 0.",
+        "readAtFuture": "Vreme ocitavanja ne moze biti u buducnosti.",
+        "readAtAfterPrevious": "Vreme ocitavanja mora biti posle prethodnog ocitavanja.",
+        "saveFailed": "Neuspesno cuvanje provere."
+      },
+      "actions": {
+        "cancel": "Otkazi",
+        "save": "Sacuvaj"
+      }
+    },
+    "tariffs": {
+      "title": "Tarife",
+      "description": "Upravljajte tarifama i njihovim statusom.",
+      "loadError": "Neuspesno ucitavanje tarifa.",
+      "backToDashboard": "Nazad na dashboard",
+      "empty": "Nema tarifa.",
+      "table": {
+        "name": "Naziv",
+        "basePrice": "Osnovna cena",
+        "limits": "Limiti",
+        "multipliers": "Mnozioci",
+        "validFrom": "Vazi od",
+        "validTo": "Vazi do",
+        "status": "Status",
+        "actions": "Akcije"
+      },
+      "filters": {
+        "searchLabel": "Pretraga",
+        "statusLabel": "Status",
+        "all": "Svi",
+        "searchTag": "Pretraga: {{value}}",
+        "statusTag": "Status: {{value}}",
+        "results": "Rezultati: {{count}}",
+        "reset": "Reset"
+      },
+      "status": {
+        "active": "Aktivna",
+        "inactive": "Neaktivna"
+      },
+      "actions": {
+        "new": "Nova tarifa",
+        "activate": "Aktiviraj",
+        "deactivate": "Deaktiviraj",
+        "delete": "Obrisi",
+        "detail": "Detalji tarife"
+      },
+      "actionVerbs": {
+        "activate": "aktivirati",
+        "deactivate": "deaktivirati",
+        "delete": "obrisati"
+      },
+      "confirm": {
+        "title": "Potvrda akcije",
+        "body": "Upravo cete {{action}} {{count}} tarifa.",
+        "confirm": "Potvrdi"
+      },
+      "form": {
+        "createTitle": "Kreiraj tarifu",
+        "detailTitle": "Detalji tarife",
+        "fields": {
+          "name": "Naziv",
+          "groupCode": "Grupni kod (opciono)",
+          "basePrice": "Osnovna cena",
+          "greenLimit": "Zeleni limit",
+          "blueLimit": "Plavi limit",
+          "blueMultiplier": "Plavi mnozilac",
+          "redMultiplier": "Crveni mnozilac",
+          "validFrom": "Vazi od",
+          "validTo": "Vazi do",
+          "status": "Status"
+        },
+        "cancel": "Otkazi",
+        "create": "Kreiraj tarifu",
+        "saveChanges": "Sacuvaj izmene"
+      },
+      "create": {
+        "title": "Nova tarifa",
+        "description": "Kreirajte novu tarifu."
+      },
+      "detail": {
+        "title": "Detalji tarife",
+        "description": "Pregled i izmena podesavanja tarife.",
+        "loadError": "Neuspesno ucitavanje tarife.",
+        "backToTariffs": "Nazad na tarife"
+      },
+      "breadcrumbs": {
+        "new": "Novo",
+        "detail": "Detalji"
+      }
+    },
+    "invoice": {
+      "title": "Detalji fakture",
+      "description": "Detaljna faktura sa ocitanjima, snimkom tarife i stavkama.",
+      "loadError": "Neuspesno ucitavanje fakture.",
+      "loading": "Ucitavanje fakture...",
+      "summary": "Rezime",
+      "account": "Nalog",
+      "meter": "Vodomer",
+      "period": "Period",
+      "consumption": "Potrosnja",
+      "unitPrice": "Cena po jedinici",
+      "subtotal": "Medjuzbir",
+      "vat": "PDV",
+      "total": "Ukupno",
+      "status": "Status",
+      "lineItems": "Stavke",
+      "readings": "Ocitavanja",
+      "tariffSnapshot": "Snimak tarife"
+    }
+  },
   "validation": {
-    "required": "Obavezno"
+    "required": "Obavezno",
+    "min": "Mora biti >= {{min}}"
   },
   "landing": {
     "hero": {

@@ -332,8 +332,195 @@
       }
     }
   },
+  "billing": {
+    "overview": {
+      "title": "Billing Overview",
+      "description": "Back-office billing overview with invoice status and totals.",
+      "loadError": "Failed to load invoices.",
+      "backToDashboard": "Back to dashboard",
+      "empty": "No invoices found."
+    },
+    "table": {
+      "account": "Account",
+      "meter": "Meter",
+      "period": "Period",
+      "created": "Created",
+      "updated": "Updated",
+      "consumption": "Consumption",
+      "total": "Total",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "filters": {
+      "searchLabel": "Search",
+      "statusLabel": "Status",
+      "reviewLabel": "Review",
+      "createdFrom": "Created from",
+      "createdTo": "Created to",
+      "all": "All",
+      "searchTag": "Search: {{value}}",
+      "statusTag": "Status: {{value}}",
+      "reviewTag": "Review: {{value}}",
+      "createdFromTag": "Created from: {{value}}",
+      "createdToTag": "Created to: {{value}}",
+      "results": "Results: {{count}}",
+      "reset": "Reset"
+    },
+    "status": {
+      "draft": "Draft",
+      "confirmed": "Confirmed",
+      "issued": "Issued",
+      "paid": "Paid",
+      "void": "Void"
+    },
+    "reviewFlags": {
+      "noFlags": "No flags",
+      "invalidReading": "Invalid reading",
+      "noReading": "No reading",
+      "noPreviousReading": "No previous reading",
+      "noHouseholdSize": "No household size"
+    },
+    "actions": {
+      "confirmInvoices": "Confirm invoices",
+      "confirm": "Confirm",
+      "invoiceDetail": "Invoice detail"
+    },
+    "confirm": {
+      "title": "Confirm invoices",
+      "body": "You are about to confirm {{count}} invoice(s). This action cannot be undone."
+    },
+    "reviewDialog": {
+      "title": "Edit readings",
+      "consumer": "Consumer",
+      "previousReading": "Previous reading",
+      "currentReading": "Current reading",
+      "fields": {
+        "value": "Value",
+        "readAt": "Read at",
+        "editReason": "Edit reason",
+        "householdSize": "Household size"
+      },
+      "helpers": {
+        "consumptionMin": "Consumption must be greater than 0.",
+        "readAt": "Must be now or earlier.",
+        "householdSizeMin": "Must be greater than 0."
+      },
+      "errors": {
+        "consumptionMin": "Consumption must be greater than 0.",
+        "editReasonRequired": "Edit reason is required.",
+        "householdSizeMin": "Household size must be greater than 0.",
+        "readAtFuture": "Current read time cannot be in the future.",
+        "readAtAfterPrevious": "Current read time must be after previous read time.",
+        "saveFailed": "Failed to save review."
+      },
+      "actions": {
+        "cancel": "Cancel",
+        "save": "Save"
+      }
+    },
+    "tariffs": {
+      "title": "Tariffs",
+      "description": "Manage tariff definitions and activation state.",
+      "loadError": "Failed to load tariffs.",
+      "backToDashboard": "Back to dashboard",
+      "empty": "No tariffs found.",
+      "table": {
+        "name": "Name",
+        "basePrice": "Base price",
+        "limits": "Limits",
+        "multipliers": "Multipliers",
+        "validFrom": "Valid from",
+        "validTo": "Valid to",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "filters": {
+        "searchLabel": "Search",
+        "statusLabel": "Status",
+        "all": "All",
+        "searchTag": "Search: {{value}}",
+        "statusTag": "Status: {{value}}",
+        "results": "Results: {{count}}",
+        "reset": "Reset"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "actions": {
+        "new": "New tariff",
+        "activate": "Activate",
+        "deactivate": "Deactivate",
+        "delete": "Delete",
+        "detail": "Tariff detail"
+      },
+      "actionVerbs": {
+        "activate": "activate",
+        "deactivate": "deactivate",
+        "delete": "delete"
+      },
+      "confirm": {
+        "title": "Confirm action",
+        "body": "You are about to {{action}} {{count}} tariff(s).",
+        "confirm": "Confirm"
+      },
+      "form": {
+        "createTitle": "Create tariff",
+        "detailTitle": "Tariff details",
+        "fields": {
+          "name": "Name",
+          "groupCode": "Group code (optional)",
+          "basePrice": "Base price",
+          "greenLimit": "Green limit",
+          "blueLimit": "Blue limit",
+          "blueMultiplier": "Blue multiplier",
+          "redMultiplier": "Red multiplier",
+          "validFrom": "Valid from",
+          "validTo": "Valid to",
+          "status": "Status"
+        },
+        "cancel": "Cancel",
+        "create": "Create tariff",
+        "saveChanges": "Save changes"
+      },
+      "create": {
+        "title": "New tariff",
+        "description": "Create a new tariff definition."
+      },
+      "detail": {
+        "title": "Tariff details",
+        "description": "Review and update tariff settings.",
+        "loadError": "Failed to load tariff.",
+        "backToTariffs": "Back to tariffs"
+      },
+      "breadcrumbs": {
+        "new": "New",
+        "detail": "Detail"
+      }
+    },
+    "invoice": {
+      "title": "Invoice Detail",
+      "description": "Detailed invoice with readings, tariff snapshot, and line items.",
+      "loadError": "Failed to load invoice.",
+      "loading": "Loading invoice...",
+      "summary": "Summary",
+      "account": "Account",
+      "meter": "Meter",
+      "period": "Period",
+      "consumption": "Consumption",
+      "unitPrice": "Unit price",
+      "subtotal": "Subtotal",
+      "vat": "VAT",
+      "total": "Total",
+      "status": "Status",
+      "lineItems": "Line items",
+      "readings": "Readings",
+      "tariffSnapshot": "Tariff snapshot"
+    }
+  },
   "validation": {
-    "required": "Required"
+    "required": "Required",
+    "min": "Must be >= {{min}}"
   },
   "landing": {
     "hero": {

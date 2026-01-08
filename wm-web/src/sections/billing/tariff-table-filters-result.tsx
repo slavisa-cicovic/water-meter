@@ -1,5 +1,6 @@
 import { Chip, Stack } from '@mui/material';
 import { ITariffTableFilters, ITariffTableFilterValue } from './tariff-table-toolbar';
+import { useLocales } from 'src/locales';
 
 type Props = {
   filters: ITariffTableFilters;
@@ -10,13 +11,23 @@ type Props = {
 };
 
 export function TariffTableFiltersResult({ filters, onFilters, onResetFilters, results, sx }: Props) {
+  const { t } = useLocales();
   const chips: Array<{ key: string; label: string; onDelete: VoidFunction }> = [];
 
   if (filters.search) {
-    chips.push({ key: 'search', label: `Search: ${filters.search}`, onDelete: () => onFilters('search', '') });
+    chips.push({
+      key: 'search',
+      label: t('billing.tariffs.filters.searchTag', { value: filters.search }),
+      onDelete: () => onFilters('search', ''),
+    });
   }
   if (filters.status) {
-    chips.push({ key: 'status', label: `Status: ${filters.status}`, onDelete: () => onFilters('status', '') });
+    const statusLabel = t(`billing.tariffs.status.${filters.status}`, { defaultValue: filters.status });
+    chips.push({
+      key: 'status',
+      label: t('billing.tariffs.filters.statusTag', { value: statusLabel }),
+      onDelete: () => onFilters('status', ''),
+    });
   }
 
   return (
@@ -24,8 +35,8 @@ export function TariffTableFiltersResult({ filters, onFilters, onResetFilters, r
       {chips.map((chip) => (
         <Chip key={chip.key} label={chip.label} onDelete={chip.onDelete} />
       ))}
-      <Chip label={`Results: ${results}`} variant="outlined" />
-      <Chip label="Reset" color="primary" onClick={onResetFilters} />
+      <Chip label={t('billing.tariffs.filters.results', { count: results })} variant="outlined" />
+      <Chip label={t('billing.tariffs.filters.reset')} color="primary" onClick={onResetFilters} />
     </Stack>
   );
 }
