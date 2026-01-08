@@ -646,6 +646,106 @@
       }
     }
   },
+  "settings": {
+    "title": "Podesavanja",
+    "description": "Admin podesavanja za obracun meseca i valutu.",
+    "loading": "Ucitavanje podesavanja...",
+    "errors": {
+      "loadFailed": "Nije moguce ucitati podesavanja."
+    },
+    "actions": {
+      "cancel": "Otkazi",
+      "save": "Sacuvaj"
+    },
+    "currentDate": {
+      "title": "Trenutni datum",
+      "modeLabel": "Rezim",
+      "modeField": "Rezim",
+      "autoDisplay": "Auto (trenutni datum)",
+      "empty": "-",
+      "modes": {
+        "auto": "Auto (koristi new Date())",
+        "manual": "Rucno"
+      },
+      "dateField": "Datum",
+      "errors": {
+        "invalidDate": "Molimo izaberite validan datum.",
+        "saveFailed": "Nije moguce sacuvati podesavanja datuma."
+      }
+    },
+    "currency": {
+      "title": "Valuta",
+      "field": "Valuta",
+      "errors": {
+        "required": "Valuta je obavezna.",
+        "saveFailed": "Nije moguce sacuvati valutu."
+      }
+    },
+    "roles": {
+      "title": "Dozvole po rolama",
+      "description": "Upravljajte rolama i podesite vidljivost naloga.",
+      "loading": "Ucitavanje dozvola...",
+      "errors": {
+        "loadFailed": "Nije moguce ucitati role ili dozvole.",
+        "saveFailed": "Nije moguce sacuvati dozvole."
+      },
+      "health": {
+        "title": "Zdravlje veza rola",
+        "loadError": "Nije moguce ucitati status zdravlja.",
+        "loading": "Ucitavanje statusa zdravlja...",
+        "accountsWithoutRoles": "Nalozi bez role",
+        "rolesWithoutPermissions": "Role bez dozvola",
+        "missingAssignments": "Neki nalozi ili role nemaju dodeljene vrednosti.",
+        "healthy": "Svi nalozi i role izgledaju ispravno."
+      },
+      "list": {
+        "title": "Role"
+      },
+      "create": {
+        "title": "Dodaj novu rolu",
+        "fields": {
+          "name": "Naziv role",
+          "slug": "Slug role",
+          "slugHint": "Mala slova, koristi donje crte"
+        },
+        "actions": {
+          "add": "Dodaj rolu"
+        },
+        "errors": {
+          "required": "Naziv i slug su obavezni.",
+          "slugExists": "Slug role vec postoji.",
+          "saveFailed": "Nije moguce napraviti rolu."
+        }
+      },
+      "select": "Izaberite rolu",
+      "allowedRoles": {
+        "label": "Dozvoljene role naloga (opciono)",
+        "helper": "Prazna lista = bez ogranicenja"
+      }
+    },
+    "translations": {
+      "title": "Prevodi",
+      "subtitle": "Kljucevi su zakljucani; menjajte samo vrednosti.",
+      "target": {
+        "mobile": "Mobilni",
+        "web": "Web"
+      },
+      "health": {
+        "title": "Zdravlje prevoda",
+        "loadError": "Nije moguce ucitati zdravlje prevoda.",
+        "loading": "Ucitavanje zdravlja prevoda...",
+        "missing": "Nedostaju prevodi: {{count}}"
+      },
+      "locale": "Jezik",
+      "filter": "Filtriraj kljuceve",
+      "loading": "Ucitavanje prevoda...",
+      "missingLocales": "Nedostaje: {{locales}}",
+      "errors": {
+        "loadFailed": "Nije moguce ucitati prevode.",
+        "updateFailed": "Nije moguce azurirati prevode."
+      }
+    }
+  },
   "validation": {
     "required": "Obavezno",
     "min": "Mora biti >= {{min}}"

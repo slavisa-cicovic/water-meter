@@ -22,10 +22,12 @@ import RoleBasedGuard from "src/auth/guard/role-based-guard";
 import { PERMISSIONS } from "src/constants/permissions";
 import RolePermissionsManager from "../role-permissions-manager";
 import TranslationManager from "../translation-manager";
+import { useLocales } from "src/locales";
 
 const formatDateLabel = (value: string | null) => value ?? "-";
 
 export function SettingsView() {
+  const { t } = useLocales();
   const settings = useSettingsContext();
   const { settings: data, settingsLoading, settingsError, mutate } = useGetSettings();
 
@@ -45,14 +47,14 @@ export function SettingsView() {
   }, [data]);
 
   const dateDisplay = useMemo(() => {
-    if (dateMode === "auto") return "Auto (current date)";
-    return formatDateLabel(dateValue);
-  }, [dateMode, dateValue]);
+    if (dateMode === "auto") return t("settings.currentDate.autoDisplay");
+    return dateValue ? formatDateLabel(dateValue) : t("settings.currentDate.empty");
+  }, [dateMode, dateValue, t]);
 
   const handleSaveDate = useCallback(async () => {
     setMonthError(null);
     if (dateMode === "manual" && (!dateValue || !dateValue.trim())) {
-      setMonthError("Please select a valid date.");
+      setMonthError(t("settings.currentDate.errors.invalidDate"));
       return;
     }
 
@@ -68,11 +70,11 @@ export function SettingsView() {
       await Promise.all(updates.map((payload) => SettingsApi.updateSetting(payload)));
       await mutate();
     } catch (error) {
-      setMonthError("Unable to save current date settings.");
+      setMonthError(t("settings.currentDate.errors.saveFailed"));
     } finally {
       setSavingMonth(false);
     }
-  }, [dateMode, dateValue, mutate]);
+  }, [dateMode, dateValue, mutate, t]);
 
   const handleCancelDate = useCallback(() => {
     if (!data) return;
@@ -84,7 +86,7 @@ export function SettingsView() {
   const handleSaveCurrency = useCallback(async () => {
     setCurrencyError(null);
     if (!currency.trim()) {
-      setCurrencyError("Currency is required.");
+      setCurrencyError(t("settings.currency.errors.required"));
       return;
     }
     setSavingCurrency(true);
@@ -92,11 +94,11 @@ export function SettingsView() {
       await SettingsApi.updateSetting({ key: "currency", value: currency.trim() });
       await mutate();
     } catch (error) {
-      setCurrencyError("Unable to save currency.");
+      setCurrencyError(t("settings.currency.errors.saveFailed"));
     } finally {
       setSavingCurrency(false);
     }
-  }, [currency, mutate]);
+  }, [currency, mutate, t]);
 
   const handleCancelCurrency = useCallback(() => {
     if (!data) return;
@@ -107,17 +109,17 @@ export function SettingsView() {
   return (
     <Container maxWidth={settings.themeStretch ? false : "lg"}>
       <CustomBreadcrumbs
-        heading="Settings"
-        description="Admin settings for month evaluation and currency."
+        heading={t("settings.title")}
+        description={t("settings.description")}
         links={[
-          { name: "App", href: paths.dashboard.root },
-          { name: "Settings" },
+          { name: t("sidebar.app"), href: paths.dashboard.root },
+          { name: t("sidebar.settings") },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 
-      {settingsError ? <Alert severity="error">Unable to load settings.</Alert> : null}
-      {settingsLoading ? <Alert severity="info">Loading settings...</Alert> : null}
+      {settingsError ? <Alert severity="error">{t("settings.errors.loadFailed")}</Alert> : null}
+      {settingsLoading ? <Alert severity="info">{t("settings.loading")}</Alert> : null}
 
       <Box
         rowGap={2}
@@ -130,24 +132,24 @@ export function SettingsView() {
             <CardContent sx={{ height: "100%" }}>
               <Stack spacing={2} sx={{ height: "100%" }}>
                 <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-              <Typography variant="h6">Current Date</Typography>
+              <Typography variant="h6">{t("settings.currentDate.title")}</Typography>
               <Typography variant="body2" color="text.secondary">
-                Mode: {dateDisplay}
+                {t("settings.currentDate.modeLabel")}: {dateDisplay}
               </Typography>
 
                 <TextField
                   select
-                  label="Mode"
+                  label={t("settings.currentDate.modeField")}
                   value={dateMode}
                   onChange={(event) => setDateMode(event.target.value as CurrentDateMode)}
                   size="small"
                 >
-                  <MenuItem value="auto">Auto (use new Date())</MenuItem>
-                  <MenuItem value="manual">Manual</MenuItem>
+                  <MenuItem value="auto">{t("settings.currentDate.modes.auto")}</MenuItem>
+                  <MenuItem value="manual">{t("settings.currentDate.modes.manual")}</MenuItem>
                 </TextField>
 
                 <TextField
-                  label="Date"
+                  label={t("settings.currentDate.dateField")}
                   type="date"
                   value={dateValue ?? ""}
                   onChange={(event) => setDateValue(event.target.value || null)}
@@ -162,10 +164,10 @@ export function SettingsView() {
 
                 <Stack direction="row" spacing={1} justifyContent="flex-end">
                   <Button variant="outlined" onClick={handleCancelDate} disabled={savingMonth}>
-                    Cancel
+                    {t("settings.actions.cancel")}
                   </Button>
                   <Button variant="contained" onClick={handleSaveDate} disabled={savingMonth}>
-                    Save
+                    {t("settings.actions.save")}
                   </Button>
                 </Stack>
               </Stack>
@@ -176,9 +178,9 @@ export function SettingsView() {
             <CardContent sx={{ height: "100%" }}>
               <Stack spacing={2} sx={{ height: "100%" }}>
                 <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-                  <Typography variant="h6">Currency</Typography>
+                  <Typography variant="h6">{t("settings.currency.title")}</Typography>
                   <TextField
-                    label="Currency"
+                    label={t("settings.currency.field")}
                     value={currency}
                     onChange={(event) => setCurrency(event.target.value)}
                     size="small"
@@ -187,10 +189,10 @@ export function SettingsView() {
                 </Box>
                 <Stack direction="row" spacing={1} justifyContent="flex-end">
                   <Button variant="outlined" onClick={handleCancelCurrency} disabled={savingCurrency}>
-                    Cancel
+                    {t("settings.actions.cancel")}
                   </Button>
                   <Button variant="contained" onClick={handleSaveCurrency} disabled={savingCurrency}>
-                    Save
+                    {t("settings.actions.save")}
                   </Button>
                 </Stack>
               </Stack>

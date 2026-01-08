@@ -646,6 +646,106 @@
       }
     }
   },
+  "settings": {
+    "title": "Settings",
+    "description": "Admin settings for month evaluation and currency.",
+    "loading": "Loading settings...",
+    "errors": {
+      "loadFailed": "Unable to load settings."
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "currentDate": {
+      "title": "Current Date",
+      "modeLabel": "Mode",
+      "modeField": "Mode",
+      "autoDisplay": "Auto (current date)",
+      "empty": "-",
+      "modes": {
+        "auto": "Auto (use new Date())",
+        "manual": "Manual"
+      },
+      "dateField": "Date",
+      "errors": {
+        "invalidDate": "Please select a valid date.",
+        "saveFailed": "Unable to save current date settings."
+      }
+    },
+    "currency": {
+      "title": "Currency",
+      "field": "Currency",
+      "errors": {
+        "required": "Currency is required.",
+        "saveFailed": "Unable to save currency."
+      }
+    },
+    "roles": {
+      "title": "Role permissions",
+      "description": "Manage which roles can access each domain and configure account visibility rules.",
+      "loading": "Loading role permissions...",
+      "errors": {
+        "loadFailed": "Unable to load roles or permissions.",
+        "saveFailed": "Unable to save permissions."
+      },
+      "health": {
+        "title": "Role links health",
+        "loadError": "Unable to load health status.",
+        "loading": "Loading health status...",
+        "accountsWithoutRoles": "Accounts without roles",
+        "rolesWithoutPermissions": "Roles without permissions",
+        "missingAssignments": "Some accounts or roles are missing assignments.",
+        "healthy": "All accounts and roles look healthy."
+      },
+      "list": {
+        "title": "Roles"
+      },
+      "create": {
+        "title": "Add new role",
+        "fields": {
+          "name": "Role name",
+          "slug": "Role slug",
+          "slugHint": "Lowercase, use underscores"
+        },
+        "actions": {
+          "add": "Add role"
+        },
+        "errors": {
+          "required": "Role name and slug are required.",
+          "slugExists": "Role slug already exists.",
+          "saveFailed": "Unable to create role."
+        }
+      },
+      "select": "Select a role",
+      "allowedRoles": {
+        "label": "Allowed account roles (optional)",
+        "helper": "Empty list = no restrictions"
+      }
+    },
+    "translations": {
+      "title": "Translations",
+      "subtitle": "Keys are locked; update values only.",
+      "target": {
+        "mobile": "Mobile",
+        "web": "Web"
+      },
+      "health": {
+        "title": "Translations health",
+        "loadError": "Unable to load translation health.",
+        "loading": "Loading translation health...",
+        "missing": "Missing translations: {{count}}"
+      },
+      "locale": "Locale",
+      "filter": "Filter keys",
+      "loading": "Loading translations...",
+      "missingLocales": "Missing: {{locales}}",
+      "errors": {
+        "loadFailed": "Unable to load translations.",
+        "updateFailed": "Unable to update translations."
+      }
+    }
+  },
   "validation": {
     "required": "Required",
     "min": "Must be >= {{min}}"

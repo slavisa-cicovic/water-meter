@@ -22,14 +22,11 @@ import { useAuthContext } from "src/auth/hooks";
 import { PERMISSIONS } from "src/constants/permissions";
 import { TranslationsApi, useGetTranslations } from "src/api/translations";
 import { TranslationBundle, TranslationTarget } from "src/types/translations";
+import { useLocales } from "src/locales";
 
 const SUPPORTED_LOCALES = ["en", "sr-Latn", "sr-Cyrl"];
-const TARGET_OPTIONS: Array<{ value: TranslationTarget; label: string }> = [
-  { value: "mobile", label: "Mobile" },
-  { value: "web", label: "Web" },
-];
-
 export default function TranslationManager() {
+  const { t } = useLocales();
   const { user } = useAuthContext();
   const [target, setTarget] = useState<TranslationTarget>("mobile");
   const [locale, setLocale] = useState("en");
@@ -39,6 +36,13 @@ export default function TranslationManager() {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const canEdit = user?.permissions?.includes(PERMISSIONS.TRANSLATIONS_UPDATE) ?? false;
+  const targetOptions: Array<{ value: TranslationTarget; label: string }> = useMemo(
+    () => [
+      { value: "mobile", label: t("settings.translations.target.mobile") },
+      { value: "web", label: t("settings.translations.target.web") },
+    ],
+    [t]
+  );
   const { bundle, translationsLoading, translationsError, mutate } = useGetTranslations(locale, target);
   const {
     bundle: enBundle,
@@ -144,20 +148,20 @@ export default function TranslationManager() {
       await mutate();
       setDrafts({});
     } catch (error) {
-      setSaveError("Unable to update translations.");
+      setSaveError(t("settings.translations.errors.updateFailed"));
     } finally {
       setSaving(false);
     }
-  }, [bundle, canEdit, entries, locale, mutate]);
+  }, [bundle, canEdit, entries, locale, mutate, t]);
 
   return (
     <Card>
       <CardContent>
         <Stack spacing={2}>
           <Box>
-            <Typography variant="h6">Translations</Typography>
+            <Typography variant="h6">{t("settings.translations.title")}</Typography>
             <Typography variant="body2" color="text.secondary">
-              Keys are locked; update values only.
+              {t("settings.translations.subtitle")}
             </Typography>
           </Box>
 
@@ -166,7 +170,7 @@ export default function TranslationManager() {
             onChange={(_, nextTarget) => setTarget(nextTarget)}
             variant="fullWidth"
           >
-            {TARGET_OPTIONS.map((option) => (
+            {targetOptions.map((option) => (
               <Tab key={option.value} value={option.value} label={option.label} />
             ))}
           </Tabs>
@@ -184,12 +188,12 @@ export default function TranslationManager() {
             }}
           >
             <Stack spacing={1}>
-              <Typography variant="subtitle1">Translations health</Typography>
-              {healthError ? <Alert severity="error">Unable to load translation health.</Alert> : null}
-              {healthLoading ? <Alert severity="info">Loading translation health...</Alert> : null}
+              <Typography variant="subtitle1">{t("settings.translations.health.title")}</Typography>
+              {healthError ? <Alert severity="error">{t("settings.translations.health.loadError")}</Alert> : null}
+              {healthLoading ? <Alert severity="info">{t("settings.translations.health.loading")}</Alert> : null}
               {!healthLoading && !healthError ? (
                 <Alert severity={missingCount ? "warning" : "success"}>
-                  Missing translations: {missingCount}
+                  {t("settings.translations.health.missing", { count: missingCount })}
                 </Alert>
               ) : null}
             </Stack>
@@ -198,7 +202,7 @@ export default function TranslationManager() {
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <TextField
               select
-              label="Locale"
+              label={t("settings.translations.locale")}
               value={locale}
               onChange={(event) => setLocale(event.target.value)}
               size="small"
@@ -211,7 +215,7 @@ export default function TranslationManager() {
               ))}
             </TextField>
             <TextField
-              label="Filter keys"
+              label={t("settings.translations.filter")}
               value={filter}
               onChange={(event) => setFilter(event.target.value)}
               size="small"
@@ -219,8 +223,8 @@ export default function TranslationManager() {
             />
           </Stack>
 
-          {translationsError ? <Alert severity="error">Unable to load translations.</Alert> : null}
-          {translationsLoading ? <Alert severity="info">Loading translations...</Alert> : null}
+          {translationsError ? <Alert severity="error">{t("settings.translations.errors.loadFailed")}</Alert> : null}
+          {translationsLoading ? <Alert severity="info">{t("settings.translations.loading")}</Alert> : null}
 
           <Stack spacing={2}>
             {Object.entries(groupedEntries)
@@ -255,7 +259,11 @@ export default function TranslationManager() {
                             onChange={(event) => handleChange(entry.key, event.target.value)}
                             disabled={!canEdit}
                             error={hasMissingLocales}
-                            helperText={hasMissingLocales ? `Missing: ${missingLocales.join(", ")}` : undefined}
+                            helperText={
+                              hasMissingLocales
+                                ? t("settings.translations.missingLocales", { locales: missingLocales.join(", ") })
+                                : undefined
+                            }
                             size="small"
                             fullWidth
                           />
@@ -272,14 +280,14 @@ export default function TranslationManager() {
 
           <Stack direction="row" spacing={1} justifyContent="flex-end">
             <Button variant="outlined" onClick={handleReset} disabled={!hasChanges || saving}>
-              Cancel
+              {t("settings.actions.cancel")}
             </Button>
             <Button
               variant="contained"
               onClick={handleSave}
               disabled={!hasChanges || saving || !canEdit}
             >
-              Save
+              {t("settings.actions.save")}
             </Button>
           </Stack>
         </Stack>

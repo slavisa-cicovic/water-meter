@@ -28,6 +28,7 @@ import { PermissionItem, RoleWithPermissions } from "src/types/roles";
 import { useAuthContext } from "src/auth/hooks";
 import { PERMISSIONS } from "src/constants/permissions";
 import { useGetRoleLinksHealth } from "src/api/health";
+import { useLocales } from "src/locales";
 
 type DraftPermission = {
   enabled: boolean;
@@ -65,6 +66,7 @@ const buildDraft = (role: RoleWithPermissions, permissions: PermissionItem[]) =>
 const normalizeSlug = (value: string) => value.trim().toLowerCase().replace(/\s+/g, "_");
 
 export default function RolePermissionsManager() {
+  const { t } = useLocales();
   const { user } = useAuthContext();
   const { roles, rolesLoading, rolesError, mutate: mutateRoles } = useGetRolesWithPermissions();
   const { permissions, permissionsLoading, permissionsError } = useGetPermissions();
@@ -161,18 +163,18 @@ export default function RolePermissionsManager() {
       await RolesApi.updateRolePermissions(selectedRole.id, updates);
       await mutateRoles();
     } catch (error) {
-      setSaveError("Unable to save permissions.");
+      setSaveError(t("settings.roles.errors.saveFailed"));
     } finally {
       setSaving(false);
     }
-  }, [draftPermissions, mutateRoles, permissions, selectedRole]);
+  }, [draftPermissions, mutateRoles, permissions, selectedRole, t]);
 
   const handleCreateRole = useCallback(async () => {
     setCreateError(null);
     const slug = normalizeSlug(newRoleSlug || newRoleName);
     const name = newRoleName.trim();
     if (!slug || !name) {
-      setCreateError("Role name and slug are required.");
+      setCreateError(t("settings.roles.create.errors.required"));
       return;
     }
 
@@ -186,19 +188,22 @@ export default function RolePermissionsManager() {
         setSelectedRoleId(response.role.id);
       }
     } catch (error: any) {
-      const message = error?.error === "ROLE_EXISTS" ? "Role slug already exists." : "Unable to create role.";
+      const message =
+        error?.error === "ROLE_EXISTS"
+          ? t("settings.roles.create.errors.slugExists")
+          : t("settings.roles.create.errors.saveFailed");
       setCreateError(message);
     } finally {
       setCreating(false);
     }
-  }, [mutateRoles, newRoleName, newRoleSlug]);
+  }, [mutateRoles, newRoleName, newRoleSlug, t]);
 
   if (rolesLoading || permissionsLoading) {
-    return <Alert severity="info">Loading role permissions...</Alert>;
+    return <Alert severity="info">{t("settings.roles.loading")}</Alert>;
   }
 
   if (rolesError || permissionsError) {
-    return <Alert severity="error">Unable to load roles or permissions.</Alert>;
+    return <Alert severity="error">{t("settings.roles.errors.loadFailed")}</Alert>;
   }
 
   return (
@@ -206,9 +211,9 @@ export default function RolePermissionsManager() {
       <CardContent>
         <Stack spacing={3}>
           <Box>
-            <Typography variant="h6">Role permissions</Typography>
+            <Typography variant="h6">{t("settings.roles.title")}</Typography>
             <Typography variant="body2" color="text.secondary">
-              Manage which roles can access each domain and configure account visibility rules.
+              {t("settings.roles.description")}
             </Typography>
           </Box>
 
@@ -226,21 +231,21 @@ export default function RolePermissionsManager() {
               }}
             >
               <Stack spacing={1.5}>
-                <Typography variant="subtitle1">Role links health</Typography>
-                {healthError ? <Alert severity="error">Unable to load health status.</Alert> : null}
-                {healthLoading ? <Alert severity="info">Loading health status...</Alert> : null}
+                <Typography variant="subtitle1">{t("settings.roles.health.title")}</Typography>
+                {healthError ? <Alert severity="error">{t("settings.roles.health.loadError")}</Alert> : null}
+                {healthLoading ? <Alert severity="info">{t("settings.roles.health.loading")}</Alert> : null}
                 {health ? (
                   <Stack spacing={1}>
                     <Typography variant="body2">
-                      Accounts without roles: {health.accountsWithoutRoles}
+                      {t("settings.roles.health.accountsWithoutRoles")}: {health.accountsWithoutRoles}
                     </Typography>
                     <Typography variant="body2">
-                      Roles without permissions: {health.rolesWithoutPermissions}
+                      {t("settings.roles.health.rolesWithoutPermissions")}: {health.rolesWithoutPermissions}
                     </Typography>
                     {!health.ok ? (
-                      <Alert severity="warning">Some accounts or roles are missing assignments.</Alert>
+                      <Alert severity="warning">{t("settings.roles.health.missingAssignments")}</Alert>
                     ) : (
-                      <Alert severity="success">All accounts and roles look healthy.</Alert>
+                      <Alert severity="success">{t("settings.roles.health.healthy")}</Alert>
                     )}
                   </Stack>
                 ) : null}
@@ -252,7 +257,7 @@ export default function RolePermissionsManager() {
             <Card variant="outlined" sx={{ minWidth: 260, flexShrink: 0 }}>
               <CardContent>
                 <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                  Roles
+                  {t("settings.roles.list.title")}
                 </Typography>
                 <List dense disablePadding>
                   {roles.map((role) => (
@@ -269,23 +274,23 @@ export default function RolePermissionsManager() {
                   <>
                     <Divider sx={{ my: 2 }} />
                     <Stack spacing={1}>
-                      <Typography variant="subtitle2">Add new role</Typography>
+                      <Typography variant="subtitle2">{t("settings.roles.create.title")}</Typography>
                       <TextField
                         size="small"
-                        label="Role name"
+                        label={t("settings.roles.create.fields.name")}
                         value={newRoleName}
                         onChange={(event) => setNewRoleName(event.target.value)}
                       />
                       <TextField
                         size="small"
-                        label="Role slug"
+                        label={t("settings.roles.create.fields.slug")}
                         value={newRoleSlug}
                         onChange={(event) => setNewRoleSlug(event.target.value)}
-                        helperText="Lowercase, use underscores"
+                        helperText={t("settings.roles.create.fields.slugHint")}
                       />
                       {createError ? <Alert severity="error">{createError}</Alert> : null}
                       <Button variant="outlined" onClick={handleCreateRole} disabled={creating}>
-                        Add role
+                        {t("settings.roles.create.actions.add")}
                       </Button>
                     </Stack>
                   </>
@@ -297,7 +302,9 @@ export default function RolePermissionsManager() {
               <Stack spacing={2}>
                 <Stack direction="row" alignItems="center" justifyContent="space-between">
                   <Box>
-                    <Typography variant="subtitle1">{selectedRole?.name ?? "Select a role"}</Typography>
+                    <Typography variant="subtitle1">
+                      {selectedRole?.name ?? t("settings.roles.select")}
+                    </Typography>
                     <Typography variant="caption" color="text.secondary">
                       {selectedRole?.slug}
                     </Typography>
@@ -336,7 +343,7 @@ export default function RolePermissionsManager() {
                                   <TextField
                                     select
                                     fullWidth
-                                    label="Allowed account roles (optional)"
+                                    label={t("settings.roles.allowedRoles.label")}
                                     SelectProps={{ multiple: true }}
                                     value={allowedRoles}
                                     onChange={(event) =>
@@ -347,7 +354,7 @@ export default function RolePermissionsManager() {
                                           : event.target.value
                                       )
                                     }
-                                    helperText="Empty list = no restrictions"
+                                    helperText={t("settings.roles.allowedRoles.helper")}
                                     size="small"
                                     sx={{ mt: 1 }}
                                   >
@@ -369,10 +376,10 @@ export default function RolePermissionsManager() {
 
                 <Stack direction="row" spacing={1} justifyContent="flex-end">
                   <Button variant="outlined" onClick={handleCancel} disabled={!hasDraftChanges || saving}>
-                    Cancel
+                    {t("settings.actions.cancel")}
                   </Button>
                   <Button variant="contained" onClick={handleSave} disabled={!hasDraftChanges || saving}>
-                    Save
+                    {t("settings.actions.save")}
                   </Button>
                 </Stack>
 
