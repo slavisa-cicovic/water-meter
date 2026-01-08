@@ -129,7 +129,7 @@ export default function TranslationManager() {
             {Object.entries(groupedEntries)
               .sort(([a], [b]) => a.localeCompare(b))
               .map(([prefix, items]) => (
-                <Accordion key={prefix} defaultExpanded>
+                <Accordion key={prefix}>
                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                       {prefix} ({items.length})

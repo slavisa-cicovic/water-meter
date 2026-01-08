@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Box,
   Button,
   Card,
@@ -18,6 +21,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useGetPermissions } from "src/api/permissions";
 import { RolesApi, useGetRolesWithPermissions } from "src/api/roles";
 import { PermissionItem, RoleWithPermissions } from "src/types/roles";
@@ -262,11 +266,13 @@ export default function RolePermissionsManager() {
 
                 <Stack spacing={2}>
                   {Object.entries(groupedPermissions).map(([resource, resourcePermissions]) => (
-                    <Card key={resource} variant="outlined">
-                      <CardContent>
-                        <Typography variant="subtitle2" sx={{ textTransform: "capitalize", mb: 1 }}>
-                          {resource.replace(/_/g, " ")}
+                    <Accordion key={resource}>
+                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        <Typography variant="subtitle2" sx={{ textTransform: "capitalize" }}>
+                          {resource.replace(/_/g, " ")} ({resourcePermissions.length})
                         </Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
                         <Stack spacing={1.5}>
                           {resourcePermissions.map((permission) => {
                             const draft = draftPermissions[permission.slug];
@@ -315,8 +321,8 @@ export default function RolePermissionsManager() {
                             );
                           })}
                         </Stack>
-                      </CardContent>
-                    </Card>
+                      </AccordionDetails>
+                    </Accordion>
                   ))}
                 </Stack>
               </Stack>
