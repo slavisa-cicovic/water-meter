@@ -38,3 +38,4 @@ Introduce multilingual support with Serbian (Latin + Cyrillic) and English acros
 9. `[p]` Replace hardcoded strings with translation keys in priority screens (auth, dashboard, meters, readings, billing).
 10. `[ ]` Validate locale-sensitive formatting (dates/numbers) aligns with selected locale.
 11. `[ ]` Manual QA: language switch persists, no missing keys, and layouts handle longer strings.
+12. `[p]` Add backend translations storage + admin editor + mobile runtime fetch (ETag/If-Modified-Since with local fallback).

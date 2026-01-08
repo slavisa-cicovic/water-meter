@@ -9,6 +9,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useColorScheme } from "@src/hooks/use-color-scheme";
 import { useAuthStore } from "@src/state/auth-store";
 import { useLocaleStore } from "@src/state/locale-store";
+import { useTranslationsStore } from "@src/state/translations-store";
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -24,6 +25,10 @@ export default function RootLayout() {
   const accessToken = useAuthStore(state => state.accessToken);
   const hydrateLocale = useLocaleStore(state => state.hydrate);
   const localeHydrated = useLocaleStore(state => state.hydrated);
+  const locale = useLocaleStore(state => state.locale);
+  const hydrateTranslations = useTranslationsStore(state => state.hydrate);
+  const translationsHydrated = useTranslationsStore(state => state.hydrated);
+  const refreshTranslations = useTranslationsStore(state => state.refresh);
 
   useEffect(() => {
     hydrate();
@@ -32,6 +37,15 @@ export default function RootLayout() {
   useEffect(() => {
     hydrateLocale();
   }, [hydrateLocale]);
+
+  useEffect(() => {
+    hydrateTranslations();
+  }, [hydrateTranslations]);
+
+  useEffect(() => {
+    if (!translationsHydrated) return;
+    refreshTranslations(locale);
+  }, [locale, refreshTranslations, translationsHydrated]);
 
   useEffect(() => {
     if (!hydrated || !localeHydrated) return;

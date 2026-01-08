@@ -74,4 +74,5 @@ export const endpoints = {
     summary: '/api/notifications',
   },
   settings: '/api/settings',
+  translations: '/api/translations',
 };

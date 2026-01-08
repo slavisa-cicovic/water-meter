@@ -411,6 +411,8 @@ const permissions: PermissionSeed[] = [
   { slug: 'roles:list', name: 'List roles', resource: 'roles', action: 'list' },
   { slug: 'roles:create', name: 'Create role', resource: 'roles', action: 'create' },
   { slug: 'roles:update', name: 'Update role permissions', resource: 'roles', action: 'update' },
+  { slug: 'translations:read', name: 'Read translations', resource: 'translations', action: 'read' },
+  { slug: 'translations:update', name: 'Update translations', resource: 'translations', action: 'update' },
   { slug: 'mobile_profile:read', name: 'Read mobile profile', resource: 'mobile_profile', action: 'read' },
   { slug: 'mobile_profile:update', name: 'Update mobile profile', resource: 'mobile_profile', action: 'update' },
   { slug: 'mobile_readings:context', name: 'Read mobile reading context', resource: 'mobile_readings', action: 'context' },

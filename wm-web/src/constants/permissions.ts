@@ -37,6 +37,8 @@ export const PERMISSIONS = {
   ROLES_LIST: 'roles:list',
   ROLES_CREATE: 'roles:create',
   ROLES_UPDATE: 'roles:update',
+  TRANSLATIONS_READ: 'translations:read',
+  TRANSLATIONS_UPDATE: 'translations:update',
   MOBILE_PROFILE_READ: 'mobile_profile:read',
   MOBILE_PROFILE_UPDATE: 'mobile_profile:update',
   MOBILE_READINGS_CONTEXT: 'mobile_readings:context',

@@ -22,6 +22,7 @@ import RoleBasedGuard from "src/auth/guard/role-based-guard";
 import { PERMISSIONS } from "src/constants/permissions";
 import RolePermissionsManager from "../role-permissions-manager";
 import { useGetRoleLinksHealth } from "src/api/health";
+import TranslationManager from "../translation-manager";
 
 const formatDateLabel = (value: string | null) => value ?? "-";
 
@@ -199,11 +200,20 @@ export function SettingsView() {
           </Card>
       </Box>
 
-      <RoleBasedGuard permissions={[PERMISSIONS.ROLES_UPDATE]} sx={{ mt: 3 }}>
-        <Box sx={{ mt: 3 }}>
+      <Box
+        display="grid"
+        columnGap={2}
+        rowGap={2}
+        gridTemplateColumns={{ xs: "1fr", md: "repeat(2, 1fr)" }}
+        sx={{ mt: 3 }}
+      >
+        <RoleBasedGuard permissions={[PERMISSIONS.ROLES_UPDATE]}>
           <RolePermissionsManager />
-        </Box>
-      </RoleBasedGuard>
+        </RoleBasedGuard>
+        <RoleBasedGuard permissions={[PERMISSIONS.TRANSLATIONS_READ]}>
+          <TranslationManager />
+        </RoleBasedGuard>
+      </Box>
 
       <RoleBasedGuard permissions={[PERMISSIONS.ROLES_LIST]} sx={{ mt: 3 }}>
         <Box sx={{ mt: 3 }}>

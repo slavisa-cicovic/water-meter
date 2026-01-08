@@ -1,0 +1,175 @@
+"use client";
+
+import { useCallback, useMemo, useState } from "react";
+import {
+  Alert,
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  MenuItem,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { useAuthContext } from "src/auth/hooks";
+import { PERMISSIONS } from "src/constants/permissions";
+import { TranslationsApi, useGetTranslations } from "src/api/translations";
+
+const SUPPORTED_LOCALES = ["en", "sr-Latn", "sr-Cyrl"];
+
+export default function TranslationManager() {
+  const { user } = useAuthContext();
+  const [locale, setLocale] = useState("en");
+  const [filter, setFilter] = useState("");
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const canEdit = user?.permissions?.includes(PERMISSIONS.TRANSLATIONS_UPDATE) ?? false;
+  const { bundle, translationsLoading, translationsError, mutate } = useGetTranslations(locale);
+
+  const entries = useMemo(() => {
+    const data = bundle?.translations ?? {};
+    const normalizedFilter = filter.trim().toLowerCase();
+    return Object.keys(data)
+      .sort()
+      .filter((key) => !normalizedFilter || key.toLowerCase().includes(normalizedFilter))
+      .map((key) => ({
+        key,
+        value: drafts[key] ?? data[key],
+        original: data[key],
+      }));
+  }, [bundle?.translations, drafts, filter]);
+
+  const groupedEntries = useMemo(() => {
+    return entries.reduce<Record<string, typeof entries>>((acc, entry) => {
+      const prefix = entry.key.split(".")[0] || "other";
+      acc[prefix] = acc[prefix] || [];
+      acc[prefix].push(entry);
+      return acc;
+    }, {});
+  }, [entries]);
+
+  const hasChanges = useMemo(
+    () => entries.some((entry) => entry.value !== entry.original),
+    [entries]
+  );
+
+  const handleChange = useCallback((key: string, value: string) => {
+    setDrafts((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
+  const handleReset = useCallback(() => {
+    setDrafts({});
+    setSaveError(null);
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    if (!bundle || !canEdit) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const updates = entries
+        .filter((entry) => entry.value !== entry.original)
+        .map((entry) => ({ key: entry.key, value: entry.value }));
+      await TranslationsApi.updateTranslations({ locale, updates });
+      await mutate();
+      setDrafts({});
+    } catch (error) {
+      setSaveError("Unable to update translations.");
+    } finally {
+      setSaving(false);
+    }
+  }, [bundle, canEdit, entries, locale, mutate]);
+
+  return (
+    <Card>
+      <CardContent>
+        <Stack spacing={2}>
+          <Box>
+            <Typography variant="h6">Translations</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Keys are locked; update values only.
+            </Typography>
+          </Box>
+
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+            <TextField
+              select
+              label="Locale"
+              value={locale}
+              onChange={(event) => setLocale(event.target.value)}
+              size="small"
+              sx={{ minWidth: 180 }}
+            >
+              {SUPPORTED_LOCALES.map((item) => (
+                <MenuItem key={item} value={item}>
+                  {item}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              label="Filter keys"
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+              size="small"
+              fullWidth
+            />
+          </Stack>
+
+          {translationsError ? <Alert severity="error">Unable to load translations.</Alert> : null}
+          {translationsLoading ? <Alert severity="info">Loading translations...</Alert> : null}
+
+          <Stack spacing={2}>
+            {Object.entries(groupedEntries)
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([prefix, items]) => (
+                <Accordion key={prefix} defaultExpanded>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                      {prefix} ({items.length})
+                    </Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Stack spacing={2}>
+                      {items.map((entry) => (
+                        <TextField
+                          key={entry.key}
+                          label={entry.key}
+                          value={entry.value}
+                          onChange={(event) => handleChange(entry.key, event.target.value)}
+                          disabled={!canEdit}
+                          size="small"
+                          fullWidth
+                        />
+                      ))}
+                    </Stack>
+                  </AccordionDetails>
+                </Accordion>
+              ))}
+          </Stack>
+
+          {saveError ? <Alert severity="error">{saveError}</Alert> : null}
+
+          <Stack direction="row" spacing={1} justifyContent="flex-end">
+            <Button variant="outlined" onClick={handleReset} disabled={!hasChanges || saving}>
+              Reset
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleSave}
+              disabled={!hasChanges || saving || !canEdit}
+            >
+              Save
+            </Button>
+          </Stack>
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+}
