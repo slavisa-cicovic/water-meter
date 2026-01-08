@@ -50,11 +50,16 @@ const flattenTranslations = (
 };
 
 const ensureSeeded = async (target: TranslationTarget, locale: SupportedLocale) => {
-  const count = await TranslationsRepository.countByTargetLocale(target, locale);
-  if (count > 0) return;
   const seed = await loadSeed(target, locale);
   const entries = Object.entries(seed).map(([key, value]) => ({ key, value }));
-  await TranslationsRepository.createMany(target, locale, entries);
+  const existingKeys = await TranslationsRepository.listKeysByTargetLocale(target, locale);
+  if (!existingKeys.length) {
+    await TranslationsRepository.createMany(target, locale, entries);
+    return;
+  }
+  const existingSet = new Set(existingKeys);
+  const missingEntries = entries.filter((entry) => !existingSet.has(entry.key));
+  await TranslationsRepository.createMany(target, locale, missingEntries);
 };
 
 const toBundle = (
