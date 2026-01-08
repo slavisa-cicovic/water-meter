@@ -125,7 +125,9 @@ export const ReadingsService = {
         if (!editor) return { success: false, error: 'ACCOUNT_NOT_FOUND' };
         const canEdit = await hasPermission(editor.id, PERMISSIONS.READINGS_UPDATE);
         if (!canEdit) return { success: false, error: 'EDITOR_FORBIDDEN' };
-        if (input.editorRole && input.editorRole !== editor.role) {
+        const editorRoles = editor.accountRoleLinks?.map((link) => link.role?.slug).filter(Boolean) ?? [];
+        const primaryRole = editorRoles[0] ?? 'unknown';
+        if (input.editorRole && input.editorRole !== primaryRole) {
           return { success: false, error: 'EDITOR_ROLE_MISMATCH' };
         }
         if (input.barcodeStatus === 'accepted' && input.barcodeFinal === undefined) {
