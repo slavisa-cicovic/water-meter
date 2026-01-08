@@ -10,6 +10,8 @@ import { normalizeLocale } from "@src/constants/translations";
 import { useLocaleStore } from "@src/state/locale-store";
 import { useTranslation } from "@src/hooks/use-translation";
 import FormField from "@src/components/ui/form-field";
+import LinkButton from "@src/components/ui/link-button";
+import { useTranslationsStore } from "@src/state/translations-store";
 
 export default function ProfileEditScreen() {
   const router = useRouter();
@@ -18,6 +20,8 @@ export default function ProfileEditScreen() {
   const currentLocale = useLocaleStore((state) => state.locale);
   const { t } = useTranslation();
   const [saving, setSaving] = useState(false);
+  const [refreshingTranslations, setRefreshingTranslations] = useState(false);
+  const refreshAllTranslations = useTranslationsStore((state) => state.refreshAll);
 
   const [form, setForm] = useState({
     firstName: user?.firstName ?? "",
@@ -97,6 +101,17 @@ export default function ProfileEditScreen() {
     ]);
   };
 
+  const handleRefreshTranslations = async () => {
+    if (refreshingTranslations) return;
+    setRefreshingTranslations(true);
+    await refreshAllTranslations();
+    setRefreshingTranslations(false);
+    Alert.alert(
+      t("profile.alert.translationsUpdatedTitle"),
+      t("profile.alert.translationsUpdatedMessage")
+    );
+  };
+
   return (
     <ScrollScreen title={t("profile.title")} contentContainerStyle={styles.content}>
         <View style={styles.card}>
@@ -133,6 +148,15 @@ export default function ProfileEditScreen() {
               onChange={(locale) => setForm((prev) => ({ ...prev, locale: normalizeLocale(locale) }))}
             />
           </View>
+          <LinkButton
+            label={
+              refreshingTranslations
+                ? t("profile.refreshingTranslations")
+                : t("profile.refreshTranslations")
+            }
+            onPress={handleRefreshTranslations}
+            style={styles.refreshLink}
+          />
         </View>
 
         <View style={styles.actions}>
@@ -159,5 +183,6 @@ const styles = StyleSheet.create({
     borderColor: "#e1e6f3",
   },
   label: { color: "#5a6b95", fontSize: 12, fontWeight: "600", marginBottom: 6 },
+  refreshLink: { alignSelf: "flex-start", marginTop: 4 },
   actions: { marginTop: 20 },
 });

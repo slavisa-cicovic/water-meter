@@ -2,7 +2,7 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, AppState, View } from "react-native";
 import "react-native-reanimated";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
@@ -29,6 +29,7 @@ export default function RootLayout() {
   const hydrateTranslations = useTranslationsStore(state => state.hydrate);
   const translationsHydrated = useTranslationsStore(state => state.hydrated);
   const refreshTranslations = useTranslationsStore(state => state.refresh);
+  const refreshAllTranslations = useTranslationsStore(state => state.refreshAll);
 
   useEffect(() => {
     hydrate();
@@ -46,6 +47,27 @@ export default function RootLayout() {
     if (!translationsHydrated) return;
     refreshTranslations(locale);
   }, [locale, refreshTranslations, translationsHydrated]);
+
+  useEffect(() => {
+    if (!translationsHydrated) return;
+
+    const refreshNow = () => {
+      refreshAllTranslations();
+    };
+
+    refreshNow();
+    const intervalId = setInterval(refreshNow, 10 * 60 * 1000);
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        refreshNow();
+      }
+    });
+
+    return () => {
+      clearInterval(intervalId);
+      subscription.remove();
+    };
+  }, [refreshAllTranslations, translationsHydrated]);
 
   useEffect(() => {
     if (!hydrated || !localeHydrated) return;

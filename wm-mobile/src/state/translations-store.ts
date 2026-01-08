@@ -16,6 +16,7 @@ type TranslationsState = {
   refreshing: Partial<Record<Locale, boolean>>;
   hydrate: () => Promise<void>;
   refresh: (locale: Locale) => Promise<void>;
+  refreshAll: () => Promise<void>;
 };
 
 export const useTranslationsStore = create<TranslationsState>((set, get) => ({
@@ -90,5 +91,8 @@ export const useTranslationsStore = create<TranslationsState>((set, get) => ({
     } finally {
       set((state) => ({ refreshing: { ...state.refreshing, [locale]: false } }));
     }
+  },
+  refreshAll: async () => {
+    await Promise.all(supportedLocales.map((locale) => get().refresh(locale)));
   },
 }));
