@@ -1,21 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
-import { Alert, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "@src/state/auth-store";
 import { MobileService } from "@src/services/mobile.service";
 import ScrollScreen from "@src/components/layout/scroll-screen";
 import SubmitButton from "@src/components/ui/submit-button";
+import LanguageToggle from "@src/screens/auth/components/ui/language-toggle";
+import { normalizeLocale } from "@src/constants/translations";
+import { useLocaleStore } from "@src/state/locale-store";
+import { useTranslation } from "@src/hooks/use-translation";
+import FormField from "@src/components/ui/form-field";
 
 export default function ProfileEditScreen() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const accessToken = useAuthStore((state) => state.accessToken);
+  const currentLocale = useLocaleStore((state) => state.locale);
+  const { t } = useTranslation();
   const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState({
     firstName: user?.firstName ?? "",
     lastName: user?.lastName ?? "",
     email: user?.email ?? "",
+    locale: normalizeLocale(user?.locale ?? currentLocale),
   });
 
   useEffect(() => {
@@ -23,21 +31,34 @@ export default function ProfileEditScreen() {
       firstName: user?.firstName ?? "",
       lastName: user?.lastName ?? "",
       email: user?.email ?? "",
+      locale: normalizeLocale(user?.locale ?? currentLocale),
     });
-  }, [user?.firstName, user?.lastName, user?.email]);
+  }, [currentLocale, user?.firstName, user?.lastName, user?.email, user?.locale]);
 
   const isDirty = useMemo(() => {
     const current = {
       firstName: user?.firstName ?? "",
       lastName: user?.lastName ?? "",
       email: user?.email ?? "",
+      locale: normalizeLocale(user?.locale ?? currentLocale),
     };
     return (
       form.firstName.trim() !== current.firstName ||
       form.lastName.trim() !== current.lastName ||
-      form.email.trim() !== current.email
+      form.email.trim() !== current.email ||
+      form.locale !== current.locale
     );
-  }, [form.email, form.firstName, form.lastName, user?.email, user?.firstName, user?.lastName]);
+  }, [
+    currentLocale,
+    form.email,
+    form.firstName,
+    form.lastName,
+    form.locale,
+    user?.email,
+    user?.firstName,
+    user?.lastName,
+    user?.locale,
+  ]);
 
   const handleSave = async () => {
     if (!user || !accessToken) {
@@ -49,6 +70,7 @@ export default function ProfileEditScreen() {
       firstName: form.firstName.trim(),
       lastName: form.lastName.trim(),
       email: form.email.trim(),
+      locale: form.locale,
     };
 
     if (!trimmed.firstName || !trimmed.lastName || !trimmed.email) {
@@ -78,32 +100,39 @@ export default function ProfileEditScreen() {
   return (
     <ScrollScreen title="Profile" contentContainerStyle={styles.content}>
         <View style={styles.card}>
-          <Text style={styles.label}>First name</Text>
-          <TextInput
-            style={styles.input}
+          <FormField
+            label="First name"
             value={form.firstName}
-            onChangeText={(value) => setForm((prev) => ({ ...prev, firstName: value }))}
+            onChange={(value) => setForm((prev) => ({ ...prev, firstName: value }))}
             placeholder="Enter first name"
-            placeholderTextColor="#a8b3d1"
+            iconName="account-outline"
+            returnKeyType="next"
           />
-          <Text style={styles.label}>Last name</Text>
-          <TextInput
-            style={styles.input}
+          <FormField
+            label="Last name"
             value={form.lastName}
-            onChangeText={(value) => setForm((prev) => ({ ...prev, lastName: value }))}
+            onChange={(value) => setForm((prev) => ({ ...prev, lastName: value }))}
             placeholder="Enter last name"
-            placeholderTextColor="#a8b3d1"
+            iconName="account-outline"
+            returnKeyType="next"
           />
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
+          <FormField
+            label="Email"
             value={form.email}
-            onChangeText={(value) => setForm((prev) => ({ ...prev, email: value }))}
+            onChange={(value) => setForm((prev) => ({ ...prev, email: value }))}
             placeholder="Enter email"
-            placeholderTextColor="#a8b3d1"
+            iconName="email-outline"
             keyboardType="email-address"
-            autoCapitalize="none"
+            returnKeyType="done"
           />
+          <Text style={styles.label}>{t("profile.language")}</Text>
+          <View style={styles.languageField}>
+            <LanguageToggle
+              value={form.locale}
+              disabled={saving}
+              onChange={(locale) => setForm((prev) => ({ ...prev, locale: normalizeLocale(locale) }))}
+            />
+          </View>
         </View>
 
         <View style={styles.actions}>
@@ -121,6 +150,7 @@ export default function ProfileEditScreen() {
 
 const styles = StyleSheet.create({
   content: { padding: 20, paddingBottom: 32 },
+  languageField: { alignItems: "flex-start", marginBottom: 14 },
   card: {
     backgroundColor: "#ffffff",
     borderRadius: 16,
@@ -128,16 +158,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e1e6f3",
   },
-  label: { color: "#6b7aa6", fontSize: 12, fontWeight: "600", marginTop: 12 },
-  input: {
-    borderWidth: 1,
-    borderColor: "#e1e6f3",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    color: "#1f2a44",
-    backgroundColor: "#ffffff",
-    marginTop: 6,
-  },
+  label: { color: "#5a6b95", fontSize: 12, fontWeight: "600", marginBottom: 6 },
   actions: { marginTop: 20 },
 });
