@@ -51,22 +51,7 @@ import { paths } from 'src/routes/paths';
 import { JobsRunHistory } from '../jobs-run-history';
 import { useAuthContext } from 'src/auth/hooks';
 import { PERMISSIONS } from 'src/constants/permissions';
-
-const weekdayOptions = [
-  { value: 1, label: 'Monday' },
-  { value: 2, label: 'Tuesday' },
-  { value: 3, label: 'Wednesday' },
-  { value: 4, label: 'Thursday' },
-  { value: 5, label: 'Friday' },
-  { value: 6, label: 'Saturday' },
-  { value: 7, label: 'Sunday' },
-];
-
-const scheduleOptions: { value: JobScheduleType; label: string }[] = [
-  { value: 'weekly', label: 'Every week' },
-  { value: 'monthly', label: 'First weekday of month' },
-  { value: 'yearly', label: 'First weekday of year' },
-];
+import { useLocales } from 'src/locales';
 
 const formatTime = (hour: number, minute: number) =>
   `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
@@ -92,17 +77,8 @@ const defaultFilters: IJobsTableFilters = {
   status: '',
 };
 
-const TABLE_HEAD = [
-  { id: 'name', label: 'Name', minWidth: 220 },
-  { id: 'handlerKey', label: 'Handler', minWidth: 200 },
-  { id: 'schedule', label: 'Schedule', minWidth: 240, disableSort: true },
-  { id: 'nextRunAt', label: 'Next run', width: 160 },
-  { id: 'enabled', label: 'Enabled', width: 120 },
-  { id: 'retry', label: 'Retry', width: 140, disableSort: true },
-  { id: '', label: 'Actions', align: 'right', width: 120, disableSort: true },
-];
-
 export function JobsListView() {
+  const { t } = useLocales();
   const settings = useSettingsContext();
   const { user } = useAuthContext();
   const userPermissions = (user?.permissions as string[]) || [];
@@ -138,12 +114,52 @@ export function JobsListView() {
   const [actionError, setActionError] = useState('');
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
 
+  const weekdayOptions = useMemo(
+    () => [
+      { value: 1, label: t('jobs.weekday.long.mon') },
+      { value: 2, label: t('jobs.weekday.long.tue') },
+      { value: 3, label: t('jobs.weekday.long.wed') },
+      { value: 4, label: t('jobs.weekday.long.thu') },
+      { value: 5, label: t('jobs.weekday.long.fri') },
+      { value: 6, label: t('jobs.weekday.long.sat') },
+      { value: 7, label: t('jobs.weekday.long.sun') },
+    ],
+    [t]
+  );
+
+  const scheduleOptions: { value: JobScheduleType; label: string }[] = useMemo(
+    () => [
+      { value: 'weekly', label: t('jobs.schedule.options.weekly') },
+      { value: 'monthly', label: t('jobs.schedule.options.monthly') },
+      { value: 'yearly', label: t('jobs.schedule.options.yearly') },
+    ],
+    [t]
+  );
+
+  const TABLE_HEAD = useMemo(
+    () => [
+      { id: 'name', label: t('jobs.table.name'), minWidth: 220 },
+      { id: 'handlerKey', label: t('jobs.table.handler'), minWidth: 200 },
+      { id: 'schedule', label: t('jobs.table.schedule'), minWidth: 240, disableSort: true },
+      { id: 'nextRunAt', label: t('jobs.table.nextRun'), width: 160 },
+      { id: 'enabled', label: t('jobs.table.enabled'), width: 120 },
+      { id: 'retry', label: t('jobs.table.retry'), width: 140, disableSort: true },
+      { id: '', label: t('jobs.table.actions'), align: 'right', width: 120, disableSort: true },
+    ],
+    [t]
+  );
+
   const { runs, runsLoading } = useGetJobRuns(expandedJobId || undefined, 8);
 
   const selectableIds = jobs.map((job) => job.id);
   const selectedJobs = useMemo(() => jobs.filter((job) => table.selected.includes(job.id)), [jobs, table.selected]);
   const canActivate = selectedJobs.some((job) => !job.enabled);
   const canDeactivate = selectedJobs.some((job) => job.enabled);
+  const actionLabels: Record<'delete' | 'activate' | 'deactivate', string> = {
+    delete: t('jobs.actionVerbs.delete'),
+    activate: t('jobs.actionVerbs.activate'),
+    deactivate: t('jobs.actionVerbs.deactivate'),
+  };
 
   const resetForm = () => {
     setFormState(defaultFormState);
@@ -217,7 +233,7 @@ export function JobsListView() {
       setRunDialogOpen(false);
       setRunJob(null);
     } catch (error) {
-      setFormError('Failed to run job.');
+      setFormError(t('jobs.errors.runFailed'));
     } finally {
       setRunSubmitting(false);
     }
@@ -225,7 +241,7 @@ export function JobsListView() {
 
   const handleSave = async () => {
     if (!formState.name.trim()) {
-      setFormError('Name is required.');
+      setFormError(t('jobs.errors.nameRequired'));
       return;
     }
 
@@ -253,7 +269,7 @@ export function JobsListView() {
       await mutate();
       handleCloseDialog();
     } catch (error) {
-      setFormError('Failed to save job.');
+      setFormError(t('jobs.errors.saveFailed'));
     }
   };
 
@@ -287,12 +303,12 @@ export function JobsListView() {
       await mutate();
       setConfirmAction(null);
     } catch (error) {
-      setActionError('Failed to update jobs.');
+      setActionError(t('jobs.errors.updateFailed'));
     }
   };
 
   const confirmContent = confirmAction
-    ? `You are about to ${confirmAction} ${table.selected.length} job(s).`
+    ? t('jobs.confirm.body', { action: actionLabels[confirmAction], count: table.selected.length })
     : '';
 
   const canReset = !isEqual(defaultFilters, filters);
@@ -306,11 +322,11 @@ export function JobsListView() {
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
       <CustomBreadcrumbs
-        heading="Job scheduler"
-        description="Manage scheduled jobs and run billing generation."
+        heading={t('jobs.title')}
+        description={t('jobs.description')}
         links={[
-          { name: 'App', href: paths.dashboard.root },
-          { name: 'Jobs', href: paths.dashboard.jobs.root },
+          { name: t('sidebar.app'), href: paths.dashboard.root },
+          { name: t('sidebar.jobs'), href: paths.dashboard.jobs.root },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
@@ -318,7 +334,7 @@ export function JobsListView() {
       <Stack direction="row" alignItems="center" justifyContent="flex-end" sx={{ mb: 3 }}>
         {canCreateJob ? (
           <Button variant="contained" onClick={openCreate}>
-            New job
+            {t('jobs.actions.new')}
           </Button>
         ) : null}
       </Stack>
@@ -338,10 +354,10 @@ export function JobsListView() {
 
         <CardContent>
           {jobsError && (
-            <EmptyContent filled title="Failed to load jobs." sx={{ py: 6 }} />
+            <EmptyContent filled title={t('jobs.loadError')} sx={{ py: 6 }} />
           )}
 
-          {!jobsLoading && jobsEmpty && <Alert severity="info">No jobs found.</Alert>}
+          {!jobsLoading && jobsEmpty && <Alert severity="info">{t('jobs.empty')}</Alert>}
 
           {!jobsLoading && !jobsError && jobs && jobs.length > 0 && (
             <TableContainer sx={{ position: 'relative' }}>
@@ -356,7 +372,7 @@ export function JobsListView() {
                         {
                           key: 'activate',
                           node: (
-                            <Tooltip title="Activate" arrow>
+                            <Tooltip title={t('jobs.actions.activate')} arrow>
                               <span>
                                 <IconButton
                                   color="success"
@@ -372,7 +388,7 @@ export function JobsListView() {
                         {
                           key: 'deactivate',
                           node: (
-                            <Tooltip title="Deactivate" arrow>
+                            <Tooltip title={t('jobs.actions.deactivate')} arrow>
                               <span>
                                 <IconButton
                                   color="warning"
@@ -392,7 +408,7 @@ export function JobsListView() {
                         {
                           key: 'delete',
                           node: (
-                            <Tooltip title="Delete" arrow>
+                            <Tooltip title={t('jobs.actions.delete')} arrow>
                               <span>
                                 <IconButton color="error" onClick={() => handleOpenConfirm('delete')}>
                                   <Iconify icon="eva:trash-2-outline" />
@@ -467,17 +483,17 @@ export function JobsListView() {
       </Card>
 
       <Dialog open={dialogOpen} onClose={handleCloseDialog} fullWidth maxWidth="sm">
-        <DialogTitle>{editingJob ? 'Edit job' : 'New job'}</DialogTitle>
+        <DialogTitle>{editingJob ? t('jobs.form.editTitle') : t('jobs.form.createTitle')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} mt={1}>
             <TextField
-              label="Name"
+              label={t('jobs.form.fields.name')}
               value={formState.name}
               onChange={(event) => setFormState((prev) => ({ ...prev, name: event.target.value }))}
             />
             <TextField
               select
-              label="Handler"
+              label={t('jobs.form.fields.handler')}
               value={formState.handlerKey}
               onChange={(event) => setFormState((prev) => ({ ...prev, handlerKey: event.target.value }))}
             >
@@ -490,7 +506,7 @@ export function JobsListView() {
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
                 select
-                label="Schedule"
+                label={t('jobs.form.fields.schedule')}
                 value={formState.scheduleType}
                 onChange={(event) =>
                   setFormState((prev) => ({ ...prev, scheduleType: event.target.value as JobScheduleType }))
@@ -505,7 +521,7 @@ export function JobsListView() {
               </TextField>
               <TextField
                 select
-                label="Weekday"
+                label={t('jobs.form.fields.weekday')}
                 value={formState.weekday}
                 onChange={(event) => setFormState((prev) => ({ ...prev, weekday: Number(event.target.value) }))}
                 sx={{ flex: 1 }}
@@ -519,7 +535,7 @@ export function JobsListView() {
             </Stack>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
-                label="Time"
+                label={t('jobs.form.fields.time')}
                 type="time"
                 value={formState.time}
                 onChange={(event) => setFormState((prev) => ({ ...prev, time: event.target.value }))}
@@ -527,7 +543,7 @@ export function JobsListView() {
                 sx={{ flex: 1 }}
               />
               <TextField
-                label="Max attempts"
+                label={t('jobs.form.fields.maxAttempts')}
                 type="number"
                 value={formState.maxAttempts}
                 onChange={(event) => setFormState((prev) => ({ ...prev, maxAttempts: Number(event.target.value) }))}
@@ -536,7 +552,7 @@ export function JobsListView() {
             </Stack>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField
-                label="Backoff seconds"
+                label={t('jobs.form.fields.backoffSeconds')}
                 type="number"
                 value={formState.backoffSeconds}
                 onChange={(event) => setFormState((prev) => ({ ...prev, backoffSeconds: Number(event.target.value) }))}
@@ -549,51 +565,53 @@ export function JobsListView() {
                     onChange={(event) => setFormState((prev) => ({ ...prev, enabled: event.target.checked }))}
                   />
                 }
-                label="Enabled"
+                label={t('jobs.form.fields.enabled')}
               />
             </Stack>
             {formError && <Typography color="error">{formError}</Typography>}
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
+          <Button onClick={handleCloseDialog}>{t('jobs.actions.cancel')}</Button>
           <Button variant="contained" onClick={handleSave}>
-            Save
+            {t('jobs.actions.save')}
           </Button>
         </DialogActions>
       </Dialog>
 
       <Dialog open={runDialogOpen} onClose={() => setRunDialogOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle>Run job</DialogTitle>
+        <DialogTitle>{t('jobs.runDialog.title')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} mt={1}>
             <Typography variant="body2">
-              {runJob ? `Run "${runJob.name}" now?` : 'Run selected job now?'}
+              {runJob ? t('jobs.runDialog.promptWithName', { name: runJob.name }) : t('jobs.runDialog.prompt')}
             </Typography>
             {runJob?.handlerKey === 'billing_generate' && (
               <>
                 <Typography variant="body2">
-                  This will generate draft invoices for the current month. Existing issued/paid invoices can be voided
-                  if you choose to overwrite them.
+                  {t('jobs.runDialog.billing.description')}
                 </Typography>
                 {overrideLoading ? (
-                  <Typography variant="body2">Checking existing invoices...</Typography>
+                  <Typography variant="body2">{t('jobs.runDialog.billing.checking')}</Typography>
                 ) : (
                   <Typography variant="body2">
-                    Issued invoices: {overrideCounts?.issued ?? 0} · Paid invoices: {overrideCounts?.paid ?? 0}
+                    {t('jobs.runDialog.billing.counts', {
+                      issued: overrideCounts?.issued ?? 0,
+                      paid: overrideCounts?.paid ?? 0,
+                    })}
                   </Typography>
                 )}
                 <FormControlLabel
                   control={
                     <Checkbox checked={overrideIssued} onChange={(event) => setOverrideIssued(event.target.checked)} />
                   }
-                  label="Overwrite issued invoices (set to void)"
+                  label={t('jobs.runDialog.billing.overrideIssued')}
                 />
                 <FormControlLabel
                   control={
                     <Checkbox checked={overridePaid} onChange={(event) => setOverridePaid(event.target.checked)} />
                   }
-                  label="Overwrite paid invoices (set to void)"
+                  label={t('jobs.runDialog.billing.overridePaid')}
                 />
               </>
             )}
@@ -601,7 +619,7 @@ export function JobsListView() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setRunDialogOpen(false)} disabled={runSubmitting}>
-            Cancel
+            {t('jobs.actions.cancel')}
           </Button>
           <LoadingButton
             variant="contained"
@@ -609,7 +627,7 @@ export function JobsListView() {
             loading={runSubmitting}
             disabled={overrideLoading || runSubmitting}
           >
-            Run now
+            {t('jobs.runDialog.runNow')}
           </LoadingButton>
         </DialogActions>
       </Dialog>
@@ -617,11 +635,11 @@ export function JobsListView() {
       <ConfirmDialog
         open={Boolean(confirmAction)}
         onClose={handleCloseConfirm}
-        title="Confirm action"
+        title={t('jobs.confirm.title')}
         content={confirmContent}
         action={
           <Button variant="contained" color="primary" onClick={handleConfirmAction}>
-            Confirm
+            {t('jobs.actions.confirm')}
           </Button>
         }
       />

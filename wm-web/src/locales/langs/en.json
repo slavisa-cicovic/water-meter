@@ -518,6 +518,134 @@
       "tariffSnapshot": "Tariff snapshot"
     }
   },
+  "jobs": {
+    "title": "Job scheduler",
+    "description": "Manage scheduled jobs and run billing generation.",
+    "loadError": "Failed to load jobs.",
+    "empty": "No jobs found.",
+    "table": {
+      "name": "Name",
+      "handler": "Handler",
+      "schedule": "Schedule",
+      "nextRun": "Next run",
+      "enabled": "Enabled",
+      "retry": "Retry",
+      "actions": "Actions"
+    },
+    "filters": {
+      "searchLabel": "Search",
+      "statusLabel": "Status",
+      "all": "All",
+      "searchTag": "Search: {{value}}",
+      "statusTag": "Status: {{value}}",
+      "results": "Results: {{count}}",
+      "reset": "Reset"
+    },
+    "status": {
+      "enabled": "Enabled",
+      "disabled": "Disabled"
+    },
+    "actions": {
+      "new": "New job",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "delete": "Delete",
+      "details": "Details",
+      "runNow": "Run now",
+      "edit": "Edit",
+      "cancel": "Cancel",
+      "save": "Save",
+      "confirm": "Confirm"
+    },
+    "actionVerbs": {
+      "activate": "activate",
+      "deactivate": "deactivate",
+      "delete": "delete"
+    },
+    "confirm": {
+      "title": "Confirm action",
+      "body": "You are about to {{action}} {{count}} job(s)."
+    },
+    "form": {
+      "createTitle": "New job",
+      "editTitle": "Edit job",
+      "fields": {
+        "name": "Name",
+        "handler": "Handler",
+        "schedule": "Schedule",
+        "weekday": "Weekday",
+        "time": "Time",
+        "maxAttempts": "Max attempts",
+        "backoffSeconds": "Backoff seconds",
+        "enabled": "Enabled"
+      }
+    },
+    "schedule": {
+      "options": {
+        "weekly": "Every week",
+        "monthly": "First weekday of month",
+        "yearly": "First weekday of year"
+      },
+      "weekly": "Every {{weekday}} at {{time}}",
+      "monthly": "First {{weekday}} of month at {{time}}",
+      "yearly": "First {{weekday}} of year at {{time}}"
+    },
+    "weekday": {
+      "short": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      },
+      "long": {
+        "mon": "Monday",
+        "tue": "Tuesday",
+        "wed": "Wednesday",
+        "thu": "Thursday",
+        "fri": "Friday",
+        "sat": "Saturday",
+        "sun": "Sunday"
+      }
+    },
+    "runDialog": {
+      "title": "Run job",
+      "prompt": "Run selected job now?",
+      "promptWithName": "Run \"{{name}}\" now?",
+      "runNow": "Run now",
+      "billing": {
+        "description": "This will generate draft invoices for the current month. Existing issued/paid invoices can be voided if you choose to overwrite them.",
+        "checking": "Checking existing invoices...",
+        "counts": "Issued invoices: {{issued}} · Paid invoices: {{paid}}",
+        "overrideIssued": "Overwrite issued invoices (set to void)",
+        "overridePaid": "Overwrite paid invoices (set to void)"
+      }
+    },
+    "errors": {
+      "nameRequired": "Name is required.",
+      "saveFailed": "Failed to save job.",
+      "runFailed": "Failed to run job.",
+      "updateFailed": "Failed to update jobs."
+    },
+    "runs": {
+      "title": "Recent runs",
+      "loading": "Loading runs...",
+      "empty": "No runs yet.",
+      "started": "Started",
+      "finished": "Finished",
+      "status": {
+        "running": "Running",
+        "success": "Success",
+        "failed": "Failed"
+      },
+      "summary": {
+        "issued": "Issued {{count}}/{{total}}",
+        "created": "Created {{count}}/{{total}}"
+      }
+    }
+  },
   "validation": {
     "required": "Required",
     "min": "Must be >= {{min}}"

@@ -518,6 +518,134 @@
       "tariffSnapshot": "Snimak tarife"
     }
   },
+  "jobs": {
+    "title": "Raspored poslova",
+    "description": "Upravljajte zakazanim poslovima i pokrecite generisanje naplate.",
+    "loadError": "Neuspesno ucitavanje poslova.",
+    "empty": "Nema poslova.",
+    "table": {
+      "name": "Naziv",
+      "handler": "Handler",
+      "schedule": "Raspored",
+      "nextRun": "Sledece pokretanje",
+      "enabled": "Ukljuceno",
+      "retry": "Pokusaji",
+      "actions": "Akcije"
+    },
+    "filters": {
+      "searchLabel": "Pretraga",
+      "statusLabel": "Status",
+      "all": "Svi",
+      "searchTag": "Pretraga: {{value}}",
+      "statusTag": "Status: {{value}}",
+      "results": "Rezultati: {{count}}",
+      "reset": "Reset"
+    },
+    "status": {
+      "enabled": "Ukljuceno",
+      "disabled": "Iskljuceno"
+    },
+    "actions": {
+      "new": "Novi posao",
+      "activate": "Aktiviraj",
+      "deactivate": "Deaktiviraj",
+      "delete": "Obrisi",
+      "details": "Detalji",
+      "runNow": "Pokreni odmah",
+      "edit": "Izmeni",
+      "cancel": "Otkazi",
+      "save": "Sacuvaj",
+      "confirm": "Potvrdi"
+    },
+    "actionVerbs": {
+      "activate": "aktivirati",
+      "deactivate": "deaktivirati",
+      "delete": "obrisati"
+    },
+    "confirm": {
+      "title": "Potvrda akcije",
+      "body": "Upravo cete {{action}} {{count}} posao(a)."
+    },
+    "form": {
+      "createTitle": "Novi posao",
+      "editTitle": "Izmena posla",
+      "fields": {
+        "name": "Naziv",
+        "handler": "Handler",
+        "schedule": "Raspored",
+        "weekday": "Dan u nedelji",
+        "time": "Vreme",
+        "maxAttempts": "Maksimalni pokusaji",
+        "backoffSeconds": "Pauza (sekunde)",
+        "enabled": "Ukljuceno"
+      }
+    },
+    "schedule": {
+      "options": {
+        "weekly": "Svake nedelje",
+        "monthly": "Prvi radni dan u mesecu",
+        "yearly": "Prvi radni dan u godini"
+      },
+      "weekly": "Svake {{weekday}} u {{time}}",
+      "monthly": "Prvi {{weekday}} u mesecu u {{time}}",
+      "yearly": "Prvi {{weekday}} u godini u {{time}}"
+    },
+    "weekday": {
+      "short": {
+        "mon": "Pon",
+        "tue": "Uto",
+        "wed": "Sre",
+        "thu": "Cet",
+        "fri": "Pet",
+        "sat": "Sub",
+        "sun": "Ned"
+      },
+      "long": {
+        "mon": "Ponedeljak",
+        "tue": "Utorak",
+        "wed": "Sreda",
+        "thu": "Cetvrtak",
+        "fri": "Petak",
+        "sat": "Subota",
+        "sun": "Nedelja"
+      }
+    },
+    "runDialog": {
+      "title": "Pokreni posao",
+      "prompt": "Pokreni izabrani posao odmah?",
+      "promptWithName": "Pokreni \"{{name}}\" odmah?",
+      "runNow": "Pokreni odmah",
+      "billing": {
+        "description": "Ovo ce generisati nacrte faktura za tekuce mesec. Postojece izdate/placene fakture mogu biti stornirane ako odaberete da ih prepisete.",
+        "checking": "Provera postojecih faktura...",
+        "counts": "Izdane fakture: {{issued}} · Placene fakture: {{paid}}",
+        "overrideIssued": "Prebrisi izdate fakture (postavi na stornirano)",
+        "overridePaid": "Prebrisi placene fakture (postavi na stornirano)"
+      }
+    },
+    "errors": {
+      "nameRequired": "Naziv je obavezan.",
+      "saveFailed": "Neuspesno cuvanje posla.",
+      "runFailed": "Neuspesno pokretanje posla.",
+      "updateFailed": "Neuspesno azuriranje poslova."
+    },
+    "runs": {
+      "title": "Poslednja pokretanja",
+      "loading": "Ucitavanje pokretanja...",
+      "empty": "Jos nema pokretanja.",
+      "started": "Pokrenuto",
+      "finished": "Zavrseno",
+      "status": {
+        "running": "U toku",
+        "success": "Uspesno",
+        "failed": "Neuspesno"
+      },
+      "summary": {
+        "issued": "Izdato {{count}}/{{total}}",
+        "created": "Kreirano {{count}}/{{total}}"
+      }
+    }
+  },
   "validation": {
     "required": "Obavezno",
     "min": "Mora biti >= {{min}}"

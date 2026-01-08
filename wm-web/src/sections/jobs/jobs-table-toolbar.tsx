@@ -2,6 +2,7 @@ import React, { useCallback } from 'react';
 import Stack from '@mui/material/Stack';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
+import { useLocales } from 'src/locales';
 
 export type IJobsTableFilterValue = string;
 
@@ -16,6 +17,7 @@ type Props = {
 };
 
 export function JobsTableToolbar({ filters, onFilters }: Props) {
+  const { t } = useLocales();
   const handleChange = useCallback(
     (name: keyof IJobsTableFilters) => (event: React.ChangeEvent<HTMLInputElement>) => {
       onFilters(name, event.target.value);
@@ -32,15 +34,21 @@ export function JobsTableToolbar({ filters, onFilters }: Props) {
     >
       <Stack direction="row" alignItems="center" spacing={2} flexGrow={1} sx={{ width: 1 }}>
         <TextField
-          label="Search"
+          label={t('jobs.filters.searchLabel')}
           value={filters.search}
           onChange={handleChange('search')}
           sx={{ flexGrow: 1, minWidth: 220 }}
         />
-        <TextField select label="Status" value={filters.status} onChange={handleChange('status')} sx={{ minWidth: 160 }}>
-          <MenuItem value="">All</MenuItem>
-          <MenuItem value="enabled">enabled</MenuItem>
-          <MenuItem value="disabled">disabled</MenuItem>
+        <TextField
+          select
+          label={t('jobs.filters.statusLabel')}
+          value={filters.status}
+          onChange={handleChange('status')}
+          sx={{ minWidth: 160 }}
+        >
+          <MenuItem value="">{t('jobs.filters.all')}</MenuItem>
+          <MenuItem value="enabled">{t('jobs.status.enabled')}</MenuItem>
+          <MenuItem value="disabled">{t('jobs.status.disabled')}</MenuItem>
         </TextField>
       </Stack>
     </Stack>
