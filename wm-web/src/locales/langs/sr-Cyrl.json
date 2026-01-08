@@ -180,6 +180,158 @@
       "update": "Ажурирај адресу водомера"
     }
   },
+  "meters": {
+    "title": "Водомери",
+    "list": {
+      "description": "Управљање водомерима и доделама потрошача.",
+      "loadError": "Неуспешно учитавање водомера.",
+      "backToDashboard": "Назад на dashboard",
+      "empty": "Нема водомера."
+    },
+    "table": {
+      "serial": "Серијски број",
+      "group": "Група",
+      "address": "Адреса",
+      "type": "Тип",
+      "status": "Статус",
+      "consumers": "Потрошачи",
+      "created": "Креиран",
+      "actions": "Акције",
+      "review": "Провера"
+    },
+    "filters": {
+      "all": "Сви",
+      "searchPlaceholder": "Претрага",
+      "searchLabel": "Претрага",
+      "statusLabel": "Статус",
+      "groupLabel": "Група",
+      "groupPlaceholder": "01-99",
+      "typeLabel": "Тип",
+      "reviewLabel": "Провера",
+      "reviewPending": "За проверу",
+      "results": "Резултати",
+      "reset": "Ресетуј"
+    },
+    "status": {
+      "active": "Активан",
+      "inactive": "Неактиван",
+      "removed": "Уклоњен"
+    },
+    "type": {
+      "automatic": "Аутоматски",
+      "mechanical": "Механички"
+    },
+    "actions": {
+      "new": "Нови водомер",
+      "details": "Детаљи",
+      "back": "Назад",
+      "cancel": "Откажи",
+      "save": "Сачувај",
+      "saveChanges": "Сачувај измене",
+      "create": "Креирај водомер"
+    },
+    "detail": {
+      "title": "Детаљи водомера",
+      "titleWithSerial": "Водомер {{serial}}",
+      "description": "Детаљи водомера и историја очитавања.",
+      "notFound": "Водомер није пронађен: {{id}}",
+      "breadcrumbs": {
+        "details": "Детаљи"
+      }
+    },
+    "create": {
+      "title": "Нови водомер",
+      "description": "Региструјте нови водомер као неактиван.",
+      "formTitle": "Региструј нови водомер",
+      "statusHint": "Статус је постављен на неактиван при креирању.",
+      "breadcrumbs": {
+        "new": "Нови"
+      }
+    },
+    "fields": {
+      "serialNumber": "Серијски број",
+      "barcode": "Бар код",
+      "groupCode": "Шифра групе",
+      "groupCodeHint": "Шифра групе (01-99)",
+      "address": "Адреса",
+      "type": "Тип",
+      "status": "Статус",
+      "consumers": "Потрошачи",
+      "consumersHint": "Изаберите једног или више потрошача"
+    },
+    "consumers": {
+      "empty": "Нема повезаних потрошача."
+    },
+    "common": {
+      "chart": "График",
+      "table": "Табела"
+    },
+    "readings": {
+      "title": "Историја очитавања",
+      "filters": {
+        "from": "Од",
+        "to": "До"
+      },
+      "loading": "Учитавање очитавања...",
+      "empty": "Нема очитавања.",
+      "chart": {
+        "consumption": "Потрошња",
+        "emptyHint": "Додајте бар два очитавања да бисте видели тренд."
+      },
+      "table": {
+        "date": "Датум",
+        "method": "Метод",
+        "value": "Вредност",
+        "consumption": "Потрошња",
+        "barcode": "Бар код",
+        "barcodeStatus": "Статус бар кода",
+        "actions": "Акције"
+      },
+      "actions": {
+        "edit": "Измени очитавање",
+        "expandEdits": "Прошири измене",
+        "collapseEdits": "Сакриј измене"
+      },
+      "edit": {
+        "title": "Измени очитавање",
+        "value": "Вредност",
+        "reason": "Разлог",
+        "reasonLabel": "Разлог",
+        "allowedRange": "Дозвољени опсег: мин {{min}}, макс {{max}}",
+        "rangeNone": "нема",
+        "history": "Историја измена",
+        "editor": "Уредник",
+        "editedAt": "Измењено",
+        "error": {
+          "invalidValue": "Унесите валидан број.",
+          "reasonRequired": "Разлог је обавезан.",
+          "minValue": "Вредност мора бити >= {{min}}.",
+          "maxValue": "Вредност мора бити <= {{max}}.",
+          "missingEditor": "Недостају подаци о уреднику.",
+          "updateFailed": "Ажурирање очитавања није успело."
+        }
+      },
+      "barcode": {
+        "title": "Провера бар кода",
+        "meter": "Бар код водомера",
+        "mobile": "Бар код са мобилног",
+        "status": "Статус",
+        "accept": "Прихвати бар код",
+        "reject": "Одбиј бар код",
+        "statusValue": {
+          "pending": "На чекању",
+          "accepted": "Прихваћен",
+          "rejected": "Одбијен"
+        },
+        "error": {
+          "missingReviewer": "Недостају подаци о провери.",
+          "notAllowed": "Немате дозволу за проверу бар кодова.",
+          "noBarcode": "Нема достављеног бар кода за ово очитавање.",
+          "updateFailed": "Ажурирање статуса бар кода није успело."
+        }
+      }
+    }
+  },
   "validation": {
     "required": "Обавезно"
   },

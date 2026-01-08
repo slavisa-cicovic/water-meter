@@ -3,6 +3,7 @@ import Iconify from 'src/components/iconify';
 import { Meter } from 'src/types/meters';
 import { RouterLink } from 'src/routes/components';
 import { paths } from 'src/routes/paths';
+import { useLocales } from 'src/locales';
 
 type Props = {
   row: Meter & { consumersCount?: number };
@@ -10,21 +11,32 @@ type Props = {
 };
 
 export function MeterTableRow({ row, showReviewColumn = false }: Props) {
+  const { t } = useLocales();
+  const statusLabelMap: Record<string, string> = {
+    active: t('meters.status.active'),
+    inactive: t('meters.status.inactive'),
+    removed: t('meters.status.removed'),
+  };
+  const typeLabelMap: Record<string, string> = {
+    automatic: t('meters.type.automatic'),
+    mechanical: t('meters.type.mechanical'),
+  };
+
   return (
     <TableRow hover>
       <TableCell sx={{ width: 220 }}>{row.serialNumber}</TableCell>
       <TableCell sx={{ width: 120 }}>{row.groupCode || '-'}</TableCell>
       <TableCell sx={{ minWidth: 420 }}>{row.address}</TableCell>
-      <TableCell sx={{ width: 140 }}>{row.type}</TableCell>
+      <TableCell sx={{ width: 140 }}>{typeLabelMap[row.type] ?? row.type}</TableCell>
       <TableCell sx={{ width: 120 }}>
-        <Chip size="small" label={row.status} />
+        <Chip size="small" label={statusLabelMap[row.status] ?? row.status} />
       </TableCell>
       <TableCell sx={{ width: 120 }}>{row.consumersCount ?? '-'}</TableCell>
       <TableCell sx={{ width: 160 }}>{row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '-'}</TableCell>
       {showReviewColumn ? (
         <TableCell sx={{ width: 120 }}>
           {row.needsBarcodeReview ? (
-            <Chip size="small" color="warning" label="Review" />
+            <Chip size="small" color="warning" label={t('meters.table.review')} />
           ) : (
             '-'
           )}
@@ -32,7 +44,7 @@ export function MeterTableRow({ row, showReviewColumn = false }: Props) {
       ) : null}
       <TableCell align="right" sx={{ width: 140 }}>
         <Stack direction="row" justifyContent="flex-end" spacing={1}>
-          <Tooltip title="Details">
+          <Tooltip title={t('meters.actions.details')}>
             <IconButton size="small" component={RouterLink} href={paths.dashboard.meters.details(row.id)}>
               <Iconify icon="eva:eye-fill" width={16} />
             </IconButton>

@@ -180,6 +180,158 @@
       "update": "Update meter address"
     }
   },
+  "meters": {
+    "title": "Meters",
+    "list": {
+      "description": "Manage water meters and their consumer assignments.",
+      "loadError": "Failed to load meters.",
+      "backToDashboard": "Back to dashboard",
+      "empty": "No meters found."
+    },
+    "table": {
+      "serial": "Serial",
+      "group": "Group",
+      "address": "Address",
+      "type": "Type",
+      "status": "Status",
+      "consumers": "Consumers",
+      "created": "Created",
+      "actions": "Actions",
+      "review": "Review"
+    },
+    "filters": {
+      "all": "All",
+      "searchPlaceholder": "Search",
+      "searchLabel": "Search",
+      "statusLabel": "Status",
+      "groupLabel": "Group",
+      "groupPlaceholder": "01-99",
+      "typeLabel": "Type",
+      "reviewLabel": "Review",
+      "reviewPending": "Needs review",
+      "results": "Results",
+      "reset": "Reset"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "removed": "Removed"
+    },
+    "type": {
+      "automatic": "Automatic",
+      "mechanical": "Mechanical"
+    },
+    "actions": {
+      "new": "New meter",
+      "details": "Details",
+      "back": "Back",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saveChanges": "Save changes",
+      "create": "Create meter"
+    },
+    "detail": {
+      "title": "Meter details",
+      "titleWithSerial": "Meter {{serial}}",
+      "description": "Meter details and readings history.",
+      "notFound": "Meter not found: {{id}}",
+      "breadcrumbs": {
+        "details": "Details"
+      }
+    },
+    "create": {
+      "title": "New meter",
+      "description": "Register a new meter as inactive.",
+      "formTitle": "Register new meter",
+      "statusHint": "Status is set to inactive on create.",
+      "breadcrumbs": {
+        "new": "New"
+      }
+    },
+    "fields": {
+      "serialNumber": "Serial number",
+      "barcode": "Barcode",
+      "groupCode": "Group code",
+      "groupCodeHint": "Group code (01-99)",
+      "address": "Address",
+      "type": "Type",
+      "status": "Status",
+      "consumers": "Consumers",
+      "consumersHint": "Select one or more consumers"
+    },
+    "consumers": {
+      "empty": "No consumers linked."
+    },
+    "common": {
+      "chart": "Chart",
+      "table": "Table"
+    },
+    "readings": {
+      "title": "Readings history",
+      "filters": {
+        "from": "From",
+        "to": "To"
+      },
+      "loading": "Loading readings...",
+      "empty": "No readings found.",
+      "chart": {
+        "consumption": "Consumption",
+        "emptyHint": "Add at least two readings to see trends."
+      },
+      "table": {
+        "date": "Date",
+        "method": "Method",
+        "value": "Value",
+        "consumption": "Consumption",
+        "barcode": "Barcode",
+        "barcodeStatus": "Barcode status",
+        "actions": "Actions"
+      },
+      "actions": {
+        "edit": "Edit reading",
+        "expandEdits": "Expand edits",
+        "collapseEdits": "Collapse edits"
+      },
+      "edit": {
+        "title": "Edit reading",
+        "value": "Value",
+        "reason": "Reason",
+        "reasonLabel": "Reason",
+        "allowedRange": "Allowed range: min {{min}}, max {{max}}",
+        "rangeNone": "none",
+        "history": "Edit history",
+        "editor": "Editor",
+        "editedAt": "Edited at",
+        "error": {
+          "invalidValue": "Enter a valid number.",
+          "reasonRequired": "Reason is required.",
+          "minValue": "Value must be >= {{min}}.",
+          "maxValue": "Value must be <= {{max}}.",
+          "missingEditor": "Missing editor information.",
+          "updateFailed": "Failed to update reading."
+        }
+      },
+      "barcode": {
+        "title": "Barcode review",
+        "meter": "Meter barcode",
+        "mobile": "Mobile barcode",
+        "status": "Status",
+        "accept": "Accept barcode",
+        "reject": "Reject barcode",
+        "statusValue": {
+          "pending": "Pending",
+          "accepted": "Accepted",
+          "rejected": "Rejected"
+        },
+        "error": {
+          "missingReviewer": "Missing reviewer information.",
+          "notAllowed": "Not allowed to review barcodes.",
+          "noBarcode": "No barcode submitted for this reading.",
+          "updateFailed": "Failed to update barcode status."
+        }
+      }
+    }
+  },
   "validation": {
     "required": "Required"
   },

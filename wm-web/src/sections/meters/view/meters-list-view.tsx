@@ -14,6 +14,7 @@ import { RouterLink } from 'src/routes/components';
 import { paths } from 'src/routes/paths';
 import { useAuthContext } from 'src/auth/hooks';
 import { PERMISSIONS } from 'src/constants/permissions';
+import { useLocales } from 'src/locales';
 import { MeterTableFiltersResult } from '../meter-table-filters-result';
 import { MeterTableRow } from '../meter-table-row';
 import { MeterTableSkeleton } from '../meter-skeleton';
@@ -27,32 +28,41 @@ const defaultFilters: IMeterTableFilters = {
   review: '',
 };
 
-const BASE_TABLE_HEAD = [
-  { id: 'serialNumber', label: 'Serial', width: 220 },
-  { id: 'groupCode', label: 'Group', width: 120 },
-  { id: 'address', label: 'Address', minWidth: 420 },
-  { id: 'type', label: 'Type', width: 140 },
-  { id: 'status', label: 'Status', width: 120 },
-  { id: 'consumersCount', label: 'Consumers', width: 120, disableSort: true },
-  { id: 'createdAt', label: 'Created', width: 160 },
-  { id: '', label: 'Actions', align: 'right', width: 140, disableSort: true },
-];
-
 export function MetersListView() {
   const settings = useSettingsContext();
   const theme = useTheme();
+  const { t } = useLocales();
   const { user } = useAuthContext();
   const currentPermissions = (user as any)?.permissions as string[] | undefined;
   const showReviewColumn = currentPermissions?.includes(PERMISSIONS.READINGS_UPDATE) ?? false;
   const [filters, setFilters] = useState(defaultFilters);
   const table = useTable({ defaultRowsPerPage: 25, defaultDense: true, defaultOrderBy: 'createdAt', defaultOrder: 'desc' });
+  const baseTableHead = useMemo(
+    () => [
+      { id: 'serialNumber', label: t('meters.table.serial'), width: 220 },
+      { id: 'groupCode', label: t('meters.table.group'), width: 120 },
+      { id: 'address', label: t('meters.table.address'), minWidth: 420 },
+      { id: 'type', label: t('meters.table.type'), width: 140 },
+      { id: 'status', label: t('meters.table.status'), width: 120 },
+      { id: 'consumersCount', label: t('meters.table.consumers'), width: 120, disableSort: true },
+      { id: 'createdAt', label: t('meters.table.created'), width: 160 },
+      { id: '', label: t('meters.table.actions'), align: 'right', width: 140, disableSort: true },
+    ],
+    [t]
+  );
+
   const tableHead = useMemo(() => {
-    if (!showReviewColumn) return BASE_TABLE_HEAD;
-    const reviewColumn = { id: 'barcodeReview', label: 'Review', width: 120, disableSort: true };
-    const next = BASE_TABLE_HEAD.slice();
+    if (!showReviewColumn) return baseTableHead;
+    const reviewColumn = {
+      id: 'barcodeReview',
+      label: t('meters.table.review'),
+      width: 120,
+      disableSort: true,
+    };
+    const next = baseTableHead.slice();
     next.splice(next.length - 1, 0, reviewColumn);
     return next;
-  }, [showReviewColumn]);
+  }, [baseTableHead, showReviewColumn, t]);
 
   const { meters, metersLoading, metersError, metersEmpty, total } = useGetMeters({
     search: filters.search,
@@ -86,11 +96,11 @@ export function MetersListView() {
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
       <CustomBreadcrumbs
-        heading="Meters"
-        description="Manage water meters and their consumer assignments."
+        heading={t('meters.title')}
+        description={t('meters.list.description')}
         links={[
-          { name: 'App', href: paths.dashboard.root },
-          { name: 'Meters', href: paths.dashboard.meters.root },
+          { name: t('sidebar.app'), href: paths.dashboard.root },
+          { name: t('meters.title'), href: paths.dashboard.meters.root },
         ]}
         action={
           <Button
@@ -108,7 +118,7 @@ export function MetersListView() {
               },
             }}
           >
-            New Meter
+            {t('meters.actions.new')}
           </Button>
         }
         sx={{ mb: { xs: 3, md: 5 } }}
@@ -135,7 +145,7 @@ export function MetersListView() {
           {metersError && (
             <EmptyContent
               filled
-              title="Failed to load meters."
+              title={t('meters.list.loadError')}
               action={
                 <Button
                   component={RouterLink}
@@ -143,14 +153,16 @@ export function MetersListView() {
                   startIcon={<Iconify icon="eva:arrow-ios-back-fill" width={16} />}
                   sx={{ mt: 3 }}
                 >
-                  Back to dashboard
+                  {t('meters.list.backToDashboard')}
                 </Button>
               }
               sx={{ py: 6 }}
             />
           )}
 
-          {!metersLoading && metersEmpty && <Alert severity="info">No meters found.</Alert>}
+          {!metersLoading && metersEmpty && (
+            <Alert severity="info">{t('meters.list.empty')}</Alert>
+          )}
 
           {!metersLoading && !metersError && meters && meters.length > 0 && (
             <TableContainer>

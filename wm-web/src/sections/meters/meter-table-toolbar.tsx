@@ -5,6 +5,7 @@ import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import Iconify from 'src/components/iconify';
 import { MeterStatus } from 'src/types/meters';
+import { useLocales } from 'src/locales';
 
 export type IMeterTableFilterValue = string;
 
@@ -23,6 +24,7 @@ type Props = {
 };
 
 export function MeterTableToolbar({ filters, onFilters, showReviewFilter = false }: Props) {
+  const { t } = useLocales();
   const handleSearch = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       onFilters('search', event.target.value);
@@ -70,7 +72,7 @@ export function MeterTableToolbar({ filters, onFilters, showReviewFilter = false
           fullWidth
           value={filters.search}
           onChange={handleSearch}
-          placeholder="search"
+          placeholder={t('meters.filters.searchPlaceholder')}
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
@@ -80,31 +82,49 @@ export function MeterTableToolbar({ filters, onFilters, showReviewFilter = false
           }}
         />
 
-        <TextField select label="Status" value={filters.status} onChange={handleStatus} sx={{ minWidth: 160 }}>
-          <MenuItem value="">All</MenuItem>
-          <MenuItem value="active">active</MenuItem>
-          <MenuItem value="inactive">inactive</MenuItem>
-          <MenuItem value="removed">removed</MenuItem>
+        <TextField
+          select
+          label={t('meters.filters.statusLabel')}
+          value={filters.status}
+          onChange={handleStatus}
+          sx={{ minWidth: 160 }}
+        >
+          <MenuItem value="">{t('meters.filters.all')}</MenuItem>
+          <MenuItem value="active">{t('meters.status.active')}</MenuItem>
+          <MenuItem value="inactive">{t('meters.status.inactive')}</MenuItem>
+          <MenuItem value="removed">{t('meters.status.removed')}</MenuItem>
         </TextField>
 
         <TextField
-          label="Group"
+          label={t('meters.filters.groupLabel')}
           value={filters.groupCode}
           onChange={handleGroupCode}
-          placeholder="01-99"
+          placeholder={t('meters.filters.groupPlaceholder')}
           sx={{ minWidth: 160 }}
         />
 
-        <TextField select label="Type" value={filters.type} onChange={handleType} sx={{ minWidth: 160 }}>
-          <MenuItem value="">All</MenuItem>
-          <MenuItem value="automatic">automatic</MenuItem>
-          <MenuItem value="mechanical">mechanical</MenuItem>
+        <TextField
+          select
+          label={t('meters.filters.typeLabel')}
+          value={filters.type}
+          onChange={handleType}
+          sx={{ minWidth: 160 }}
+        >
+          <MenuItem value="">{t('meters.filters.all')}</MenuItem>
+          <MenuItem value="automatic">{t('meters.type.automatic')}</MenuItem>
+          <MenuItem value="mechanical">{t('meters.type.mechanical')}</MenuItem>
         </TextField>
 
         {showReviewFilter ? (
-          <TextField select label="Review" value={filters.review} onChange={handleReview} sx={{ minWidth: 160 }}>
-            <MenuItem value="">All</MenuItem>
-            <MenuItem value="pending">Needs review</MenuItem>
+          <TextField
+            select
+            label={t('meters.filters.reviewLabel')}
+            value={filters.review}
+            onChange={handleReview}
+            sx={{ minWidth: 160 }}
+          >
+            <MenuItem value="">{t('meters.filters.all')}</MenuItem>
+            <MenuItem value="pending">{t('meters.filters.reviewPending')}</MenuItem>
           </TextField>
         ) : null}
       </Stack>

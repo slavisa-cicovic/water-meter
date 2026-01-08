@@ -45,6 +45,7 @@ import { ReadingsApi, useGetReadings } from 'src/api/readings';
 import { useGetSettings } from 'src/api/settings';
 import { ChartWrapper, useChart } from 'src/components/chart';
 import { useAuthContext } from 'src/auth/hooks';
+import { useLocales } from 'src/locales';
 
 type Props = {
   currentMeter?: Meter;
@@ -90,16 +91,17 @@ function TruncatedText({ text, maxWidth = 260 }: TruncatedTextProps) {
 }
 
 export function MeterEditForm({ currentMeter }: Props) {
+  const { t } = useLocales();
   const router = useRouter();
   const isCreate = !currentMeter;
   const { user } = useAuthContext();
 
   const MeterSchema = Yup.object().shape({
-    serialNumber: Yup.string().required('Required'),
+    serialNumber: Yup.string().required(t('validation.required')),
     barcode: Yup.string().nullable(),
-    address: isCreate ? Yup.string().required('Required') : Yup.string(),
-    type: isCreate ? Yup.string().required('Required') : Yup.string(),
-    status: isCreate ? Yup.string() : Yup.string().required('Required'),
+    address: isCreate ? Yup.string().required(t('validation.required')) : Yup.string(),
+    type: isCreate ? Yup.string().required(t('validation.required')) : Yup.string(),
+    status: isCreate ? Yup.string() : Yup.string().required(t('validation.required')),
   });
 
   const defaultValues = {
@@ -235,17 +237,17 @@ export function MeterEditForm({ currentMeter }: Props) {
         tooltip: {
           y: {
             formatter: (value: number) => formatReadingValue(value),
-            title: { formatter: () => 'Consumption' },
+            title: { formatter: () => t('meters.readings.chart.consumption') },
           },
         },
       }),
-      [readingsChartData.categories]
+      [readingsChartData.categories, t]
     )
   );
 
   const chartSeries = useMemo(
-    () => [{ name: 'Consumption', data: readingsChartData.data }],
-    [readingsChartData.data]
+    () => [{ name: t('meters.readings.chart.consumption'), data: readingsChartData.data }],
+    [readingsChartData.data, t]
   );
 
   const hasChartData = readingsChartData.data.length > 0;
@@ -325,27 +327,27 @@ export function MeterEditForm({ currentMeter }: Props) {
     const numericValue = Number(editValue);
 
     if (!Number.isFinite(numericValue)) {
-      setEditError('Enter a valid number.');
+      setEditError(t('meters.readings.edit.error.invalidValue'));
       return;
     }
 
     if (!editReason.trim()) {
-      setEditReasonError('Reason is required.');
+      setEditReasonError(t('meters.readings.edit.error.reasonRequired'));
       return;
     }
 
     if (editBounds?.min !== undefined && numericValue < editBounds.min) {
-      setEditError(`Value must be >= ${editBounds.min}.`);
+      setEditError(t('meters.readings.edit.error.minValue', { min: editBounds.min }));
       return;
     }
 
     if (editBounds?.max !== undefined && numericValue > editBounds.max) {
-      setEditError(`Value must be <= ${editBounds.max}.`);
+      setEditError(t('meters.readings.edit.error.maxValue', { max: editBounds.max }));
       return;
     }
 
     if (!viewerId || !viewerRole) {
-      setEditError('Missing editor information.');
+      setEditError(t('meters.readings.edit.error.missingEditor'));
       return;
     }
 
@@ -361,7 +363,7 @@ export function MeterEditForm({ currentMeter }: Props) {
       await mutateReadings();
       handleCloseEditDialog();
     } catch (error) {
-      setEditError('Failed to update reading.');
+      setEditError(t('meters.readings.edit.error.updateFailed'));
     } finally {
       setEditSaving(false);
     }
@@ -370,15 +372,15 @@ export function MeterEditForm({ currentMeter }: Props) {
   const handleBarcodeDecision = async (status: 'accepted' | 'rejected') => {
     if (!editingReading) return;
     if (!viewerId || !viewerRole) {
-      setBarcodeError('Missing reviewer information.');
+      setBarcodeError(t('meters.readings.barcode.error.missingReviewer'));
       return;
     }
     if (!canReviewBarcode) {
-      setBarcodeError('Not allowed to review barcodes.');
+      setBarcodeError(t('meters.readings.barcode.error.notAllowed'));
       return;
     }
     if (!editingReading.barcodeRaw) {
-      setBarcodeError('No barcode submitted for this reading.');
+      setBarcodeError(t('meters.readings.barcode.error.noBarcode'));
       return;
     }
 
@@ -394,7 +396,7 @@ export function MeterEditForm({ currentMeter }: Props) {
       });
       await mutateReadings();
     } catch {
-      setBarcodeError('Failed to update barcode status.');
+      setBarcodeError(t('meters.readings.barcode.error.updateFailed'));
     } finally {
       setBarcodeSaving(false);
     }
@@ -418,29 +420,36 @@ export function MeterEditForm({ currentMeter }: Props) {
       <Grid container spacing={3}>
         <Grid size={{ xs: 12, md: isCreate ? 12 : 5 }}>
           <Card>
-            <CardHeader title={isCreate ? 'Register new meter' : 'Meter details'} />
+            <CardHeader
+              title={isCreate ? t('meters.create.formTitle') : t('meters.detail.title')}
+            />
             <CardContent>
               {isCreate ? (
                 <Stack spacing={2}>
-                  <RHFTextField name="serialNumber" label="Serial number" />
-                  <RHFTextField name="barcode" label="Barcode" />
-                  <RHFTextField name="groupCode" label="Group code (01-99)" />
-                  <RHFTextField name="address" label="Address" />
+                  <RHFTextField name="serialNumber" label={t('meters.fields.serialNumber')} />
+                  <RHFTextField name="barcode" label={t('meters.fields.barcode')} />
+                  <RHFTextField
+                    name="groupCode"
+                    label={t('meters.fields.groupCode')}
+                    helperText={t('meters.fields.groupCodeHint')}
+                  />
+                  <RHFTextField name="address" label={t('meters.fields.address')} />
                   <TextField
                     select
-                    label="Type"
+                    label={t('meters.fields.type')}
                     value={methods.getValues('type')}
                     onChange={(event) => methods.setValue('type', event.target.value)}
                   >
-                    <MenuItem value="automatic">automatic</MenuItem>
-                    <MenuItem value="mechanical">mechanical</MenuItem>
+                    <MenuItem value="automatic">{t('meters.type.automatic')}</MenuItem>
+                    <MenuItem value="mechanical">{t('meters.type.mechanical')}</MenuItem>
                   </TextField>
                   <TextField
                     select
-                    label="Consumers"
+                    label={t('meters.fields.consumers')}
                     slotProps={{ select: { multiple: true } }}
                     value={selectedConsumers}
                     onChange={(event) => setSelectedConsumers(event.target.value as unknown as string[])}
+                    helperText={t('meters.fields.consumersHint')}
                   >
                     {accounts.map((acct) => (
                       <MenuItem key={acct.id} value={acct.id}>
@@ -449,38 +458,42 @@ export function MeterEditForm({ currentMeter }: Props) {
                     ))}
                   </TextField>
                   <Typography variant="caption" color="text.secondary">
-                    Status is set to inactive on create.
+                    {t('meters.create.statusHint')}
                   </Typography>
                 </Stack>
               ) : (
                 <>
                   <Stack spacing={2}>
-                    <RHFTextField name="serialNumber" label="Serial number" />
-                    <RHFTextField name="barcode" label="Barcode" />
-                    <RHFTextField name="groupCode" label="Group code (01-99)" />
-                    <RHFTextField name="address" label="Address" disabled />
-                    <RHFTextField name="status" label="Status" select>
-                      <MenuItem value="active">active</MenuItem>
-                      <MenuItem value="inactive">inactive</MenuItem>
-                      <MenuItem value="removed">removed</MenuItem>
+                    <RHFTextField name="serialNumber" label={t('meters.fields.serialNumber')} />
+                    <RHFTextField name="barcode" label={t('meters.fields.barcode')} />
+                    <RHFTextField
+                      name="groupCode"
+                      label={t('meters.fields.groupCode')}
+                      helperText={t('meters.fields.groupCodeHint')}
+                    />
+                    <RHFTextField name="address" label={t('meters.fields.address')} disabled />
+                    <RHFTextField name="status" label={t('meters.fields.status')} select>
+                      <MenuItem value="active">{t('meters.status.active')}</MenuItem>
+                      <MenuItem value="inactive">{t('meters.status.inactive')}</MenuItem>
+                      <MenuItem value="removed">{t('meters.status.removed')}</MenuItem>
                     </RHFTextField>
-                    <RHFTextField name="type" label="Type" select disabled>
-                      <MenuItem value="automatic">automatic</MenuItem>
-                      <MenuItem value="mechanical">mechanical</MenuItem>
+                    <RHFTextField name="type" label={t('meters.fields.type')} select disabled>
+                      <MenuItem value="automatic">{t('meters.type.automatic')}</MenuItem>
+                      <MenuItem value="mechanical">{t('meters.type.mechanical')}</MenuItem>
                     </RHFTextField>
                     <Stack direction="row" justifyContent="flex-end" spacing={1}>
                       <Button variant="outlined" onClick={handleCancelEdit}>
-                        Cancel
+                        {t('meters.actions.cancel')}
                       </Button>
                       <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-                        Save changes
+                        {t('meters.actions.saveChanges')}
                       </LoadingButton>
                     </Stack>
                     <Stack spacing={1}>
-                      <Typography variant="subtitle2">Consumers</Typography>
+                      <Typography variant="subtitle2">{t('meters.fields.consumers')}</Typography>
                       {consumers.length === 0 && (
                         <Typography variant="body2" color="text.secondary">
-                          No consumers linked.
+                          {t('meters.consumers.empty')}
                         </Typography>
                       )}
                       {consumers.length > 0 && (
@@ -516,12 +529,12 @@ export function MeterEditForm({ currentMeter }: Props) {
         {!isCreate && (
           <Grid size={{ xs: 12, md: 7 }}>
             <Card>
-              <CardHeader title="Readings history" />
+              <CardHeader title={t('meters.readings.title')} />
               <CardContent>
                 <Stack spacing={2}>
                   <Stack direction="row" spacing={2}>
                     <TextField
-                      label="From"
+                      label={t('meters.readings.filters.from')}
                       type="date"
                       value={readingFrom}
                       onChange={(event) => setReadingFrom(event.target.value)}
@@ -529,7 +542,7 @@ export function MeterEditForm({ currentMeter }: Props) {
                       sx={{ minWidth: 160 }}
                     />
                     <TextField
-                      label="To"
+                      label={t('meters.readings.filters.to')}
                       type="date"
                       value={readingTo}
                       onChange={(event) => setReadingTo(event.target.value)}
@@ -539,21 +552,21 @@ export function MeterEditForm({ currentMeter }: Props) {
                   </Stack>
 
                   <Tabs value={readingsTab} onChange={(_, value) => setReadingsTab(value)}>
-                    <Tab value="chart" label="Chart" />
-                    <Tab value="table" label="Table" />
+                    <Tab value="chart" label={t('meters.common.chart')} />
+                    <Tab value="table" label={t('meters.common.table')} />
                   </Tabs>
 
                   {readingsLoading ? (
-                    <Typography variant="body2">Loading readings...</Typography>
+                    <Typography variant="body2">{t('meters.readings.loading')}</Typography>
                   ) : readingsEmpty ? (
-                    <Typography variant="body2">No readings found.</Typography>
+                    <Typography variant="body2">{t('meters.readings.empty')}</Typography>
                   ) : (
                     <>
                       {readingsTab === 'chart' &&
                         (hasChartData ? (
                           <ChartWrapper type="bar" series={chartSeries} options={chartOptions} height={360} />
                         ) : (
-                          <Typography variant="body2">Add at least two readings to see trends.</Typography>
+                          <Typography variant="body2">{t('meters.readings.chart.emptyHint')}</Typography>
                         ))}
 
                       {readingsTab === 'table' && (
@@ -562,13 +575,13 @@ export function MeterEditForm({ currentMeter }: Props) {
                             <TableHead>
                               <TableRow>
                                 <TableCell sx={{ width: 48 }} />
-                                <TableCell sx={{ width: 160 }}>Date</TableCell>
-                                <TableCell sx={{ width: 140 }}>Method</TableCell>
-                                <TableCell sx={{ width: 120 }}>Value</TableCell>
-                                <TableCell sx={{ width: 140 }}>Consumption</TableCell>
-                                <TableCell sx={{ width: 160 }}>Barcode</TableCell>
-                                <TableCell sx={{ width: 140 }}>Barcode status</TableCell>
-                                <TableCell sx={{ width: 80 }}>Actions</TableCell>
+                                <TableCell sx={{ width: 160 }}>{t('meters.readings.table.date')}</TableCell>
+                                <TableCell sx={{ width: 140 }}>{t('meters.readings.table.method')}</TableCell>
+                                <TableCell sx={{ width: 120 }}>{t('meters.readings.table.value')}</TableCell>
+                                <TableCell sx={{ width: 140 }}>{t('meters.readings.table.consumption')}</TableCell>
+                                <TableCell sx={{ width: 160 }}>{t('meters.readings.table.barcode')}</TableCell>
+                                <TableCell sx={{ width: 140 }}>{t('meters.readings.table.barcodeStatus')}</TableCell>
+                                <TableCell sx={{ width: 80 }}>{t('meters.readings.table.actions')}</TableCell>
                               </TableRow>
                             </TableHead>
                             <TableBody>
@@ -587,7 +600,11 @@ export function MeterEditForm({ currentMeter }: Props) {
                                           <IconButton
                                             size="small"
                                             onClick={() => toggleReadingExpanded(reading.id)}
-                                            aria-label={isExpanded ? 'Collapse edits' : 'Expand edits'}
+                                            aria-label={
+                                              isExpanded
+                                                ? t('meters.readings.actions.collapseEdits')
+                                                : t('meters.readings.actions.expandEdits')
+                                            }
                                           >
                                             {isExpanded ? (
                                               <KeyboardArrowDownIcon fontSize="small" />
@@ -609,14 +626,16 @@ export function MeterEditForm({ currentMeter }: Props) {
                                         {reading.barcodeRaw ?? '-'}
                                       </TableCell>
                                       <TableCell sx={{ width: 140 }}>
-                                        {reading.barcodeStatus ?? '-'}
+                                        {reading.barcodeStatus
+                                          ? t(`meters.readings.barcode.statusValue.${reading.barcodeStatus}`)
+                                          : '-'}
                                       </TableCell>
                                       <TableCell sx={{ width: 80 }}>
                                         <IconButton
                                           size="small"
                                           disabled={!canEdit}
                                           onClick={() => handleOpenEditDialog(reading.id, index)}
-                                          aria-label="Edit reading"
+                                          aria-label={t('meters.readings.actions.edit')}
                                         >
                                           <EditIcon fontSize="small" />
                                         </IconButton>
@@ -635,14 +654,20 @@ export function MeterEditForm({ currentMeter }: Props) {
                                                 borderColor: 'divider',
                                               }}
                                             >
-                                              <Typography variant="subtitle2">Edit history</Typography>
+                                              <Typography variant="subtitle2">{t('meters.readings.edit.history')}</Typography>
                                               <Table size="small">
                                                 <TableHead>
                                                   <TableRow>
-                                                    <TableCell sx={{ width: 180 }}>Editor</TableCell>
-                                                    <TableCell sx={{ width: 160 }}>Edited at</TableCell>
-                                                    <TableCell sx={{ width: 120 }}>Value</TableCell>
-                                                    <TableCell>Reason</TableCell>
+                                                    <TableCell sx={{ width: 180 }}>
+                                                      {t('meters.readings.edit.editor')}
+                                                    </TableCell>
+                                                    <TableCell sx={{ width: 160 }}>
+                                                      {t('meters.readings.edit.editedAt')}
+                                                    </TableCell>
+                                                    <TableCell sx={{ width: 120 }}>
+                                                      {t('meters.readings.edit.value')}
+                                                    </TableCell>
+                                                    <TableCell>{t('meters.readings.edit.reason')}</TableCell>
                                                   </TableRow>
                                                 </TableHead>
                                                 <TableBody>
@@ -696,21 +721,21 @@ export function MeterEditForm({ currentMeter }: Props) {
             sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', columnGap: 1 }}
           >
             <Button variant="outlined" onClick={() => router.push(paths.dashboard.meters.root)}>
-              Cancel
+              {t('meters.actions.cancel')}
             </Button>
             <LoadingButton type="submit" variant="contained" loading={isSubmitting}>
-              Create meter
+              {t('meters.actions.create')}
             </LoadingButton>
           </Grid>
         )}
       </Grid>
 
       <Dialog open={editDialogOpen} onClose={handleCloseEditDialog} fullWidth maxWidth="sm">
-        <DialogTitle>Edit reading</DialogTitle>
+        <DialogTitle>{t('meters.readings.edit.title')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} mt={1}>
             <TextField
-              label="Value"
+              label={t('meters.readings.edit.value')}
               type="number"
               value={editValue}
               onChange={(event) => {
@@ -722,34 +747,42 @@ export function MeterEditForm({ currentMeter }: Props) {
               helperText={
                 editError ||
                 (editBounds
-                  ? `Allowed range: min ${editBounds.min ?? 'none'}, max ${editBounds.max ?? 'none'}`
+                  ? t('meters.readings.edit.allowedRange', {
+                      min: editBounds.min ?? t('meters.readings.edit.rangeNone'),
+                      max: editBounds.max ?? t('meters.readings.edit.rangeNone'),
+                    })
                   : undefined)
               }
               slotProps={{ inputLabel: { shrink: true } }}
             />
             <TextField
-              label="Reason"
+              label={t('meters.readings.edit.reasonLabel')}
               value={editReason}
               onChange={(event) => {
                 setEditReason(event.target.value);
                 if (editReasonError) setEditReasonError('');
               }}
               error={Boolean(editReasonError)}
-              helperText={editReasonError || 'Required'}
+              helperText={editReasonError || t('validation.required')}
               multiline
               minRows={2}
             />
             <Divider />
             <Stack spacing={1}>
-              <Typography variant="subtitle2">Barcode review</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Meter barcode: {editingReading?.meter?.barcode || currentMeter?.barcode || '-'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Mobile barcode: {editingReading?.barcodeRaw || '-'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Status: {editingReading?.barcodeStatus || '-'}
+              <Typography variant="subtitle2">{t('meters.readings.barcode.title')}</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {t('meters.readings.barcode.meter')}:{' '}
+                  {editingReading?.meter?.barcode || currentMeter?.barcode || '-'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {t('meters.readings.barcode.mobile')}:{' '}
+                  {editingReading?.barcodeRaw || '-'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {t('meters.readings.barcode.status')}:{' '}
+                  {editingReading?.barcodeStatus
+                    ? t(`meters.readings.barcode.statusValue.${editingReading.barcodeStatus}`)
+                    : '-'}
               </Typography>
               {barcodeError && (
                 <Typography variant="body2" color="error">
@@ -763,7 +796,7 @@ export function MeterEditForm({ currentMeter }: Props) {
                   disabled={!canReviewBarcode || barcodeSaving || !editingReading?.barcodeRaw}
                   onClick={() => handleBarcodeDecision('accepted')}
                 >
-                  Accept barcode
+                  {t('meters.readings.barcode.accept')}
                 </Button>
                 <Button
                   variant="outlined"
@@ -771,7 +804,7 @@ export function MeterEditForm({ currentMeter }: Props) {
                   disabled={!canReviewBarcode || barcodeSaving || !editingReading?.barcodeRaw}
                   onClick={() => handleBarcodeDecision('rejected')}
                 >
-                  Reject barcode
+                  {t('meters.readings.barcode.reject')}
                 </Button>
               </Stack>
             </Stack>
@@ -779,10 +812,10 @@ export function MeterEditForm({ currentMeter }: Props) {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseEditDialog} disabled={editSaving}>
-            Cancel
+            {t('meters.actions.cancel')}
           </Button>
           <Button onClick={handleSaveEdit} variant="contained" disabled={editSaving}>
-            Save
+            {t('meters.actions.save')}
           </Button>
         </DialogActions>
       </Dialog>

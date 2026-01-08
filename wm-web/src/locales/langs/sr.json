@@ -180,6 +180,158 @@
       "update": "Azuriraj adresu vodomera"
     }
   },
+  "meters": {
+    "title": "Vodomeri",
+    "list": {
+      "description": "Upravljanje vodomerima i dodelama potrosaca.",
+      "loadError": "Neuspesno ucitavanje vodomera.",
+      "backToDashboard": "Nazad na dashboard",
+      "empty": "Nema vodomera."
+    },
+    "table": {
+      "serial": "Serijski broj",
+      "group": "Grupa",
+      "address": "Adresa",
+      "type": "Tip",
+      "status": "Status",
+      "consumers": "Potrosaci",
+      "created": "Kreiran",
+      "actions": "Akcije",
+      "review": "Provera"
+    },
+    "filters": {
+      "all": "Svi",
+      "searchPlaceholder": "Pretraga",
+      "searchLabel": "Pretraga",
+      "statusLabel": "Status",
+      "groupLabel": "Grupa",
+      "groupPlaceholder": "01-99",
+      "typeLabel": "Tip",
+      "reviewLabel": "Provera",
+      "reviewPending": "Za proveru",
+      "results": "Rezultati",
+      "reset": "Resetuj"
+    },
+    "status": {
+      "active": "Aktivan",
+      "inactive": "Neaktivan",
+      "removed": "Uklonjen"
+    },
+    "type": {
+      "automatic": "Automatski",
+      "mechanical": "Mehanicki"
+    },
+    "actions": {
+      "new": "Novi vodomer",
+      "details": "Detalji",
+      "back": "Nazad",
+      "cancel": "Otkazi",
+      "save": "Sacuvaj",
+      "saveChanges": "Sacuvaj izmene",
+      "create": "Kreiraj vodomer"
+    },
+    "detail": {
+      "title": "Detalji vodomera",
+      "titleWithSerial": "Vodomer {{serial}}",
+      "description": "Detalji vodomera i istorija ocitavanja.",
+      "notFound": "Vodomer nije pronadjen: {{id}}",
+      "breadcrumbs": {
+        "details": "Detalji"
+      }
+    },
+    "create": {
+      "title": "Novi vodomer",
+      "description": "Registrujte novi vodomer kao neaktivan.",
+      "formTitle": "Registruj novi vodomer",
+      "statusHint": "Status je postavljen na neaktivan pri kreiranju.",
+      "breadcrumbs": {
+        "new": "Novi"
+      }
+    },
+    "fields": {
+      "serialNumber": "Serijski broj",
+      "barcode": "Barkod",
+      "groupCode": "Sifra grupe",
+      "groupCodeHint": "Sifra grupe (01-99)",
+      "address": "Adresa",
+      "type": "Tip",
+      "status": "Status",
+      "consumers": "Potrosaci",
+      "consumersHint": "Izaberite jednog ili vise potrosaca"
+    },
+    "consumers": {
+      "empty": "Nema povezanih potrosaca."
+    },
+    "common": {
+      "chart": "Grafik",
+      "table": "Tabela"
+    },
+    "readings": {
+      "title": "Istorija ocitavanja",
+      "filters": {
+        "from": "Od",
+        "to": "Do"
+      },
+      "loading": "Ucitavanje ocitavanja...",
+      "empty": "Nema ocitavanja.",
+      "chart": {
+        "consumption": "Potrosnja",
+        "emptyHint": "Dodajte bar dva ocitavanja da biste videli trend."
+      },
+      "table": {
+        "date": "Datum",
+        "method": "Metod",
+        "value": "Vrednost",
+        "consumption": "Potrosnja",
+        "barcode": "Barkod",
+        "barcodeStatus": "Status barkoda",
+        "actions": "Akcije"
+      },
+      "actions": {
+        "edit": "Izmeni ocitavanje",
+        "expandEdits": "Prosiri izmene",
+        "collapseEdits": "Sakrij izmene"
+      },
+      "edit": {
+        "title": "Izmeni ocitavanje",
+        "value": "Vrednost",
+        "reason": "Razlog",
+        "reasonLabel": "Razlog",
+        "allowedRange": "Dozvoljeni opseg: min {{min}}, max {{max}}",
+        "rangeNone": "nema",
+        "history": "Istorija izmena",
+        "editor": "Urednik",
+        "editedAt": "Izmenjeno",
+        "error": {
+          "invalidValue": "Unesite validan broj.",
+          "reasonRequired": "Razlog je obavezan.",
+          "minValue": "Vrednost mora biti >= {{min}}.",
+          "maxValue": "Vrednost mora biti <= {{max}}.",
+          "missingEditor": "Nedostaju podaci o uredniku.",
+          "updateFailed": "Azuriranje ocitavanja nije uspelo."
+        }
+      },
+      "barcode": {
+        "title": "Provera barkoda",
+        "meter": "Barkod vodomera",
+        "mobile": "Barkod sa mobilnog",
+        "status": "Status",
+        "accept": "Prihvati barkod",
+        "reject": "Odbij barkod",
+        "statusValue": {
+          "pending": "Na cekanju",
+          "accepted": "Prihvacen",
+          "rejected": "Odbijen"
+        },
+        "error": {
+          "missingReviewer": "Nedostaju podaci o proveri.",
+          "notAllowed": "Nemate dozvolu za proveru barkoda.",
+          "noBarcode": "Nema dostavljenog barkoda za ovo ocitavanje.",
+          "updateFailed": "Azuriranje statusa barkoda nije uspelo."
+        }
+      }
+    }
+  },
   "validation": {
     "required": "Obavezno"
   },
