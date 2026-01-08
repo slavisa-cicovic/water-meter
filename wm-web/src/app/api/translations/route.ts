@@ -4,20 +4,21 @@ import { PERMISSIONS } from "src/constants/permissions";
 import { withPermission } from "src/services/permissionGuard";
 import type { TranslationUpdateInput } from "src/types/translations";
 
-const buildEtag = (locale: string, updatedAt: string | null, count: number) => {
+const buildEtag = (target: string, locale: string, updatedAt: string | null, count: number) => {
   const stamp = updatedAt ? new Date(updatedAt).getTime() : 0;
-  return `W/"translations:${locale}:${stamp}:${count}"`;
+  return `W/"translations:${target}:${locale}:${stamp}:${count}"`;
 };
 
 export const GET = async (req: NextRequest) => {
   const locale = req.nextUrl.searchParams.get("locale") || "en";
-  const bundle = await TranslationsService.getBundle(locale);
+  const target = req.nextUrl.searchParams.get("target") || "mobile";
+  const bundle = await TranslationsService.getBundle(locale, target);
   if (!bundle) {
     return NextResponse.json({ success: false, error: "INVALID_LOCALE" }, { status: 400 });
   }
 
   const entriesCount = Object.keys(bundle.translations).length;
-  const etag = buildEtag(bundle.locale, bundle.updatedAt, entriesCount);
+  const etag = buildEtag(bundle.target, bundle.locale, bundle.updatedAt, entriesCount);
   const ifNoneMatch = req.headers.get("if-none-match");
   if (ifNoneMatch && ifNoneMatch === etag) {
     return new NextResponse(null, { status: 304, headers: { ETag: etag } });
@@ -45,7 +46,7 @@ export const GET = async (req: NextRequest) => {
 
 export const PUT = withPermission(PERMISSIONS.TRANSLATIONS_UPDATE, async (req: NextRequest, _ctx, guard) => {
   const body = (await req.json()) as TranslationUpdateInput;
-  if (!body?.locale || !Array.isArray(body.updates)) {
+  if (!body?.locale || !body?.target || !Array.isArray(body.updates)) {
     return NextResponse.json({ success: false, error: "VALIDATION_FAILED" }, { status: 400 });
   }
 
@@ -54,7 +55,7 @@ export const PUT = withPermission(PERMISSIONS.TRANSLATIONS_UPDATE, async (req: N
     return NextResponse.json({ success: false, error: "VALIDATION_FAILED" }, { status: 400 });
   }
 
-  const bundle = await TranslationsService.update(body.locale, updates, guard.payload.accountId);
+  const bundle = await TranslationsService.update(body.locale, body.target, updates, guard.payload.accountId);
   if (!bundle) {
     return NextResponse.json({ success: false, error: "INVALID_LOCALE_OR_KEYS" }, { status: 400 });
   }

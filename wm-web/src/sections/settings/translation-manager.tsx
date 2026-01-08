@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
   Accordion,
@@ -11,6 +11,8 @@ import {
   Card,
   CardContent,
   MenuItem,
+  Tab,
+  Tabs,
   Stack,
   TextField,
   Typography,
@@ -19,12 +21,17 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useAuthContext } from "src/auth/hooks";
 import { PERMISSIONS } from "src/constants/permissions";
 import { TranslationsApi, useGetTranslations } from "src/api/translations";
-import { TranslationBundle } from "src/types/translations";
+import { TranslationBundle, TranslationTarget } from "src/types/translations";
 
 const SUPPORTED_LOCALES = ["en", "sr-Latn", "sr-Cyrl"];
+const TARGET_OPTIONS: Array<{ value: TranslationTarget; label: string }> = [
+  { value: "mobile", label: "Mobile" },
+  { value: "web", label: "Web" },
+];
 
 export default function TranslationManager() {
   const { user } = useAuthContext();
+  const [target, setTarget] = useState<TranslationTarget>("mobile");
   const [locale, setLocale] = useState("en");
   const [filter, setFilter] = useState("");
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -32,22 +39,22 @@ export default function TranslationManager() {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const canEdit = user?.permissions?.includes(PERMISSIONS.TRANSLATIONS_UPDATE) ?? false;
-  const { bundle, translationsLoading, translationsError, mutate } = useGetTranslations(locale);
+  const { bundle, translationsLoading, translationsError, mutate } = useGetTranslations(locale, target);
   const {
     bundle: enBundle,
     translationsLoading: enLoading,
     translationsError: enError,
-  } = useGetTranslations("en");
+  } = useGetTranslations("en", target);
   const {
     bundle: srLatnBundle,
     translationsLoading: srLatnLoading,
     translationsError: srLatnError,
-  } = useGetTranslations("sr-Latn");
+  } = useGetTranslations("sr-Latn", target);
   const {
     bundle: srCyrlBundle,
     translationsLoading: srCyrlLoading,
     translationsError: srCyrlError,
-  } = useGetTranslations("sr-Cyrl");
+  } = useGetTranslations("sr-Cyrl", target);
 
   const entries = useMemo(() => {
     const data = bundle?.translations ?? {};
@@ -115,6 +122,11 @@ export default function TranslationManager() {
     setDrafts((prev) => ({ ...prev, [key]: value }));
   }, []);
 
+  useEffect(() => {
+    setDrafts({});
+    setSaveError(null);
+  }, [locale, target]);
+
   const handleReset = useCallback(() => {
     setDrafts({});
     setSaveError(null);
@@ -128,7 +140,7 @@ export default function TranslationManager() {
       const updates = entries
         .filter((entry) => entry.value !== entry.original)
         .map((entry) => ({ key: entry.key, value: entry.value }));
-      await TranslationsApi.updateTranslations({ locale, updates });
+      await TranslationsApi.updateTranslations({ locale, target, updates });
       await mutate();
       setDrafts({});
     } catch (error) {
@@ -148,6 +160,16 @@ export default function TranslationManager() {
               Keys are locked; update values only.
             </Typography>
           </Box>
+
+          <Tabs
+            value={target}
+            onChange={(_, nextTarget) => setTarget(nextTarget)}
+            variant="fullWidth"
+          >
+            {TARGET_OPTIONS.map((option) => (
+              <Tab key={option.value} value={option.value} label={option.label} />
+            ))}
+          </Tabs>
 
           <Box
             sx={{

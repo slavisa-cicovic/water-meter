@@ -1,10 +1,11 @@
 import fs from "fs/promises";
 import path from "path";
 import { TranslationsRepository } from "src/repositories/translationsRepository";
-import { TranslationBundle, TranslationUpdate } from "src/types/translations";
+import { TranslationBundle, TranslationTarget, TranslationUpdate } from "src/types/translations";
 
 const SUPPORTED_LOCALES = ["en", "sr-Latn", "sr-Cyrl"] as const;
 type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
+const SUPPORTED_TARGETS: TranslationTarget[] = ["mobile", "web"];
 
 const normalizeLocale = (value: string): SupportedLocale | null => {
   const normalized = value === "sr" ? "sr-Latn" : value;
@@ -13,24 +14,54 @@ const normalizeLocale = (value: string): SupportedLocale | null => {
     : null;
 };
 
-const seedPathForLocale = (locale: SupportedLocale) =>
-  path.join(process.cwd(), "src", "translations", "mobile", `${locale}.json`);
+const normalizeTarget = (value?: string | null): TranslationTarget | null => {
+  if (!value) return "mobile";
+  return SUPPORTED_TARGETS.includes(value as TranslationTarget) ? (value as TranslationTarget) : null;
+};
 
-const loadSeed = async (locale: SupportedLocale): Promise<Record<string, string>> => {
-  const filePath = seedPathForLocale(locale);
+const seedPathForLocale = (target: TranslationTarget, locale: SupportedLocale) => {
+  if (target === "web") {
+    return path.join(process.cwd(), "src", "locales", "langs", `${locale}.json`);
+  }
+  return path.join(process.cwd(), "src", "translations", "mobile", `${locale}.json`);
+};
+
+const loadSeed = async (target: TranslationTarget, locale: SupportedLocale): Promise<Record<string, string>> => {
+  const filePath = seedPathForLocale(target, locale);
   const content = await fs.readFile(filePath, "utf-8");
-  return JSON.parse(content) as Record<string, string>;
+  const parsed = JSON.parse(content) as Record<string, unknown>;
+  return target === "web" ? flattenTranslations(parsed) : (parsed as Record<string, string>);
 };
 
-const ensureSeeded = async (locale: SupportedLocale) => {
-  const count = await TranslationsRepository.countByLocale(locale);
+const flattenTranslations = (
+  data: Record<string, unknown>,
+  prefix = "",
+  result: Record<string, string> = {}
+): Record<string, string> => {
+  Object.entries(data).forEach(([key, value]) => {
+    const nextKey = prefix ? `${prefix}.${key}` : key;
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      flattenTranslations(value as Record<string, unknown>, nextKey, result);
+      return;
+    }
+    result[nextKey] = String(value ?? "");
+  });
+  return result;
+};
+
+const ensureSeeded = async (target: TranslationTarget, locale: SupportedLocale) => {
+  const count = await TranslationsRepository.countByTargetLocale(target, locale);
   if (count > 0) return;
-  const seed = await loadSeed(locale);
+  const seed = await loadSeed(target, locale);
   const entries = Object.entries(seed).map(([key, value]) => ({ key, value }));
-  await TranslationsRepository.createMany(locale, entries);
+  await TranslationsRepository.createMany(target, locale, entries);
 };
 
-const toBundle = (locale: SupportedLocale, rows: Array<{ key: string; value: string; updatedAt: Date }>) => {
+const toBundle = (
+  target: TranslationTarget,
+  locale: SupportedLocale,
+  rows: Array<{ key: string; value: string; updatedAt: Date }>
+) => {
   const translations: Record<string, string> = {};
   let updatedAt: Date | null = null;
   rows.forEach((row) => {
@@ -41,6 +72,7 @@ const toBundle = (locale: SupportedLocale, rows: Array<{ key: string; value: str
   });
 
   return {
+    target,
     locale,
     updatedAt: updatedAt ? updatedAt.toISOString() : null,
     translations,
@@ -48,23 +80,30 @@ const toBundle = (locale: SupportedLocale, rows: Array<{ key: string; value: str
 };
 
 export const TranslationsService = {
-  async getBundle(locale: string): Promise<TranslationBundle | null> {
+  async getBundle(locale: string, target?: string | null): Promise<TranslationBundle | null> {
     const resolved = normalizeLocale(locale);
-    if (!resolved) return null;
+    const resolvedTarget = normalizeTarget(target);
+    if (!resolved || !resolvedTarget) return null;
 
-    await ensureSeeded(resolved);
-    const rows = await TranslationsRepository.listByLocale(resolved);
-    return toBundle(resolved, rows);
+    await ensureSeeded(resolvedTarget, resolved);
+    const rows = await TranslationsRepository.listByTargetLocale(resolvedTarget, resolved);
+    return toBundle(resolvedTarget, resolved, rows);
   },
 
-  async update(locale: string, updates: TranslationUpdate[], actorId?: string): Promise<TranslationBundle | null> {
+  async update(
+    locale: string,
+    target: string | null | undefined,
+    updates: TranslationUpdate[],
+    actorId?: string
+  ): Promise<TranslationBundle | null> {
     const resolved = normalizeLocale(locale);
-    if (!resolved) return null;
+    const resolvedTarget = normalizeTarget(target);
+    if (!resolved || !resolvedTarget) return null;
 
-    await ensureSeeded(resolved);
+    await ensureSeeded(resolvedTarget, resolved);
 
     const keys = updates.map((entry) => entry.key);
-    const existingKeys = await TranslationsRepository.listKeysByLocale(resolved);
+    const existingKeys = await TranslationsRepository.listKeysByTargetLocale(resolvedTarget, resolved);
     const existingSet = new Set(existingKeys);
     const unknownKeys = keys.filter((key) => !existingSet.has(key));
     if (unknownKeys.length) {
@@ -72,6 +111,7 @@ export const TranslationsService = {
     }
 
     await TranslationsRepository.updateValues(
+      resolvedTarget,
       resolved,
       updates.map((entry) => ({
         key: entry.key,
@@ -80,7 +120,7 @@ export const TranslationsService = {
       }))
     );
 
-    const rows = await TranslationsRepository.listByLocale(resolved);
-    return toBundle(resolved, rows);
+    const rows = await TranslationsRepository.listByTargetLocale(resolvedTarget, resolved);
+    return toBundle(resolvedTarget, resolved, rows);
   },
 };

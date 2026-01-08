@@ -147,15 +147,16 @@ model Account {
 
 model Translation {
   id          String   @id @default(uuid())
+  target      String   @default("mobile")
   locale      String
   key         String
-  value       String
+  value       String   @db.Text
   updatedById String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@unique([locale, key])
-  @@index([locale])
+  @@unique([target, locale, key])
+  @@index([target, locale])
 }
 
 model ConsumerProfile {

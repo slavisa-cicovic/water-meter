@@ -12,7 +12,7 @@ export type TranslationsResponse = {
 export const TranslationsApi = {
   async getTranslations(locale: string, headers?: Record<string, string>) {
     return apiClient.get<TranslationsResponse>("/api/translations", {
-      params: { locale },
+      params: { locale, target: "mobile" },
       headers,
       validateStatus: (status) => status === 200 || status === 304,
     });

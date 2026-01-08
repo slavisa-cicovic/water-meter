@@ -7,40 +7,44 @@ export type TranslationRecord = {
 };
 
 export const TranslationsRepository = {
-  async countByLocale(locale: string) {
-    return prisma.translation.count({ where: { locale } });
+  async countByTargetLocale(target: string, locale: string) {
+    return prisma.translation.count({ where: { target, locale } });
   },
 
-  async listByLocale(locale: string): Promise<TranslationRecord[]> {
+  async listByTargetLocale(target: string, locale: string): Promise<TranslationRecord[]> {
     return prisma.translation.findMany({
-      where: { locale },
+      where: { target, locale },
       select: { key: true, value: true, updatedAt: true },
       orderBy: { key: "asc" },
     });
   },
 
-  async listKeysByLocale(locale: string): Promise<string[]> {
+  async listKeysByTargetLocale(target: string, locale: string): Promise<string[]> {
     const rows = await prisma.translation.findMany({
-      where: { locale },
+      where: { target, locale },
       select: { key: true },
     });
     return rows.map((row) => row.key);
   },
 
-  async createMany(locale: string, data: Array<{ key: string; value: string }>) {
+  async createMany(target: string, locale: string, data: Array<{ key: string; value: string }>) {
     if (!data.length) return;
     await prisma.translation.createMany({
-      data: data.map((entry) => ({ locale, key: entry.key, value: entry.value })),
+      data: data.map((entry) => ({ target, locale, key: entry.key, value: entry.value })),
       skipDuplicates: true,
     });
   },
 
-  async updateValues(locale: string, updates: Array<{ key: string; value: string; updatedById?: string }>) {
+  async updateValues(
+    target: string,
+    locale: string,
+    updates: Array<{ key: string; value: string; updatedById?: string }>
+  ) {
     if (!updates.length) return;
     await prisma.$transaction(
       updates.map((entry) =>
         prisma.translation.update({
-          where: { locale_key: { locale, key: entry.key } },
+          where: { target_locale_key: { target, locale, key: entry.key } },
           data: { value: entry.value, updatedById: entry.updatedById },
         })
       )

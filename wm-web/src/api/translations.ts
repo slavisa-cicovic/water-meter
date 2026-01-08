@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 import useSWR from "swr";
 import axiosInstance, { endpoints, fetcher } from "src/utils/axios";
-import { TranslationBundle, TranslationUpdateInput } from "src/types/translations";
+import { TranslationBundle, TranslationTarget, TranslationUpdateInput } from "src/types/translations";
 
-export function useGetTranslations(locale: string) {
+export function useGetTranslations(locale: string, target: TranslationTarget) {
   const { data, isLoading, error, isValidating, mutate } = useSWR(
-    [endpoints.translations, { params: { locale } }],
+    [endpoints.translations, { params: { locale, target } }],
     fetcher
   );
 
