@@ -6,9 +6,11 @@ import { MobileService } from "@src/services/mobile.service";
 import { MobilePaymentInvoice } from "@src/api/types/mobile";
 import { useRouter } from "expo-router";
 import { useNotificationsStore } from "@src/state/notifications-store";
+import { useTranslation } from "@src/hooks/use-translation";
 
 export default function PaymentScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const refreshNotifications = useNotificationsStore((state) => state.refreshNotifications);
   const setHasIssuedInvoice = useNotificationsStore((state) => state.setHasIssuedInvoice);
   const [invoice, setInvoice] = useState<MobilePaymentInvoice | null>(null);
@@ -42,14 +44,14 @@ export default function PaymentScreen() {
     const result = await MobileService.payInvoice(invoice.id);
     setSubmitting(false);
     if (!result.success) {
-      Alert.alert("Payment failed", result.message);
+      Alert.alert(t("payment.alert.failedTitle"), result.message);
       return;
     }
     setHasIssuedInvoice(false);
     refreshNotifications().catch(() => null);
-    Alert.alert("Success", "Payment submitted successfully.", [
+    Alert.alert(t("payment.alert.successTitle"), t("payment.alert.successMessage"), [
       {
-        text: "OK",
+        text: t("common.ok"),
         onPress: () => {
           router.replace("/home");
         },
@@ -57,65 +59,71 @@ export default function PaymentScreen() {
     ]);
   };
 
+  const formatLineTypeLabel = (type: MobilePaymentInvoice["lines"][number]["type"]) => {
+    if (type === "consumption") return t("payment.line.consumption");
+    if (type === "vat") return t("payment.line.vat");
+    return t("payment.line.fee");
+  };
+
   return (
-    <ScrollScreen title="Invoice payment" contentContainerStyle={styles.content}>
+    <ScrollScreen title={t("payment.title")} contentContainerStyle={styles.content}>
       <View style={styles.card}>
-        <Text style={styles.title}>Latest invoice</Text>
-        {loading ? <Text style={styles.subtle}>Loading invoice...</Text> : null}
+        <Text style={styles.title}>{t("payment.latestInvoice")}</Text>
+        {loading ? <Text style={styles.subtle}>{t("payment.loadingInvoice")}</Text> : null}
         {error ? <Text style={styles.error}>{error}</Text> : null}
         {!loading && !error && !invoice ? (
-          <Text style={styles.subtle}>No issued invoices yet.</Text>
+          <Text style={styles.subtle}>{t("payment.noIssued")}</Text>
         ) : null}
         {!loading && !error && invoice ? (
           <>
             <View style={styles.row}>
-              <Text style={styles.label}>Meter</Text>
+              <Text style={styles.label}>{t("payment.label.meter")}</Text>
               <Text style={styles.value}>{invoice.meterSerialNumber ?? "-"}</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.label}>Period</Text>
+              <Text style={styles.label}>{t("payment.label.period")}</Text>
               <Text style={styles.value}>{formatPeriod(invoice.periodStart, invoice.periodEnd)}</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.label}>Previous reading</Text>
+              <Text style={styles.label}>{t("payment.label.previousReading")}</Text>
               <Text style={styles.value}>{formatReading(invoice.previousValue)}</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.label}>Current reading</Text>
+              <Text style={styles.label}>{t("payment.label.currentReading")}</Text>
               <Text style={styles.value}>{formatReading(invoice.currentValue)}</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.label}>Consumption</Text>
+              <Text style={styles.label}>{t("payment.label.consumption")}</Text>
               <Text style={styles.value}>{invoice.consumption}</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.label}>Unit price</Text>
+              <Text style={styles.label}>{t("payment.label.unitPrice")}</Text>
               <Text style={styles.value}>{formatAmount(invoice.unitPrice)}</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.label}>Subtotal</Text>
+              <Text style={styles.label}>{t("payment.label.subtotal")}</Text>
               <Text style={styles.value}>{formatAmount(invoice.subtotal)}</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.label}>VAT rate</Text>
+              <Text style={styles.label}>{t("payment.label.vatRate")}</Text>
               <Text style={styles.value}>{formatPercent(invoice.vatRate)}</Text>
             </View>
             <View style={styles.row}>
-              <Text style={styles.label}>VAT amount</Text>
+              <Text style={styles.label}>{t("payment.label.vatAmount")}</Text>
               <Text style={styles.value}>{formatAmount(invoice.vatAmount)}</Text>
             </View>
             <View style={styles.rowTotal}>
-              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={styles.totalLabel}>{t("payment.label.total")}</Text>
               <Text style={styles.totalValue}>{formatAmount(invoice.totalAmount)}</Text>
             </View>
 
             {invoice.lines.length ? (
               <View style={styles.lines}>
-                <Text style={styles.linesTitle}>Line items</Text>
+                <Text style={styles.linesTitle}>{t("payment.lines.title")}</Text>
                 {invoice.lines.map((line) => (
                   <View key={line.id} style={styles.lineRow}>
                     <View>
-                      <Text style={styles.lineLabel}>{formatLineType(line.type)}</Text>
+                      <Text style={styles.lineLabel}>{formatLineTypeLabel(line.type)}</Text>
                       {line.description ? <Text style={styles.lineDescription}>{line.description}</Text> : null}
                     </View>
                     <View style={styles.lineMeta}>
@@ -132,8 +140,8 @@ export default function PaymentScreen() {
             ) : null}
 
             <SubmitButton
-              label="Submit payment"
-              loadingLabel="Submitting..."
+              label={t("payment.action.submit")}
+              loadingLabel={t("payment.action.submitting")}
               loading={submitting}
               disabled={submitting}
               onPress={handleSubmitPayment}
@@ -158,12 +166,6 @@ const formatAmount = (value: number) => `${value.toFixed(2)}`;
 const formatPercent = (value: number) => `${value.toFixed(2)}%`;
 
 const formatReading = (value: number | null) => (value === null ? "-" : `${value}`);
-
-const formatLineType = (type: MobilePaymentInvoice["lines"][number]["type"]) => {
-  if (type === "consumption") return "Consumption";
-  if (type === "vat") return "VAT";
-  return "Fee";
-};
 
 const styles = StyleSheet.create({
   content: { padding: 20, paddingBottom: 32 },
