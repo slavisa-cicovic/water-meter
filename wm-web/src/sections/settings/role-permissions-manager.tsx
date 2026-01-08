@@ -27,6 +27,7 @@ import { RolesApi, useGetRolesWithPermissions } from "src/api/roles";
 import { PermissionItem, RoleWithPermissions } from "src/types/roles";
 import { useAuthContext } from "src/auth/hooks";
 import { PERMISSIONS } from "src/constants/permissions";
+import { useGetRoleLinksHealth } from "src/api/health";
 
 type DraftPermission = {
   enabled: boolean;
@@ -67,6 +68,7 @@ export default function RolePermissionsManager() {
   const { user } = useAuthContext();
   const { roles, rolesLoading, rolesError, mutate: mutateRoles } = useGetRolesWithPermissions();
   const { permissions, permissionsLoading, permissionsError } = useGetPermissions();
+  const { health, healthLoading, healthError } = useGetRoleLinksHealth();
 
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
   const [draftPermissions, setDraftPermissions] = useState<DraftMap>({});
@@ -79,6 +81,7 @@ export default function RolePermissionsManager() {
   const [createError, setCreateError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const canCreateRole = user?.permissions?.includes(PERMISSIONS.ROLES_CREATE);
+  const canViewHealth = user?.permissions?.includes(PERMISSIONS.ROLES_LIST);
 
   useEffect(() => {
     if (!selectedRoleId && roles.length) {
@@ -209,6 +212,42 @@ export default function RolePermissionsManager() {
             </Typography>
           </Box>
 
+          {canViewHealth ? (
+            <Box
+              sx={{
+                border: 1,
+                borderColor: healthError
+                  ? "error.main"
+                  : health?.ok === false
+                  ? "warning.main"
+                  : "success.main",
+                borderRadius: 1,
+                p: 2,
+              }}
+            >
+              <Stack spacing={1.5}>
+                <Typography variant="subtitle1">Role links health</Typography>
+                {healthError ? <Alert severity="error">Unable to load health status.</Alert> : null}
+                {healthLoading ? <Alert severity="info">Loading health status...</Alert> : null}
+                {health ? (
+                  <Stack spacing={1}>
+                    <Typography variant="body2">
+                      Accounts without roles: {health.accountsWithoutRoles}
+                    </Typography>
+                    <Typography variant="body2">
+                      Roles without permissions: {health.rolesWithoutPermissions}
+                    </Typography>
+                    {!health.ok ? (
+                      <Alert severity="warning">Some accounts or roles are missing assignments.</Alert>
+                    ) : (
+                      <Alert severity="success">All accounts and roles look healthy.</Alert>
+                    )}
+                  </Stack>
+                ) : null}
+              </Stack>
+            </Box>
+          ) : null}
+
           <Stack direction={{ xs: "column", md: "row" }} spacing={2} alignItems="stretch">
             <Card variant="outlined" sx={{ minWidth: 260, flexShrink: 0 }}>
               <CardContent>
@@ -336,6 +375,7 @@ export default function RolePermissionsManager() {
                     Save
                   </Button>
                 </Stack>
+
               </Stack>
             </Box>
           </Stack>

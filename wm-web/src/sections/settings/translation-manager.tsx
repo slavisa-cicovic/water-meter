@@ -19,6 +19,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useAuthContext } from "src/auth/hooks";
 import { PERMISSIONS } from "src/constants/permissions";
 import { TranslationsApi, useGetTranslations } from "src/api/translations";
+import { TranslationBundle } from "src/types/translations";
 
 const SUPPORTED_LOCALES = ["en", "sr-Latn", "sr-Cyrl"];
 
@@ -32,6 +33,21 @@ export default function TranslationManager() {
 
   const canEdit = user?.permissions?.includes(PERMISSIONS.TRANSLATIONS_UPDATE) ?? false;
   const { bundle, translationsLoading, translationsError, mutate } = useGetTranslations(locale);
+  const {
+    bundle: enBundle,
+    translationsLoading: enLoading,
+    translationsError: enError,
+  } = useGetTranslations("en");
+  const {
+    bundle: srLatnBundle,
+    translationsLoading: srLatnLoading,
+    translationsError: srLatnError,
+  } = useGetTranslations("sr-Latn");
+  const {
+    bundle: srCyrlBundle,
+    translationsLoading: srCyrlLoading,
+    translationsError: srCyrlError,
+  } = useGetTranslations("sr-Cyrl");
 
   const entries = useMemo(() => {
     const data = bundle?.translations ?? {};
@@ -54,6 +70,41 @@ export default function TranslationManager() {
       return acc;
     }, {});
   }, [entries]);
+
+  const { missingByKey, missingCount } = useMemo(() => {
+    const bundlesByLocale: Record<string, TranslationBundle | null> = {
+      en: enBundle,
+      "sr-Latn": srLatnBundle,
+      "sr-Cyrl": srCyrlBundle,
+    };
+    const keys = new Set<string>();
+
+    SUPPORTED_LOCALES.forEach((supportedLocale) => {
+      const translations = bundlesByLocale[supportedLocale]?.translations ?? {};
+      Object.keys(translations).forEach((key) => keys.add(key));
+    });
+
+    const nextMissingByKey: Record<string, string[]> = {};
+    let nextMissingCount = 0;
+
+    keys.forEach((key) => {
+      SUPPORTED_LOCALES.forEach((supportedLocale) => {
+        const value = bundlesByLocale[supportedLocale]?.translations?.[key];
+        if (value === undefined || value === null || value === "") {
+          nextMissingCount += 1;
+          if (!nextMissingByKey[key]) {
+            nextMissingByKey[key] = [];
+          }
+          nextMissingByKey[key].push(supportedLocale);
+        }
+      });
+    });
+
+    return { missingByKey: nextMissingByKey, missingCount: nextMissingCount };
+  }, [enBundle, srLatnBundle, srCyrlBundle]);
+
+  const healthLoading = enLoading || srLatnLoading || srCyrlLoading;
+  const healthError = enError || srLatnError || srCyrlError;
 
   const hasChanges = useMemo(
     () => entries.some((entry) => entry.value !== entry.original),
@@ -98,6 +149,30 @@ export default function TranslationManager() {
             </Typography>
           </Box>
 
+          <Box
+            sx={{
+              border: 1,
+              borderColor: healthError
+                ? "error.main"
+                : missingCount
+                ? "warning.main"
+                : "success.main",
+              borderRadius: 1,
+              p: 2,
+            }}
+          >
+            <Stack spacing={1}>
+              <Typography variant="subtitle1">Translations health</Typography>
+              {healthError ? <Alert severity="error">Unable to load translation health.</Alert> : null}
+              {healthLoading ? <Alert severity="info">Loading translation health...</Alert> : null}
+              {!healthLoading && !healthError ? (
+                <Alert severity={missingCount ? "warning" : "success"}>
+                  Missing translations: {missingCount}
+                </Alert>
+              ) : null}
+            </Stack>
+          </Box>
+
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
             <TextField
               select
@@ -128,8 +203,17 @@ export default function TranslationManager() {
           <Stack spacing={2}>
             {Object.entries(groupedEntries)
               .sort(([a], [b]) => a.localeCompare(b))
-              .map(([prefix, items]) => (
-                <Accordion key={prefix}>
+              .map(([prefix, items]) => {
+                const hasMissing = items.some((item) => missingByKey[item.key]?.length);
+                return (
+                  <Accordion
+                    key={prefix}
+                    sx={{
+                      border: 1,
+                      borderColor: hasMissing ? "error.main" : "divider",
+                      "&:before": { display: "none" },
+                    }}
+                  >
                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                       {prefix} ({items.length})
@@ -137,21 +221,29 @@ export default function TranslationManager() {
                   </AccordionSummary>
                   <AccordionDetails>
                     <Stack spacing={2}>
-                      {items.map((entry) => (
-                        <TextField
-                          key={entry.key}
-                          label={entry.key}
-                          value={entry.value}
-                          onChange={(event) => handleChange(entry.key, event.target.value)}
-                          disabled={!canEdit}
-                          size="small"
-                          fullWidth
-                        />
-                      ))}
+                      {items.map((entry) => {
+                        const missingLocales = missingByKey[entry.key] ?? [];
+                        const hasMissingLocales = missingLocales.length > 0;
+
+                        return (
+                          <TextField
+                            key={entry.key}
+                            label={entry.key}
+                            value={entry.value}
+                            onChange={(event) => handleChange(entry.key, event.target.value)}
+                            disabled={!canEdit}
+                            error={hasMissingLocales}
+                            helperText={hasMissingLocales ? `Missing: ${missingLocales.join(", ")}` : undefined}
+                            size="small"
+                            fullWidth
+                          />
+                        );
+                      })}
                     </Stack>
                   </AccordionDetails>
                 </Accordion>
-              ))}
+              );
+            })}
           </Stack>
 
           {saveError ? <Alert severity="error">{saveError}</Alert> : null}

@@ -21,7 +21,6 @@ import { paths } from "src/routes/paths";
 import RoleBasedGuard from "src/auth/guard/role-based-guard";
 import { PERMISSIONS } from "src/constants/permissions";
 import RolePermissionsManager from "../role-permissions-manager";
-import { useGetRoleLinksHealth } from "src/api/health";
 import TranslationManager from "../translation-manager";
 
 const formatDateLabel = (value: string | null) => value ?? "-";
@@ -29,7 +28,6 @@ const formatDateLabel = (value: string | null) => value ?? "-";
 export function SettingsView() {
   const settings = useSettingsContext();
   const { settings: data, settingsLoading, settingsError, mutate } = useGetSettings();
-  const { health, healthLoading, healthError } = useGetRoleLinksHealth();
 
   const [dateMode, setDateMode] = useState<CurrentDateMode>("auto");
   const [dateValue, setDateValue] = useState<string | null>(null);
@@ -215,34 +213,6 @@ export function SettingsView() {
         </RoleBasedGuard>
       </Box>
 
-      <RoleBasedGuard permissions={[PERMISSIONS.ROLES_LIST]} sx={{ mt: 3 }}>
-        <Box sx={{ mt: 3 }}>
-          <Card>
-            <CardContent>
-              <Stack spacing={1.5}>
-                <Typography variant="h6">Role links health</Typography>
-                {healthError ? <Alert severity="error">Unable to load health status.</Alert> : null}
-                {healthLoading ? <Alert severity="info">Loading health status...</Alert> : null}
-                {health ? (
-                  <Stack spacing={1}>
-                    <Typography variant="body2">
-                      Accounts without roles: {health.accountsWithoutRoles}
-                    </Typography>
-                    <Typography variant="body2">
-                      Roles without permissions: {health.rolesWithoutPermissions}
-                    </Typography>
-                    {!health.ok ? (
-                      <Alert severity="warning">Some accounts or roles are missing assignments.</Alert>
-                    ) : (
-                      <Alert severity="success">All accounts and roles look healthy.</Alert>
-                    )}
-                  </Stack>
-                ) : null}
-              </Stack>
-            </CardContent>
-          </Card>
-        </Box>
-      </RoleBasedGuard>
     </Container>
   );
 }
