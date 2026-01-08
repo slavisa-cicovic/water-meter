@@ -12,6 +12,8 @@ import {
   MobileStaffMetersData,
 } from "@src/api/types/mobile";
 import { useAuthStore } from "@src/state/auth-store";
+import { normalizeLocale } from "@src/constants/translations";
+import { useLocaleStore } from "@src/state/locale-store";
 
 type ServiceResult<T> =
   | { success: true; data: T }
@@ -36,7 +38,14 @@ const updateAuthUser = (data: MobileAccountData) => {
     lastName: data.lastName,
     email: data.email,
     address: data.address,
+    locale: data.locale ?? user.locale,
   });
+};
+
+const syncLocale = (locale?: string | null) => {
+  if (!locale) return;
+  const normalized = normalizeLocale(locale);
+  useLocaleStore.getState().setLocale(normalized);
 };
 
 export const MobileService = {
@@ -54,6 +63,7 @@ export const MobileService = {
       }
 
       updateAuthUser(data);
+      syncLocale(data.locale);
       return { success: true, data };
     } catch (error: any) {
       const message = error?.response?.data?.error
@@ -77,6 +87,7 @@ export const MobileService = {
       }
 
       updateAuthUser(data);
+      syncLocale(data.locale);
       return { success: true, data };
     } catch (error: any) {
       const message = error?.response?.data?.error

@@ -10,6 +10,7 @@ export type MobileAccountData = {
   lastName: string;
   email: string;
   address: string;
+  locale?: string | null;
   meter: MobileAccountMeter | null;
 };
 
@@ -17,6 +18,11 @@ export type MobileProfileUpdateInput = {
   firstName: string;
   lastName: string;
   email: string;
+  locale?: string | null;
+};
+
+export type MobileLocaleUpdateInput = {
+  locale: string;
 };
 
 export type MobileConsumptionPoint = {

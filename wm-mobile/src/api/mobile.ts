@@ -5,6 +5,7 @@ import {
   MobileBillingData,
   MobileConsumptionData,
   MobileProfileUpdateInput,
+  MobileLocaleUpdateInput,
   MobileReadingContext,
   MobileReadingCreateInput,
   MobileReadingResult,
@@ -22,6 +23,12 @@ export const MobileApi = {
     payload: MobileProfileUpdateInput
   ): Promise<ApiResponse<MobileAccountData>> => {
     const res = await apiClient.put<ApiResponse<MobileAccountData>>("/api/mobile", payload);
+    return res.data;
+  },
+  updateLocale: async (
+    payload: MobileLocaleUpdateInput
+  ): Promise<ApiResponse<MobileAccountData>> => {
+    const res = await apiClient.put<ApiResponse<MobileAccountData>>("/api/mobile/locale", payload);
     return res.data;
   },
   getConsumption: async (year: number): Promise<ApiResponse<MobileConsumptionData>> => {

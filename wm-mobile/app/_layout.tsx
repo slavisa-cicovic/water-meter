@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { useColorScheme } from "@src/hooks/use-color-scheme";
 import { useAuthStore } from "@src/state/auth-store";
+import { useLocaleStore } from "@src/state/locale-store";
 
 export const unstable_settings = {
   anchor: "(tabs)",
@@ -21,13 +22,19 @@ export default function RootLayout() {
   const hydrate = useAuthStore(state => state.hydrate);
   const hydrated = useAuthStore(state => state.hydrated);
   const accessToken = useAuthStore(state => state.accessToken);
+  const hydrateLocale = useLocaleStore(state => state.hydrate);
+  const localeHydrated = useLocaleStore(state => state.hydrated);
 
   useEffect(() => {
     hydrate();
   }, [hydrate]);
 
   useEffect(() => {
-    if (!hydrated) return;
+    hydrateLocale();
+  }, [hydrateLocale]);
+
+  useEffect(() => {
+    if (!hydrated || !localeHydrated) return;
 
     const inAuthRoute =
       segments[0] === "login" || segments[0] === "register" || segments[0] === "forgot-password";
@@ -41,9 +48,11 @@ export default function RootLayout() {
 
   const theme = colorScheme === "dark" ? DarkTheme : DefaultTheme;
 
+  const ready = hydrated && localeHydrated;
+
   return (
     <ThemeProvider value={theme}>
-      {!hydrated ? (
+      {!ready ? (
         <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
           <ActivityIndicator />
         </View>

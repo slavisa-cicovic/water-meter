@@ -13,6 +13,7 @@ export type LoginUser = {
   lastName: string;
   email: string;
   address?: string;
+  locale?: string;
   role: AccountRole;
   verificationStatus: VerificationStatus;
 };
