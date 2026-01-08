@@ -21,7 +21,7 @@ import { HEADER } from '../config-layout';
 import { navConfig } from './config-navigation';
 import NavDesktop from './nav/desktop';
 //
-import { LoginButton, SettingsButton } from '../_common';
+import { LanguagePopover, LoginButton, SettingsButton } from '../_common';
 
 // ----------------------------------------------------------------------
 
@@ -83,6 +83,7 @@ export default function Header() {
                 mr: { md: 2 },
               }}
             />
+            <LanguagePopover />
           </Stack>
         </Container>
       </Toolbar>

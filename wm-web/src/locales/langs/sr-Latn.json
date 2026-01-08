@@ -2,6 +2,41 @@
   "app": {
     "title": "Vodomer"
   },
+  "landing": {
+    "hero": {
+      "overline": "Vodomer",
+      "titleLine1": "Upravljajte ocitanjima, naplatom i nalozima",
+      "titleLine2": "na jednom mestu.",
+      "subtitle": "Jednostavni tokovi za terenske ekipe, verifikovane potrosace i back-office timove. Prikupljajte ocitanja, sinhronizujte naloge i izdajte racune bez napustanja kontrolne table.",
+      "primaryCta": "Pocnite",
+      "secondaryCta": "Otvori dashboard"
+    },
+    "features": {
+      "fieldReady": {
+        "title": "Spremno za teren",
+        "description": "Brz unos ocitanja na terenu uz mobilne tokove."
+      },
+      "accurateBilling": {
+        "title": "Precizna naplata",
+        "description": "Verifikovani nalozi i ocitanja ulaze direktno u racune."
+      },
+      "backOffice": {
+        "title": "Back-office kontrola",
+        "description": "Osoblje moze da verifikuje korisnike, upravlja vodomerima i prati statuse."
+      }
+    },
+    "stats": {
+      "households": "Domacinstva",
+      "metersSynced": "Sinhronizovani vodomeri",
+      "monthlyReads": "Mesecna ocitanja"
+    },
+    "cta": {
+      "title": "Spremni da sinhronizujete vodomere?",
+      "subtitle": "Pocnite sa verifikovanim nalozima, prikupljajte mesecna ocitanja i drzite naplatu preciznom.",
+      "primaryCta": "Registrujte se",
+      "secondaryCta": "Prijavite se"
+    }
+  },
   "noData": "Nema podataka",
   "dense": "Kompaktno"
 }

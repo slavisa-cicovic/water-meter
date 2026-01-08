@@ -2,6 +2,41 @@
   "app": {
     "title": "Water Meter"
   },
+  "landing": {
+    "hero": {
+      "overline": "Water Meter",
+      "titleLine1": "Manage readings, billing, and accounts",
+      "titleLine2": "in one place.",
+      "subtitle": "Simple flows for field staff, verified consumers, and back-office teams. Collect readings, keep accounts in sync, and issue bills without leaving the dashboard.",
+      "primaryCta": "Get started",
+      "secondaryCta": "View dashboard"
+    },
+    "features": {
+      "fieldReady": {
+        "title": "Field-ready",
+        "description": "Fast entry for readings on site with mobile-friendly flows."
+      },
+      "accurateBilling": {
+        "title": "Accurate billing",
+        "description": "Verified accounts and readings feed straight into invoices."
+      },
+      "backOffice": {
+        "title": "Back-office control",
+        "description": "Staff can verify users, manage meters, and track statuses."
+      }
+    },
+    "stats": {
+      "households": "Households",
+      "metersSynced": "Meters synced",
+      "monthlyReads": "Monthly reads"
+    },
+    "cta": {
+      "title": "Ready to sync your meters?",
+      "subtitle": "Start with verified accounts, collect monthly readings, and keep billing accurate across the city.",
+      "primaryCta": "Sign up",
+      "secondaryCta": "Log in"
+    }
+  },
   "noData": "No data",
   "dense": "Dense"
 }

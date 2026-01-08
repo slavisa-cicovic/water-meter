@@ -9,6 +9,7 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import { alpha } from '@mui/material/styles';
 import { m } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 // components
 import { MotionViewport, varFade } from 'src/components/animate';
 
@@ -17,30 +18,32 @@ import { MotionViewport, varFade } from 'src/components/animate';
 const FEATURES = [
   {
     icon: '/assets/icons/home/ic_make_brand.svg',
-    title: 'Field-ready',
-    description: 'Fast entry for readings on site with mobile-friendly flows.',
+    titleKey: 'landing.features.fieldReady.title',
+    descriptionKey: 'landing.features.fieldReady.description',
   },
   {
     icon: '/assets/icons/home/ic_design.svg',
-    title: 'Accurate billing',
-    description: 'Verified accounts and readings feed straight into invoices.',
+    titleKey: 'landing.features.accurateBilling.title',
+    descriptionKey: 'landing.features.accurateBilling.description',
   },
   {
     icon: '/assets/icons/home/ic_development.svg',
-    title: 'Back-office control',
-    description: 'Staff can verify users, manage meters, and track statuses.',
+    titleKey: 'landing.features.backOffice.title',
+    descriptionKey: 'landing.features.backOffice.description',
   },
 ];
 
 const STATS = [
-  { label: 'Households', value: '100K+' },
-  { label: 'Meters synced', value: '250K' },
-  { label: 'Monthly reads', value: '1.2M' },
+  { labelKey: 'landing.stats.households', value: '100K+' },
+  { labelKey: 'landing.stats.metersSynced', value: '250K' },
+  { labelKey: 'landing.stats.monthlyReads', value: '1.2M' },
 ];
 
 // ----------------------------------------------------------------------
 
 export default function HomeMinimal() {
+  const { t } = useTranslation();
+
   return (
     <Container
       component={MotionViewport}
@@ -73,31 +76,30 @@ export default function HomeMinimal() {
         <Stack spacing={3} sx={{ textAlign: { xs: 'left', md: 'center' }, position: 'relative' }}>
           <m.div variants={varFade().inUp} initial="initial" animate="animate">
             <Typography component="div" variant="overline" sx={{ color: 'text.disabled' }}>
-              Water Meter
+              {t('landing.hero.overline')}
             </Typography>
           </m.div>
 
           <m.div variants={varFade().inDown} initial="initial" animate="animate">
             <Typography variant="h2">
-              Manage readings, billing, and accounts
-              <br /> in one place.
+              {t('landing.hero.titleLine1')}
+              <br /> {t('landing.hero.titleLine2')}
             </Typography>
           </m.div>
 
           <m.div variants={varFade().in} initial="initial" animate="animate">
             <Typography sx={{ color: 'text.secondary', maxWidth: 720, mx: { xs: 0, md: 'auto' } }}>
-              Simple flows for field staff, verified consumers, and back-office teams. Collect readings, keep
-              accounts in sync, and issue bills without leaving the dashboard.
+              {t('landing.hero.subtitle')}
             </Typography>
           </m.div>
 
           <m.div variants={varFade().inUp} initial="initial" animate="animate">
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent={{ md: 'center' }}>
               <Button size="large" variant="contained" href="/register">
-                Get started
+                {t('landing.hero.primaryCta')}
               </Button>
               <Button size="large" variant="outlined" href="/dashboard">
-                View dashboard
+                {t('landing.hero.secondaryCta')}
               </Button>
             </Stack>
           </m.div>
@@ -116,7 +118,7 @@ export default function HomeMinimal() {
         sx={{ mb: { xs: 6, md: 10 } }}
       >
         {FEATURES.map((card, index) => (
-          <m.div key={card.title} variants={varFade().inUp} initial="initial" animate="animate">
+          <m.div key={card.titleKey} variants={varFade().inUp} initial="initial" animate="animate">
             <Card
               sx={{
                 textAlign: 'center',
@@ -137,15 +139,15 @@ export default function HomeMinimal() {
               <Box
                 component="img"
                 src={card.icon}
-                alt={card.title}
+                alt={t(card.titleKey)}
                 sx={{ mx: 'auto', width: 48, height: 48 }}
               />
 
               <Typography variant="h5" sx={{ mt: 6, mb: 2 }}>
-                {card.title}
+                {t(card.titleKey)}
               </Typography>
 
-              <Typography sx={{ color: 'text.secondary' }}>{card.description}</Typography>
+              <Typography sx={{ color: 'text.secondary' }}>{t(card.descriptionKey)}</Typography>
             </Card>
           </m.div>
         ))}
@@ -167,10 +169,10 @@ export default function HomeMinimal() {
           justifyContent="space-between"
         >
           {STATS.map((stat) => (
-            <m.div key={stat.label} variants={varFade().inUp} initial="initial" animate="animate">
+            <m.div key={stat.labelKey} variants={varFade().inUp} initial="initial" animate="animate">
               <Stack spacing={0.5} sx={{ textAlign: { xs: 'left', md: 'center' } }}>
                 <Typography variant="h4">{stat.value}</Typography>
-                <Typography sx={{ color: 'text.secondary' }}>{stat.label}</Typography>
+                <Typography sx={{ color: 'text.secondary' }}>{t(stat.labelKey)}</Typography>
               </Stack>
             </m.div>
           ))}
@@ -188,17 +190,17 @@ export default function HomeMinimal() {
       >
         <m.div variants={varFade().inUp} initial="initial" animate="animate">
           <Typography variant="h4" sx={{ mb: 2 }}>
-            Ready to sync your meters?
+            {t('landing.cta.title')}
           </Typography>
           <Typography sx={{ color: 'text.secondary', mb: 3, maxWidth: 560, mx: { xs: 0, md: 'auto' } }}>
-            Start with verified accounts, collect monthly readings, and keep billing accurate across the city.
+            {t('landing.cta.subtitle')}
           </Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent={{ md: 'center' }}>
             <Button size="large" variant="contained" href="/register">
-              Sign up
+              {t('landing.cta.primaryCta')}
             </Button>
             <Button size="large" variant="text" href="/auth/jwt/login">
-              Log in
+              {t('landing.cta.secondaryCta')}
             </Button>
           </Stack>
         </m.div>
