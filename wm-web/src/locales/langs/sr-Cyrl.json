@@ -12,6 +12,16 @@
       "login": "Пријава"
     }
   },
+  "sidebar": {
+    "overview": "Преглед",
+    "app": "Почетна",
+    "accounts": "Налози",
+    "meters": "Водомери",
+    "billing": "Наплата",
+    "tariffs": "Тарифе",
+    "jobs": "Задаци",
+    "settings": "Подешавања"
+  },
   "landing": {
     "hero": {
       "overline": "Водомер",

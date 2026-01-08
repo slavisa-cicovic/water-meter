@@ -3,6 +3,7 @@ import { memo, useState, useCallback } from 'react';
 import List from '@mui/material/List';
 import Stack from '@mui/material/Stack';
 import Collapse from '@mui/material/Collapse';
+import { useTranslation } from 'react-i18next';
 //
 import { NavSectionProps, NavListProps, NavConfigProps } from '../types';
 import { navVerticalConfig } from '../config';
@@ -13,12 +14,14 @@ import NavList from './nav-list';
 // ----------------------------------------------------------------------
 
 function NavSectionVertical({ data, config, sx, ...other }: NavSectionProps) {
+  const { t } = useTranslation();
+
   return (
     <Stack sx={sx} {...other}>
       {data.map((group, index) => (
         <Group
           key={group.subheader || index}
-          subheader={group.subheader}
+          subheader={group.subheaderKey ? t(group.subheaderKey) : group.subheader}
           items={group.items}
           config={navVerticalConfig(config)}
         />

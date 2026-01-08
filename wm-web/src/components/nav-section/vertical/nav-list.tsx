@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 // @mui
 import Collapse from '@mui/material/Collapse';
+import { useTranslation } from 'react-i18next';
 // routes
 import { usePathname } from 'src/routes/hooks';
 import { useActiveLink } from 'src/routes/hooks/use-active-link';
@@ -18,6 +19,7 @@ type NavListRootProps = {
 };
 
 export default function NavList({ data, depth, hasChild, config }: NavListRootProps) {
+  const { t } = useTranslation();
   const pathname = usePathname();
 
   const active = useActiveLink(data.path, hasChild);
@@ -41,10 +43,21 @@ export default function NavList({ data, depth, hasChild, config }: NavListRootPr
     setOpen(false);
   }, []);
 
+  const localizedData = {
+    ...data,
+    title: data.titleKey ? t(data.titleKey) : data.title,
+    caption: data.captionKey ? t(data.captionKey) : data.caption,
+    children: data.children?.map((child: NavListProps) => ({
+      ...child,
+      title: child.titleKey ? t(child.titleKey) : child.title,
+      caption: child.captionKey ? t(child.captionKey) : child.caption,
+    })),
+  };
+
   return (
     <>
       <NavItem
-        item={data}
+        item={localizedData}
         depth={depth}
         open={open}
         active={active}
@@ -55,7 +68,7 @@ export default function NavList({ data, depth, hasChild, config }: NavListRootPr
 
       {hasChild && (
         <Collapse in={open} unmountOnExit>
-          <NavSubList data={data.children} depth={depth} config={config} />
+          <NavSubList data={localizedData.children} depth={depth} config={config} />
         </Collapse>
       )}
     </>

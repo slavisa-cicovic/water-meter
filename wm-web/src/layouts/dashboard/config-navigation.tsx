@@ -1,8 +1,6 @@
 import { useMemo } from 'react';
 // routes
 import { paths } from 'src/routes/paths';
-// locales
-import { useLocales } from 'src/locales';
 // components
 import Label from 'src/components/label';
 import Iconify from 'src/components/iconify';
@@ -32,44 +30,52 @@ export function useNavData() {
     () => [
       {
         subheader: 'Overview',
+        subheaderKey: 'sidebar.overview',
         items: [
           {
             title: 'app',
+            titleKey: 'sidebar.app',
             path: paths.dashboard.root,
             icon: ICONS.dashboard,
           },
           {
             title: 'Accounts',
+            titleKey: 'sidebar.accounts',
             path: paths.dashboard.accounts.root,
             icon: ICONS.accounts,
             permissions: [PERMISSIONS.ACCOUNTS_LIST],
           },
           {
             title: 'Meters',
+            titleKey: 'sidebar.meters',
             path: paths.dashboard.meters.root,
             icon: ICONS.meters,
             permissions: [PERMISSIONS.METERS_LIST],
           },
           {
             title: 'Billing',
+            titleKey: 'sidebar.billing',
             path: paths.dashboard.billing.root,
             icon: ICONS.billing,
             permissions: [PERMISSIONS.BILLING_LIST],
           },
           {
             title: 'Tariffs',
+            titleKey: 'sidebar.tariffs',
             path: paths.dashboard.billing.tariffs.root,
             icon: ICONS.billing,
             permissions: [PERMISSIONS.TARIFFS_LIST],
           },
           {
             title: 'Jobs',
+            titleKey: 'sidebar.jobs',
             path: paths.dashboard.jobs.root,
             icon: ICONS.jobs,
             permissions: [PERMISSIONS.JOBS_LIST],
           },
           {
             title: 'Settings',
+            titleKey: 'sidebar.settings',
             path: paths.dashboard.settings.root,
             icon: ICONS.settings,
             permissions: [PERMISSIONS.SETTINGS_READ],

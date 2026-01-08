@@ -12,6 +12,16 @@
       "login": "Login"
     }
   },
+  "sidebar": {
+    "overview": "Overview",
+    "app": "App",
+    "accounts": "Accounts",
+    "meters": "Meters",
+    "billing": "Billing",
+    "tariffs": "Tariffs",
+    "jobs": "Jobs",
+    "settings": "Settings"
+  },
   "landing": {
     "hero": {
       "overline": "Water Meter",

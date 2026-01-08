@@ -12,6 +12,16 @@
       "login": "Prijava"
     }
   },
+  "sidebar": {
+    "overview": "Pregled",
+    "app": "Pocetna",
+    "accounts": "Nalozi",
+    "meters": "Vodomeri",
+    "billing": "Naplata",
+    "tariffs": "Tarife",
+    "jobs": "Zadaci",
+    "settings": "Podesavanja"
+  },
   "landing": {
     "hero": {
       "overline": "Vodomer",
