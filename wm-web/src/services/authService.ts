@@ -50,6 +50,7 @@ export const AuthService = {
           lastName: account.lastName,
           email: account.email,
           address: account.address,
+          locale: account.locale ?? "en",
           role: primaryRole,
           roles,
           verificationStatus: account.verificationStatus,

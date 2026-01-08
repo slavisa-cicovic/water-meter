@@ -9,6 +9,7 @@ type AccountBase = Prisma.AccountGetPayload<{
     lastName: true;
     email: true;
     address: true;
+    locale: true;
     accountRoleLinks: { select: { role: { select: { slug: true } } } };
   };
 }>;
@@ -29,6 +30,7 @@ export const MobileRepository = {
         lastName: true,
         email: true,
         address: true,
+        locale: true,
         accountRoleLinks: { select: { role: { select: { slug: true } } } },
       },
     });
@@ -204,17 +206,24 @@ export const MobileRepository = {
 
     type ReadingSnapshot = { value: number; readAt: Date };
 
-    const endReading = invoice.readings.find((link) => link.role === "end")?.reading ?? null;
+    const toSnapshot = (reading: { value: unknown; readAt: Date }): ReadingSnapshot => ({
+      value: Number(reading.value),
+      readAt: reading.readAt,
+    });
+
+    const endReading =
+      invoice.readings.find((link) => link.role === "end")?.reading ?? null;
+    const endSnapshot = endReading ? toSnapshot(endReading) : null;
     let latest: ReadingSnapshot | null = null;
 
     invoice.readings.forEach((link) => {
-      const reading = link.reading;
+      const reading = toSnapshot(link.reading);
       if (!latest || reading.readAt > latest.readAt) {
         latest = reading;
       }
     });
 
-    const resolved = endReading ?? latest;
+    const resolved = endSnapshot ?? latest;
     if (!resolved) return null;
 
     return { value: resolved.value, readAt: resolved.readAt.toISOString() };
@@ -337,19 +346,47 @@ export const MobileRepository = {
 
   async updateProfile(accountId: string, input: MobileProfileUpdateInput): Promise<AccountBase | null> {
     try {
+      const data: Prisma.AccountUpdateInput = {
+        firstName: input.firstName,
+        lastName: input.lastName,
+        email: input.email,
+      };
+      if (input.locale !== undefined) {
+        data.locale = input.locale;
+      }
       return await prisma.account.update({
         where: { id: accountId },
-        data: {
-          firstName: input.firstName,
-          lastName: input.lastName,
-          email: input.email,
-        },
+        data,
         select: {
           id: true,
           firstName: true,
           lastName: true,
           email: true,
           address: true,
+          locale: true,
+          accountRoleLinks: { select: { role: { select: { slug: true } } } },
+        },
+      });
+    } catch (error: unknown) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+        return null;
+      }
+      throw error;
+    }
+  },
+
+  async updateLocale(accountId: string, locale: string): Promise<AccountBase | null> {
+    try {
+      return await prisma.account.update({
+        where: { id: accountId },
+        data: { locale },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          address: true,
+          locale: true,
           accountRoleLinks: { select: { role: { select: { slug: true } } } },
         },
       });

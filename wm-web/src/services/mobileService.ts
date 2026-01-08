@@ -3,6 +3,7 @@ import {
   MobileAccountData,
   MobileBillingData,
   MobileConsumptionData,
+  MobileLocaleUpdateInput,
   MobileProfileUpdateInput,
   MobileReadingContext,
   MobilePaymentInvoice,
@@ -17,12 +18,22 @@ import { AuthorizationService } from "src/services/authorizationService";
 
 type ServiceResult<T> = { success: true; data: T } | { success: false; error: string; details?: Record<string, string[]> };
 
+const DEFAULT_LOCALE = "en";
+const SUPPORTED_LOCALES = new Set(["en", "sr", "sr-Latn", "sr-Cyrl"]);
+
+const normalizeLocale = (value?: string | null) => {
+  if (!value) return DEFAULT_LOCALE;
+  if (value === "sr") return "sr-Latn";
+  return SUPPORTED_LOCALES.has(value) ? value : DEFAULT_LOCALE;
+};
+
 const toMobileAccountData = (record: {
   id: string;
   firstName: string;
   lastName: string;
   email: string;
   address: string;
+  locale?: string | null;
   meter: MobileAccountData["meter"];
 }): MobileAccountData => ({
   id: record.id,
@@ -30,6 +41,7 @@ const toMobileAccountData = (record: {
   lastName: record.lastName,
   email: record.email,
   address: record.address,
+  locale: normalizeLocale(record.locale),
   meter: record.meter ?? null,
 });
 
@@ -49,7 +61,10 @@ export const MobileService = {
     }
 
     try {
-      const updated = await MobileRepository.updateProfile(accountId, input);
+      const updated = await MobileRepository.updateProfile(accountId, {
+        ...input,
+        locale: input.locale ? normalizeLocale(input.locale) : undefined,
+      });
       if (!updated) {
         return { success: false, error: "NOT_FOUND" };
       }
@@ -64,6 +79,25 @@ export const MobileService = {
     if (!refreshed) {
       return { success: false, error: "NOT_FOUND" };
     }
+    return { success: true, data: toMobileAccountData(refreshed) };
+  },
+
+  async updateLocale(accountId: string, input: MobileLocaleUpdateInput): Promise<ServiceResult<MobileAccountData>> {
+    if (!SUPPORTED_LOCALES.has(input.locale)) {
+      return { success: false, error: "VALIDATION_FAILED", details: { locale: ["Invalid locale"] } };
+    }
+    const locale = normalizeLocale(input.locale);
+
+    const updated = await MobileRepository.updateLocale(accountId, locale);
+    if (!updated) {
+      return { success: false, error: "NOT_FOUND" };
+    }
+
+    const refreshed = await MobileRepository.findMobileAccount(accountId);
+    if (!refreshed) {
+      return { success: false, error: "NOT_FOUND" };
+    }
+
     return { success: true, data: toMobileAccountData(refreshed) };
   },
 

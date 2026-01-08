@@ -126,6 +126,7 @@ model Account {
   email              String              @unique
   phone              String?             @unique
   address            String
+  locale             String?
   passwordHash       String
   permissionsVersion Int                 @default(1)
   verificationStatus VerificationStatus   @default(pending)

@@ -29,12 +29,22 @@ const validateEmail = (email: string, errors: Record<string, string[]>) => {
   }
 };
 
+const SUPPORTED_LOCALES = new Set(["en", "sr", "sr-Latn", "sr-Cyrl"]);
+
+const validateLocale = (locale: string | null | undefined, errors: Record<string, string[]>) => {
+  if (!locale) return;
+  if (!SUPPORTED_LOCALES.has(locale)) {
+    pushError(errors, "locale", "Invalid locale");
+  }
+};
+
 export const validateMobileProfileUpdate = (input: MobileProfileUpdateInput): ValidationResult => {
   const errors: Record<string, string[]> = {};
 
   validateName(input.firstName, "firstName", errors);
   validateName(input.lastName, "lastName", errors);
   validateEmail(input.email, errors);
+  validateLocale(input.locale, errors);
 
   return { valid: Object.keys(errors).length === 0, errors };
 };
