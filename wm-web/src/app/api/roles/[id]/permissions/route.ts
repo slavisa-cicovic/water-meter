@@ -23,7 +23,8 @@ const hasValidConditions = (conditions: RolePermissionUpdate['conditions']) => {
 };
 
 export const PATCH = withPermission(PERMISSIONS.ROLES_UPDATE, async (req: NextRequest, ctx: any, guard) => {
-  const roleId = ctx?.params?.id as string | undefined;
+  const params = await ctx?.params;
+  const roleId = params?.id as string | undefined;
   if (!roleId) {
     return NextResponse.json({ error: 'INVALID_ROLE' }, { status: 400 });
   }
