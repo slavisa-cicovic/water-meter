@@ -41,10 +41,6 @@ export default function ReadingsScreen() {
   const [imageSize, setImageSize] = useState<{ width: number; height: number } | null>(null);
   const [imageLayout, setImageLayout] = useState<{ width: number; height: number } | null>(null);
   const [showCandidatePicker, setShowCandidatePicker] = useState(false);
-  const [availableMeters, setAvailableMeters] = useState<
-    NonNullable<MobileReadingContext["meters"]>
-  >([]);
-  const [selectedMeterId, setSelectedMeterId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const viewShotRef = useRef<ViewShot | null>(null);
   const scale = useSharedValue(1);
@@ -67,7 +63,6 @@ export default function ReadingsScreen() {
     }
     setContextError(null);
     setContext(result.data);
-    setAvailableMeters(result.data.meters ?? []);
   };
 
   useEffect(() => {
@@ -86,7 +81,6 @@ export default function ReadingsScreen() {
   useEffect(() => {
     if (previousMeterIdRef.current !== routeMeterId) {
       resetReadingInput();
-      setSelectedMeterId(routeMeterId ?? null);
       previousMeterIdRef.current = routeMeterId;
     }
   }, [routeMeterId]);
@@ -127,12 +121,6 @@ export default function ReadingsScreen() {
     setShowPreview(false);
     lastScale.value = 1;
     scale.value = 1;
-  };
-
-  const handleSelectMeter = (meterId: string) => {
-    setSelectedMeterId(meterId);
-    resetReadingInput();
-    loadContext(meterId).catch(() => null);
   };
 
   const runRecognition = async (uri: string) => {
@@ -381,30 +369,19 @@ export default function ReadingsScreen() {
           </View>
         </View>
       </Modal>
-      {isStaffField && !meter && !routeMeterId ? (
+      {isStaffField && !routeMeterId ? (
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Select meter</Text>
-          {loadingContext ? <Text style={styles.helperText}>Loading meters...</Text> : null}
           {contextError ? <Text style={styles.errorText}>{contextError}</Text> : null}
-          {availableMeters.length === 0 && !loadingContext ? (
-            <Text style={styles.helperText}>No meters available.</Text>
+          {loadingContext ? <Text style={styles.helperText}>Loading meter...</Text> : null}
+          {!loadingContext && !contextError ? (
+            <>
+              <Text style={styles.helperText}>Please select meter first.</Text>
+              <TouchableOpacity style={styles.backButton} onPress={() => router.replace("/home")}>
+                <Text style={styles.backButtonText}>Back to Home</Text>
+              </TouchableOpacity>
+            </>
           ) : null}
-          {availableMeters.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              style={[
-                styles.meterOption,
-                selectedMeterId === item.id ? styles.meterOptionActive : null,
-              ]}
-              onPress={() => handleSelectMeter(item.id)}
-            >
-              <View style={styles.meterOptionHeader}>
-                <Text style={styles.meterOptionSerial}>{item.serialNumber}</Text>
-                {item.shared ? <Text style={styles.meterOptionBadge}>Shared</Text> : null}
-              </View>
-              <Text style={styles.meterOptionAddress}>{item.address ?? "Address not set"}</Text>
-            </TouchableOpacity>
-          ))}
         </View>
       ) : (
         <View style={styles.card}>
@@ -564,6 +541,13 @@ const styles = StyleSheet.create({
   value: { color: "#1f2a44", fontSize: 16, fontWeight: "700", marginTop: 6 },
   helperText: { color: "#6b7aa6", fontSize: 12, marginTop: 6 },
   errorText: { color: "#b23a3a", fontSize: 12, marginTop: 6 },
+  backButton: {
+    alignSelf: "flex-start",
+    marginTop: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
+  backButtonText: { color: "#3a4c7a", fontSize: 12, fontWeight: "600" },
   cameraButton: {
     backgroundColor: "#e9edfb",
     borderRadius: 12,
@@ -717,32 +701,4 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   inputReadOnly: { backgroundColor: "#f3f5fb" },
-  meterOption: {
-    marginTop: 12,
-    backgroundColor: "#f8f9ff",
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#e1e6f3",
-  },
-  meterOptionActive: {
-    borderColor: "#3a4c7a",
-    backgroundColor: "#eef1fb",
-  },
-  meterOptionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  meterOptionSerial: { color: "#1f2a44", fontSize: 14, fontWeight: "700" },
-  meterOptionBadge: {
-    color: "#3a4c7a",
-    fontSize: 11,
-    fontWeight: "600",
-    backgroundColor: "#e9edfb",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 999,
-  },
-  meterOptionAddress: { color: "#6b7aa6", fontSize: 12, marginTop: 6 },
 });
