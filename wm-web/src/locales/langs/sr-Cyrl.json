@@ -22,6 +22,167 @@
     "jobs": "Задаци",
     "settings": "Подешавања"
   },
+  "accounts": {
+    "title": "Налози",
+    "list": {
+      "description": "Потрошачи и особље на чекању. Верификујте или одбијте да бисте омогућили приступ.",
+      "loadError": "Неуспешно учитавање налога.",
+      "backToDashboard": "Назад на dashboard",
+      "empty": "Нема налога."
+    },
+    "table": {
+      "name": "Име",
+      "email": "Емаил",
+      "type": "Тип",
+      "status": "Статус",
+      "created": "Креиран",
+      "actions": "Акције"
+    },
+    "filters": {
+      "all": "Сви",
+      "searchPlaceholder": "Претрага",
+      "typeLabel": "Тип",
+      "statusLabel": "Статус",
+      "found": "Пронађено",
+      "nameLabel": "Име",
+      "clear": "Обриши"
+    },
+    "type": {
+      "consumer": "Потрошач",
+      "staff": "Особље",
+      "staffField": "Особље (терен)",
+      "staffBackoffice": "Особље (back office)"
+    },
+    "status": {
+      "pending": "На чекању",
+      "verified": "Верификован",
+      "rejected": "Одбијен"
+    },
+    "actions": {
+      "verify": "Верификуј",
+      "reject": "Одбиј",
+      "details": "Детаљи",
+      "back": "Назад",
+      "saveChanges": "Сачувај измене",
+      "cancel": "Откажи",
+      "save": "Сачувај"
+    },
+    "detail": {
+      "notFound": "Налог није пронађен: {{id}}",
+      "titleFallback": "Налог {{id}}",
+      "description": {
+        "consumer": "Историја наплате и профил.",
+        "staffField": "Историја очитавања и профил.",
+        "default": "Профил налога."
+      },
+      "breadcrumbs": {
+        "details": "Детаљи"
+      },
+      "editTitle": "Измени налог",
+      "sectionTitle": "Детаљи налога"
+    },
+    "fields": {
+      "firstName": "Име",
+      "lastName": "Презиме",
+      "address": "Адреса",
+      "email": "Емаил",
+      "tariff": "Тарифа",
+      "tariffLoading": "Учитавање тарифа...",
+      "tariffHelper": "Измена тарифе наплате (опционо).",
+      "tariffDefault": "Подразумевана (водомер)",
+      "tariffInactive": "неактивна"
+    },
+    "common": {
+      "chart": "График",
+      "table": "Табела"
+    },
+    "billing": {
+      "title": "Историја наплате",
+      "filters": {
+        "createdFrom": "Креирано од",
+        "createdTo": "Креирано до",
+        "status": "Статус"
+      },
+      "table": {
+        "month": "Месец",
+        "total": "Укупно",
+        "status": "Статус",
+        "reviewFlags": "Ознаке провере"
+      },
+      "status": {
+        "draft": "Нацрт",
+        "confirmed": "Потврђен",
+        "issued": "Издато",
+        "paid": "Плаћено",
+        "void": "Сторнирано"
+      },
+      "chart": {
+        "total": "Укупно",
+        "totalBilled": "Укупно наплаћено"
+      },
+      "loading": "Учитавање рачуна...",
+      "confirm": {
+        "title": "Потврди рачун",
+        "message": "Управо потврђујете овај рачун. Ова акција се не може поништити.",
+        "itemsTitle": "Ставке рачуна",
+        "empty": "Нема ставки рачуна.",
+        "action": "Потврди"
+      }
+    },
+    "readings": {
+      "title": "Историја очитавања",
+      "filters": {
+        "from": "Од",
+        "to": "До",
+        "meter": "Водомер"
+      },
+      "chart": {
+        "consumption": "Потрошња",
+        "emptyHint": "Додајте бар два очитавања да бисте видели тренд потрошње."
+      },
+      "table": {
+        "date": "Датум",
+        "method": "Метод",
+        "value": "Вредност",
+        "consumption": "Потрошња",
+        "edited": "Измењено",
+        "meter": "Водомер",
+        "actions": "Акције",
+        "noReason": "Није наведен разлог"
+      },
+      "actions": {
+        "edit": "Измени очитавање"
+      },
+      "edit": {
+        "title": "Измени очитавање",
+        "valueLabel": "Вредност",
+        "reasonLabel": "Разлог",
+        "allowedRange": "Дозвољени опсег: мин {{min}}, макс {{max}}",
+        "rangeNone": "нема",
+        "error": {
+          "invalidValue": "Унесите валидан број.",
+          "reasonRequired": "Разлог је обавезан.",
+          "noChange": "Вредност или разлог морају бити измењени.",
+          "minValue": "Вредност мора бити >= {{min}}.",
+          "maxValue": "Вредност мора бити <= {{max}}.",
+          "missingEditor": "Недостају подаци о уреднику.",
+          "updateFailed": "Ажурирање очитавања није успело."
+        }
+      },
+      "meterLabel": "Група: {{group}}, {{address}}, {{serial}}",
+      "loading": "Учитавање очитавања...",
+      "empty": "Нема очитавања."
+    },
+    "addressPrompt": {
+      "title": "Ажурирати адресу водомера?",
+      "message": "Адреса је промењена. Желите ли да ажурирате и адресу водомера?",
+      "keep": "Задржи адресу водомера",
+      "update": "Ажурирај адресу водомера"
+    }
+  },
+  "validation": {
+    "required": "Обавезно"
+  },
   "landing": {
     "hero": {
       "overline": "Водомер",

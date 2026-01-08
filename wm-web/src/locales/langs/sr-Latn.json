@@ -22,6 +22,167 @@
     "jobs": "Zadaci",
     "settings": "Podesavanja"
   },
+  "accounts": {
+    "title": "Nalozi",
+    "list": {
+      "description": "Potrosaci i osoblje na cekanju. Verifikujte ili odbijte da biste omogucili pristup.",
+      "loadError": "Neuspesno ucitavanje naloga.",
+      "backToDashboard": "Nazad na dashboard",
+      "empty": "Nema naloga."
+    },
+    "table": {
+      "name": "Ime",
+      "email": "Email",
+      "type": "Tip",
+      "status": "Status",
+      "created": "Kreiran",
+      "actions": "Akcije"
+    },
+    "filters": {
+      "all": "Svi",
+      "searchPlaceholder": "Pretraga",
+      "typeLabel": "Tip",
+      "statusLabel": "Status",
+      "found": "Pronadjeno",
+      "nameLabel": "Ime",
+      "clear": "Obrisi"
+    },
+    "type": {
+      "consumer": "Potrosac",
+      "staff": "Osoblje",
+      "staffField": "Osoblje (teren)",
+      "staffBackoffice": "Osoblje (back office)"
+    },
+    "status": {
+      "pending": "Na cekanju",
+      "verified": "Verifikovan",
+      "rejected": "Odbijen"
+    },
+    "actions": {
+      "verify": "Verifikuj",
+      "reject": "Odbij",
+      "details": "Detalji",
+      "back": "Nazad",
+      "saveChanges": "Sacuvaj izmene",
+      "cancel": "Otkazi",
+      "save": "Sacuvaj"
+    },
+    "detail": {
+      "notFound": "Nalog nije pronadjen: {{id}}",
+      "titleFallback": "Nalog {{id}}",
+      "description": {
+        "consumer": "Istorija naplate i profil.",
+        "staffField": "Istorija ocitavanja i profil.",
+        "default": "Profil naloga."
+      },
+      "breadcrumbs": {
+        "details": "Detalji"
+      },
+      "editTitle": "Izmeni nalog",
+      "sectionTitle": "Detalji naloga"
+    },
+    "fields": {
+      "firstName": "Ime",
+      "lastName": "Prezime",
+      "address": "Adresa",
+      "email": "Email",
+      "tariff": "Tarifa",
+      "tariffLoading": "Ucitavanje tarifa...",
+      "tariffHelper": "Izmena tarife naplate (opciono).",
+      "tariffDefault": "Podrazumevana (vodomer)",
+      "tariffInactive": "neaktivna"
+    },
+    "common": {
+      "chart": "Grafik",
+      "table": "Tabela"
+    },
+    "billing": {
+      "title": "Istorija naplate",
+      "filters": {
+        "createdFrom": "Kreirano od",
+        "createdTo": "Kreirano do",
+        "status": "Status"
+      },
+      "table": {
+        "month": "Mesec",
+        "total": "Ukupno",
+        "status": "Status",
+        "reviewFlags": "Oznake provere"
+      },
+      "status": {
+        "draft": "Nacrt",
+        "confirmed": "Potvrdjen",
+        "issued": "Izdato",
+        "paid": "Placeno",
+        "void": "Stornirano"
+      },
+      "chart": {
+        "total": "Ukupno",
+        "totalBilled": "Ukupno naplaceno"
+      },
+      "loading": "Ucitavanje racuna...",
+      "confirm": {
+        "title": "Potvrdi racun",
+        "message": "Upravo potvrdujete ovaj racun. Ova akcija se ne moze ponistiti.",
+        "itemsTitle": "Stavke racuna",
+        "empty": "Nema stavki racuna.",
+        "action": "Potvrdi"
+      }
+    },
+    "readings": {
+      "title": "Istorija ocitavanja",
+      "filters": {
+        "from": "Od",
+        "to": "Do",
+        "meter": "Vodomer"
+      },
+      "chart": {
+        "consumption": "Potrosnja",
+        "emptyHint": "Dodajte bar dva ocitavanja da biste videli trend potrosnje."
+      },
+      "table": {
+        "date": "Datum",
+        "method": "Metod",
+        "value": "Vrednost",
+        "consumption": "Potrosnja",
+        "edited": "Izmenjeno",
+        "meter": "Vodomer",
+        "actions": "Akcije",
+        "noReason": "Nije naveden razlog"
+      },
+      "actions": {
+        "edit": "Izmeni ocitavanje"
+      },
+      "edit": {
+        "title": "Izmeni ocitavanje",
+        "valueLabel": "Vrednost",
+        "reasonLabel": "Razlog",
+        "allowedRange": "Dozvoljeni opseg: min {{min}}, max {{max}}",
+        "rangeNone": "nema",
+        "error": {
+          "invalidValue": "Unesite validan broj.",
+          "reasonRequired": "Razlog je obavezan.",
+          "noChange": "Vrednost ili razlog moraju biti izmenjeni.",
+          "minValue": "Vrednost mora biti >= {{min}}.",
+          "maxValue": "Vrednost mora biti <= {{max}}.",
+          "missingEditor": "Nedostaju podaci o uredniku.",
+          "updateFailed": "Azuriranje ocitavanja nije uspelo."
+        }
+      },
+      "meterLabel": "Grupa: {{group}}, {{address}}, {{serial}}",
+      "loading": "Ucitavanje ocitavanja...",
+      "empty": "Nema ocitavanja."
+    },
+    "addressPrompt": {
+      "title": "Azurirati adresu vodomera?",
+      "message": "Adresa je promenjena. Zelite li da azurirate i adresu vodomera?",
+      "keep": "Zadrzi adresu vodomera",
+      "update": "Azuriraj adresu vodomera"
+    }
+  },
+  "validation": {
+    "required": "Obavezno"
+  },
   "landing": {
     "hero": {
       "overline": "Vodomer",

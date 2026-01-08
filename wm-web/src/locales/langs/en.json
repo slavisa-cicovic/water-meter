@@ -22,6 +22,167 @@
     "jobs": "Jobs",
     "settings": "Settings"
   },
+  "accounts": {
+    "title": "Accounts",
+    "list": {
+      "description": "Pending consumers and staff. Verify or reject to allow access.",
+      "loadError": "Failed to load accounts.",
+      "backToDashboard": "Back to dashboard",
+      "empty": "No accounts found."
+    },
+    "table": {
+      "name": "Name",
+      "email": "Email",
+      "type": "Type",
+      "status": "Status",
+      "created": "Created",
+      "actions": "Actions"
+    },
+    "filters": {
+      "all": "All",
+      "searchPlaceholder": "Search",
+      "typeLabel": "Type",
+      "statusLabel": "Status",
+      "found": "Found",
+      "nameLabel": "Name",
+      "clear": "Clear"
+    },
+    "type": {
+      "consumer": "Consumer",
+      "staff": "Staff",
+      "staffField": "Staff (field)",
+      "staffBackoffice": "Staff (back office)"
+    },
+    "status": {
+      "pending": "Pending",
+      "verified": "Verified",
+      "rejected": "Rejected"
+    },
+    "actions": {
+      "verify": "Verify",
+      "reject": "Reject",
+      "details": "Details",
+      "back": "Back",
+      "saveChanges": "Save changes",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "detail": {
+      "notFound": "Account not found: {{id}}",
+      "titleFallback": "Account {{id}}",
+      "description": {
+        "consumer": "Billing history and profile.",
+        "staffField": "Readings history and profile.",
+        "default": "Account profile."
+      },
+      "breadcrumbs": {
+        "details": "Details"
+      },
+      "editTitle": "Edit account",
+      "sectionTitle": "Account details"
+    },
+    "fields": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "address": "Address",
+      "email": "Email",
+      "tariff": "Tariff",
+      "tariffLoading": "Loading tariffs...",
+      "tariffHelper": "Override billing tariff (optional).",
+      "tariffDefault": "Default (meter)",
+      "tariffInactive": "inactive"
+    },
+    "common": {
+      "chart": "Chart",
+      "table": "Table"
+    },
+    "billing": {
+      "title": "Billing history",
+      "filters": {
+        "createdFrom": "Created from",
+        "createdTo": "Created to",
+        "status": "Status"
+      },
+      "table": {
+        "month": "Month",
+        "total": "Total",
+        "status": "Status",
+        "reviewFlags": "Review flags"
+      },
+      "status": {
+        "draft": "Draft",
+        "confirmed": "Confirmed",
+        "issued": "Issued",
+        "paid": "Paid",
+        "void": "Void"
+      },
+      "chart": {
+        "total": "Total",
+        "totalBilled": "Total billed"
+      },
+      "loading": "Loading invoices...",
+      "confirm": {
+        "title": "Confirm invoice",
+        "message": "You are about to confirm this invoice. This action cannot be undone.",
+        "itemsTitle": "Invoice items",
+        "empty": "No invoice items available.",
+        "action": "Confirm"
+      }
+    },
+    "readings": {
+      "title": "Readings history",
+      "filters": {
+        "from": "From",
+        "to": "To",
+        "meter": "Meter"
+      },
+      "chart": {
+        "consumption": "Consumption",
+        "emptyHint": "Add at least two readings to see consumption trends."
+      },
+      "table": {
+        "date": "Date",
+        "method": "Method",
+        "value": "Value",
+        "consumption": "Consumption",
+        "edited": "Edited",
+        "meter": "Meter",
+        "actions": "Actions",
+        "noReason": "No reason provided"
+      },
+      "actions": {
+        "edit": "Edit reading"
+      },
+      "edit": {
+        "title": "Edit reading",
+        "valueLabel": "Value",
+        "reasonLabel": "Reason",
+        "allowedRange": "Allowed range: min {{min}}, max {{max}}",
+        "rangeNone": "none",
+        "error": {
+          "invalidValue": "Enter a valid number.",
+          "reasonRequired": "Reason is required.",
+          "noChange": "Value or reason must change.",
+          "minValue": "Value must be >= {{min}}.",
+          "maxValue": "Value must be <= {{max}}.",
+          "missingEditor": "Missing editor information.",
+          "updateFailed": "Failed to update reading."
+        }
+      },
+      "meterLabel": "Group: {{group}}, {{address}}, {{serial}}",
+      "loading": "Loading readings...",
+      "empty": "No readings found."
+    },
+    "addressPrompt": {
+      "title": "Update meter address?",
+      "message": "Address changed. Do you want to update the meter address as well?",
+      "keep": "Keep meter address",
+      "update": "Update meter address"
+    }
+  },
+  "validation": {
+    "required": "Required"
+  },
   "landing": {
     "hero": {
       "overline": "Water Meter",

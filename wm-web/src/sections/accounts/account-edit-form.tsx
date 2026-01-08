@@ -64,14 +64,6 @@ type Props = {
   currentAccount?: AccountRow;
 };
 
-const BILLING_STATUS_OPTIONS: Array<{ label: string; value: InvoiceStatus }> = [
-  { label: 'Draft', value: 'draft' },
-  { label: 'Confirmed', value: 'confirmed' },
-  { label: 'Issued', value: 'issued' },
-  { label: 'Paid', value: 'paid' },
-  { label: 'Void', value: 'void' },
-];
-
 export default function AccountEditForm({ currentAccount }: Props) {
   const { t } = useLocales();
   const router = useRouter();
@@ -81,9 +73,9 @@ export default function AccountEditForm({ currentAccount }: Props) {
   const { settings: appSettings } = useGetSettings();
 
   const AccountSchema = Yup.object().shape({
-    firstName: Yup.string().required('Required'),
-    lastName: Yup.string().required('Required'),
-    address: Yup.string().required('Required'),
+    firstName: Yup.string().required(t('validation.required')),
+    lastName: Yup.string().required(t('validation.required')),
+    address: Yup.string().required(t('validation.required')),
     tariffId: Yup.string().nullable(),
   });
 
@@ -172,6 +164,17 @@ export default function AccountEditForm({ currentAccount }: Props) {
   const isConsumer = currentAccount?.type === 'consumer';
   const isStaffField = currentAccount?.type === 'staff_field';
 
+  const billingStatusOptions = useMemo<Array<{ label: string; value: InvoiceStatus }>>(
+    () => [
+      { label: t('accounts.billing.status.draft'), value: 'draft' },
+      { label: t('accounts.billing.status.confirmed'), value: 'confirmed' },
+      { label: t('accounts.billing.status.issued'), value: 'issued' },
+      { label: t('accounts.billing.status.paid'), value: 'paid' },
+      { label: t('accounts.billing.status.void'), value: 'void' },
+    ],
+    [t]
+  );
+
   const currentYear = new Date().getFullYear();
   const [billingFrom, setBillingFrom] = useState(`${currentYear}-01-01`);
   const [billingTo, setBillingTo] = useState(`${currentYear}-12-31`);
@@ -252,7 +255,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
     const groupCode = meter.groupCode || '-';
     const address = meter.address || '-';
     const serialNumber = meter.serialNumber || '-';
-    return `Group: ${groupCode}, ${address}, ${serialNumber}`;
+    return t('accounts.readings.meterLabel', { group: groupCode, address, serial: serialNumber });
   };
 
   const readingsChartData = useMemo(() => {
@@ -293,25 +296,26 @@ export default function AccountEditForm({ currentAccount }: Props) {
         tooltip: {
           y: {
             formatter: (value: number) => `${value}`,
-            title: { formatter: () => 'Consumption' },
+            title: { formatter: () => t('accounts.readings.chart.consumption') },
           },
         },
       }),
-      [readingsChartData.categories]
+      [readingsChartData.categories, t]
     )
   );
 
   const chartSeries = useMemo(
-    () => [{ name: 'Consumption', data: readingsChartData.data }],
-    [readingsChartData.data]
+    () => [{ name: t('accounts.readings.chart.consumption'), data: readingsChartData.data }],
+    [readingsChartData.data, t]
   );
 
   const hasChartData = readingsChartData.data.length > 0;
   const readingsFilteredEmpty = !readingsLoading && filteredReadings.length === 0;
 
   const renderReadingsContent = (content: ReactNode) => {
-    if (readingsLoading) return <Typography variant="body2">Loading readings...</Typography>;
-    if (readingsEmpty || readingsFilteredEmpty) return <Typography variant="body2">No readings found.</Typography>;
+    if (readingsLoading) return <Typography variant="body2">{t('accounts.readings.loading')}</Typography>;
+    if (readingsEmpty || readingsFilteredEmpty)
+      return <Typography variant="body2">{t('accounts.readings.empty')}</Typography>;
     return content;
   };
 
@@ -372,21 +376,21 @@ export default function AccountEditForm({ currentAccount }: Props) {
         tooltip: {
           y: {
             formatter: (value: number) => formatCurrencyValue(value, appSettings?.currency),
-            title: { formatter: () => 'Total' },
+            title: { formatter: () => t('accounts.billing.chart.total') },
           },
         },
       }),
-      [appSettings?.currency, billingChartData.categories]
+      [appSettings?.currency, billingChartData.categories, t]
     )
   );
 
   const billingChartSeries = useMemo(
-    () => [{ name: 'Total billed', data: billingChartData.data }],
-    [billingChartData.data]
+    () => [{ name: t('accounts.billing.chart.totalBilled'), data: billingChartData.data }],
+    [billingChartData.data, t]
   );
 
   const renderBillingContent = (content: ReactNode) => {
-    if (invoicesLoading) return <Typography variant="body2">Loading invoices...</Typography>;
+    if (invoicesLoading) return <Typography variant="body2">{t('accounts.billing.loading')}</Typography>;
     return content;
   };
 
@@ -479,32 +483,32 @@ export default function AccountEditForm({ currentAccount }: Props) {
     const latestEdit = editingReading.edits && editingReading.edits.length ? editingReading.edits[0] : undefined;
 
     if (!Number.isFinite(numericValue)) {
-      setEditError('Enter a valid number.');
+      setEditError(t('accounts.readings.edit.error.invalidValue'));
       return;
     }
 
     if (!editReason.trim()) {
-      setEditReasonError('Reason is required.');
+      setEditReasonError(t('accounts.readings.edit.error.reasonRequired'));
       return;
     }
 
     if (numericValue === editingReading.value && editReason.trim() === (latestEdit?.reason || '').trim()) {
-      setEditError('Value or reason must change.');
+      setEditError(t('accounts.readings.edit.error.noChange'));
       return;
     }
 
     if (editBounds?.min !== undefined && numericValue < editBounds.min) {
-      setEditError(`Value must be >= ${editBounds.min}.`);
+      setEditError(t('accounts.readings.edit.error.minValue', { min: editBounds.min }));
       return;
     }
 
     if (editBounds?.max !== undefined && numericValue > editBounds.max) {
-      setEditError(`Value must be <= ${editBounds.max}.`);
+      setEditError(t('accounts.readings.edit.error.maxValue', { max: editBounds.max }));
       return;
     }
 
     if (!viewerId || !viewerRole) {
-      setEditError('Missing editor information.');
+      setEditError(t('accounts.readings.edit.error.missingEditor'));
       return;
     }
 
@@ -520,7 +524,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
       await mutateReadings();
       handleCloseEditDialog();
     } catch (error) {
-      setEditError('Failed to update reading.');
+      setEditError(t('accounts.readings.edit.error.updateFailed'));
     } finally {
       setEditSaving(false);
     }
@@ -529,35 +533,39 @@ export default function AccountEditForm({ currentAccount }: Props) {
   const renderDetails = (
     <Grid size={{ xs: 12, md: 5 }}>
       <Card>
-        {!mdUp && <CardHeader title="Edit account" />}
+        {!mdUp && <CardHeader title={t('accounts.detail.editTitle')} />}
         <CardContent>
           <Stack spacing={2}>
-            <Typography variant="subtitle2">Account details</Typography>
-            <RHFTextField name="firstName" label="First name" disabled={!canEdit} />
-            <RHFTextField name="lastName" label="Last name" disabled={!canEdit} />
-            <RHFTextField name="address" label="Address" disabled={!canEdit} />
-            <RHFTextField name="email" label="Email" disabled />
+            <Typography variant="subtitle2">{t('accounts.detail.sectionTitle')}</Typography>
+            <RHFTextField name="firstName" label={t('accounts.fields.firstName')} disabled={!canEdit} />
+            <RHFTextField name="lastName" label={t('accounts.fields.lastName')} disabled={!canEdit} />
+            <RHFTextField name="address" label={t('accounts.fields.address')} disabled={!canEdit} />
+            <RHFTextField name="email" label={t('accounts.fields.email')} disabled />
             {isConsumer && (
               <RHFTextField
                 name="tariffId"
-                label="Tariff"
+                label={t('accounts.fields.tariff')}
                 select
                 disabled={!canEdit || tariffsLoading}
-                helperText={tariffsLoading ? 'Loading tariffs...' : 'Override billing tariff (optional).'}
+                helperText={
+                  tariffsLoading
+                    ? t('accounts.fields.tariffLoading')
+                    : t('accounts.fields.tariffHelper')
+                }
               >
-                <MenuItem value="">Default (meter)</MenuItem>
+                <MenuItem value="">{t('accounts.fields.tariffDefault')}</MenuItem>
                 {tariffs.map((tariff) => (
                   <MenuItem key={tariff.id} value={tariff.id}>
                     {tariff.name}
                     {tariff.groupCode ? ` (${tariff.groupCode})` : ''}
-                    {tariff.status === 'inactive' ? ' - inactive' : ''}
+                    {tariff.status === 'inactive' ? ` - ${t('accounts.fields.tariffInactive')}` : ''}
                   </MenuItem>
                 ))}
               </RHFTextField>
             )}
             <Stack direction="row" justifyContent="flex-end">
               <LoadingButton type="submit" variant="contained" size="large" loading={isSubmitting} disabled={!canEdit}>
-                save_changes
+                {t('accounts.actions.saveChanges')}
               </LoadingButton>
             </Stack>
           </Stack>
@@ -569,11 +577,11 @@ export default function AccountEditForm({ currentAccount }: Props) {
   const renderBillingHistory = isConsumer && (
     <Grid size={{ xs: 12, md: 8 }}>
       <Card>
-        <CardHeader title="Billing history" />
+        <CardHeader title={t('accounts.billing.title')} />
         <CardContent>
           <Stack direction="row" spacing={2} mb={2}>
             <TextField
-              label="Created from"
+              label={t('accounts.billing.filters.createdFrom')}
               type="date"
               value={billingFrom}
               onChange={(event) => setBillingFrom(event.target.value)}
@@ -581,7 +589,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
               sx={{ minWidth: 160 }}
             />
             <TextField
-              label="Created to"
+              label={t('accounts.billing.filters.createdTo')}
               type="date"
               value={billingTo}
               onChange={(event) => setBillingTo(event.target.value)}
@@ -590,13 +598,13 @@ export default function AccountEditForm({ currentAccount }: Props) {
             />
             <TextField
               select
-              label="Status"
+              label={t('accounts.billing.filters.status')}
               value={billingStatus}
               onChange={(event) => setBillingStatus(event.target.value as '' | InvoiceStatus)}
               sx={{ minWidth: 200 }}
             >
-              <MenuItem value="">All</MenuItem>
-              {BILLING_STATUS_OPTIONS.map((option) => (
+              <MenuItem value="">{t('accounts.filters.all')}</MenuItem>
+              {billingStatusOptions.map((option) => (
                 <MenuItem key={option.value} value={option.value}>
                   {option.label}
                 </MenuItem>
@@ -605,8 +613,8 @@ export default function AccountEditForm({ currentAccount }: Props) {
           </Stack>
 
           <Tabs value={billingTab} onChange={(_, value) => setBillingTab(value)} sx={{ mb: 2 }}>
-            <Tab value="chart" label="Chart" />
-            <Tab value="table" label="Table" />
+            <Tab value="chart" label={t('accounts.common.chart')} />
+            <Tab value="table" label={t('accounts.common.table')} />
           </Tabs>
 
           {billingTab === 'chart' &&
@@ -620,11 +628,11 @@ export default function AccountEditForm({ currentAccount }: Props) {
                 <Table size="small">
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ width: 180 }}>Month</TableCell>
-                      <TableCell sx={{ width: 120 }}>Total</TableCell>
-                      <TableCell sx={{ width: 120 }}>Status</TableCell>
+                      <TableCell sx={{ width: 180 }}>{t('accounts.billing.table.month')}</TableCell>
+                      <TableCell sx={{ width: 120 }}>{t('accounts.billing.table.total')}</TableCell>
+                      <TableCell sx={{ width: 120 }}>{t('accounts.billing.table.status')}</TableCell>
                       <TableCell sx={{ width: 80 }} align="right">
-                        Review flags
+                        {t('accounts.billing.table.reviewFlags')}
                       </TableCell>
                     </TableRow>
                   </TableHead>
@@ -649,7 +657,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
                             {status ? (
                               <Chip
                                 size="small"
-                                label={status}
+                                label={t(`accounts.billing.status.${status}`)}
                                 color={getInvoiceStatusColor(status)}
                                 clickable={canConfirm}
                                 onClick={canConfirm && invoice ? () => handleOpenConfirmDialog(invoice) : undefined}
@@ -676,7 +684,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
                                     size="small"
                                     color="warning"
                                     onClick={canEdit && invoice ? () => handleOpenReviewDialog(invoice) : undefined}
-                                    aria-label="Review flags"
+                                    aria-label={t('accounts.billing.table.reviewFlags')}
                                   >
                                     <Iconify icon="eva:alert-circle-fill" width={16} />
                                   </IconButton>
@@ -699,11 +707,11 @@ export default function AccountEditForm({ currentAccount }: Props) {
   const renderReadingsHistory = isStaffField && (
     <Grid size={{ xs: 12, md: 8 }}>
       <Card>
-        <CardHeader title="Readings history" />
+        <CardHeader title={t('accounts.readings.title')} />
         <CardContent>
           <Stack direction="row" spacing={2} mb={2}>
             <TextField
-              label="From"
+              label={t('accounts.readings.filters.from')}
               type="date"
               value={readingFrom}
               onChange={(event) => setReadingFrom(event.target.value)}
@@ -711,7 +719,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
               sx={{ minWidth: 160 }}
             />
             <TextField
-              label="To"
+              label={t('accounts.readings.filters.to')}
               type="date"
               value={readingTo}
               onChange={(event) => setReadingTo(event.target.value)}
@@ -720,7 +728,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
             />
             <TextField
               select
-              label="Meter"
+              label={t('accounts.readings.filters.meter')}
               value={selectedMeterId}
               onChange={(event) => setSelectedMeterId(event.target.value)}
               sx={{ minWidth: 220 }}
@@ -735,8 +743,8 @@ export default function AccountEditForm({ currentAccount }: Props) {
           </Stack>
 
           <Tabs value={readingsTab} onChange={(_, value) => setReadingsTab(value)} sx={{ mb: 2 }}>
-            <Tab value="chart" label="Chart" />
-            <Tab value="table" label="Table" />
+            <Tab value="chart" label={t('accounts.common.chart')} />
+            <Tab value="table" label={t('accounts.common.table')} />
           </Tabs>
 
           {readingsTab === 'chart' &&
@@ -744,7 +752,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
               hasChartData ? (
                 <ChartWrapper type="bar" series={chartSeries} options={chartOptions} height={360} />
               ) : (
-                <Typography variant="body2">Add at least two readings to see consumption trends.</Typography>
+                <Typography variant="body2">{t('accounts.readings.chart.emptyHint')}</Typography>
               )
             )}
 
@@ -754,13 +762,13 @@ export default function AccountEditForm({ currentAccount }: Props) {
                 <Table size="small">
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ width: 140 }}>Date</TableCell>
-                      <TableCell sx={{ width: 140 }}>Method</TableCell>
-                      <TableCell sx={{ width: 120 }}>Value</TableCell>
-                      <TableCell sx={{ width: 140 }}>Consumption</TableCell>
-                      <TableCell sx={{ width: 200 }}>Edited</TableCell>
-                      <TableCell>Meter</TableCell>
-                      <TableCell sx={{ width: 80 }}>Actions</TableCell>
+                      <TableCell sx={{ width: 140 }}>{t('accounts.readings.table.date')}</TableCell>
+                      <TableCell sx={{ width: 140 }}>{t('accounts.readings.table.method')}</TableCell>
+                      <TableCell sx={{ width: 120 }}>{t('accounts.readings.table.value')}</TableCell>
+                      <TableCell sx={{ width: 140 }}>{t('accounts.readings.table.consumption')}</TableCell>
+                      <TableCell sx={{ width: 200 }}>{t('accounts.readings.table.edited')}</TableCell>
+                      <TableCell>{t('accounts.readings.table.meter')}</TableCell>
+                      <TableCell sx={{ width: 80 }}>{t('accounts.readings.table.actions')}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -782,7 +790,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
                           </TableCell>
                           <TableCell sx={{ width: 200 }}>
                             {latestEdit ? (
-                              <Tooltip title={latestEdit.reason || 'No reason provided'}>
+                              <Tooltip title={latestEdit.reason || t('accounts.readings.table.noReason')}>
                                 <span>{editorName || '-'}</span>
                               </Tooltip>
                             ) : (
@@ -795,7 +803,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
                               size="small"
                               disabled={!canEditReadings}
                               onClick={() => handleOpenEditDialog(reading, index)}
-                              aria-label="Edit reading"
+                              aria-label={t('accounts.readings.actions.edit')}
                             >
                               <EditIcon fontSize="small" />
                             </IconButton>
@@ -821,11 +829,11 @@ export default function AccountEditForm({ currentAccount }: Props) {
       </Grid>
 
       <Dialog open={editDialogOpen} onClose={handleCloseEditDialog} fullWidth maxWidth="sm">
-        <DialogTitle>Edit reading</DialogTitle>
+        <DialogTitle>{t('accounts.readings.edit.title')}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} mt={1}>
             <TextField
-              label="Value"
+              label={t('accounts.readings.edit.valueLabel')}
               type="number"
               value={editValue}
               onChange={(event) => {
@@ -837,20 +845,23 @@ export default function AccountEditForm({ currentAccount }: Props) {
               helperText={
                 editError ||
                 (editBounds
-                  ? `Allowed range: min ${editBounds.min ?? 'none'}, max ${editBounds.max ?? 'none'}`
+                  ? t('accounts.readings.edit.allowedRange', {
+                      min: editBounds.min ?? t('accounts.readings.edit.rangeNone'),
+                      max: editBounds.max ?? t('accounts.readings.edit.rangeNone'),
+                    })
                   : undefined)
               }
               slotProps={{ inputLabel: { shrink: true } }}
             />
             <TextField
-              label="Reason"
+              label={t('accounts.readings.edit.reasonLabel')}
               value={editReason}
               onChange={(event) => {
                 setEditReason(event.target.value);
                 if (editReasonError) setEditReasonError('');
               }}
               error={Boolean(editReasonError)}
-              helperText={editReasonError || 'Required'}
+              helperText={editReasonError || t('validation.required')}
               multiline
               minRows={2}
             />
@@ -858,10 +869,10 @@ export default function AccountEditForm({ currentAccount }: Props) {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseEditDialog} disabled={editSaving}>
-            Cancel
+            {t('accounts.actions.cancel')}
           </Button>
           <Button onClick={handleSaveEdit} variant="contained" disabled={editSaving}>
-            Save
+            {t('accounts.actions.save')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -877,15 +888,15 @@ export default function AccountEditForm({ currentAccount }: Props) {
       <ConfirmDialog
         open={confirmDialogOpen}
         onClose={handleCloseConfirmDialog}
-        title="Confirm invoice"
+        title={t('accounts.billing.confirm.title')}
         content={
           <Stack spacing={1.5}>
             <Typography variant="body2">
-              You are about to confirm this invoice. This action cannot be undone.
+              {t('accounts.billing.confirm.message')}
             </Typography>
             {confirmInvoice?.lines && confirmInvoice.lines.length > 0 ? (
               <Stack spacing={1}>
-                <Typography variant="subtitle2">Invoice items</Typography>
+                <Typography variant="subtitle2">{t('accounts.billing.confirm.itemsTitle')}</Typography>
                 <Stack spacing={0.5}>
                   {confirmInvoice.lines.map((line) => (
                     <Stack
@@ -907,27 +918,29 @@ export default function AccountEditForm({ currentAccount }: Props) {
               </Stack>
             ) : (
               <Typography variant="body2" color="text.secondary">
-                No invoice items available.
+                {t('accounts.billing.confirm.empty')}
               </Typography>
             )}
           </Stack>
         }
         action={
           <Button variant="contained" color="primary" onClick={handleConfirmInvoice}>
-            Confirm
+            {t('accounts.billing.confirm.action')}
           </Button>
         }
       />
 
       <Dialog open={addressPromptOpen} onClose={() => setAddressPromptOpen(false)}>
-        <DialogTitle>Update meter address?</DialogTitle>
+        <DialogTitle>{t('accounts.addressPrompt.title')}</DialogTitle>
         <DialogContent>
-          <Typography variant="body2">Address changed. Do you want to update the meter address as well?</Typography>
+          <Typography variant="body2">{t('accounts.addressPrompt.message')}</Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => handleAddressDecision(false)}>Keep meter address</Button>
+          <Button onClick={() => handleAddressDecision(false)}>
+            {t('accounts.addressPrompt.keep')}
+          </Button>
           <Button onClick={() => handleAddressDecision(true)} variant="contained">
-            Update meter address
+            {t('accounts.addressPrompt.update')}
           </Button>
         </DialogActions>
       </Dialog>

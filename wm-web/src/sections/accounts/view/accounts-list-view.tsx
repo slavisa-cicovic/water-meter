@@ -29,6 +29,7 @@ import { isEqual } from 'lodash';
 import AccountTableToolbar from '../account-table-toolbar';
 import AccountTableFiltersResult from '../account-table-filters-result';
 import AccountTableRow from '../account-table-row';
+import { useLocales } from 'src/locales';
 
 
 
@@ -38,18 +39,8 @@ const defaultFilters: IAccountTableFilters = {
   status: '',
 };
 
-const TABLE_HEAD = [
-  { id: 'avatar', label: '', width: 72, disableSort: true },
-  { id: 'name', label: 'Name', width: 320 },
-  { id: 'email', label: 'Email', minWidth: 620 },
-  { id: 'type', label: 'Type', width: 120 },
-  { id: 'verificationStatus', label: 'Status', width: 120 },
-  { id: 'createdAt', label: 'Created', width: 120 },
-  { id: '', label: 'Actions', align: 'right', width: 140, disableSort: true },
-];
-
-
 export default function AccountsListView() {
+  const { t } = useLocales();
 
   const settings = useSettingsContext();
   const [filters, setFilters] = useState(defaultFilters);
@@ -94,14 +85,24 @@ export default function AccountsListView() {
     [mutate]
   );
 
+  const TABLE_HEAD = [
+    { id: 'avatar', label: '', width: 72, disableSort: true },
+    { id: 'name', label: t('accounts.table.name'), width: 320 },
+    { id: 'email', label: t('accounts.table.email'), minWidth: 620 },
+    { id: 'type', label: t('accounts.table.type'), width: 120 },
+    { id: 'verificationStatus', label: t('accounts.table.status'), width: 120 },
+    { id: 'createdAt', label: t('accounts.table.created'), width: 120 },
+    { id: '', label: t('accounts.table.actions'), align: 'right', width: 140, disableSort: true },
+  ];
+
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
       <CustomBreadcrumbs
-        heading="Accounts"
-        description="Pending consumers and staff. Verify or reject to allow access."
+        heading={t('accounts.title')}
+        description={t('accounts.list.description')}
         links={[
-          { name: 'App', href: paths.dashboard.root },
-          { name: 'Accounts', href: paths.dashboard.accounts.root },
+          { name: t('sidebar.app'), href: paths.dashboard.root },
+          { name: t('accounts.title'), href: paths.dashboard.accounts.root },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}
       />
@@ -128,7 +129,7 @@ export default function AccountsListView() {
           {accountsError && (
             <EmptyContent
               filled
-              title="Failed to load accounts."
+              title={t('accounts.list.loadError')}
               action={
                 <Button
                   component={RouterLink}
@@ -136,14 +137,16 @@ export default function AccountsListView() {
                   startIcon={<Iconify icon="eva:arrow-ios-back-fill" width={16} />}
                   sx={{ mt: 3 }}
                 >
-                  Back to dashboard
+                  {t('accounts.list.backToDashboard')}
                 </Button>
               }
               sx={{ py: 6 }}
             />
           )}
 
-          {!accountsLoading && accountsEmpty && <Alert severity="info">No accounts found.</Alert>}
+          {!accountsLoading && accountsEmpty && (
+            <Alert severity="info">{t('accounts.list.empty')}</Alert>
+          )}
 
           {!accountsLoading && !accountsError && accounts && accounts.length > 0 && (
             <TableContainer>

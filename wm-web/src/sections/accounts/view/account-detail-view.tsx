@@ -41,7 +41,7 @@ export default function AccountEditView({id}: Props) {
   const renderError = (
     <EmptyContent
       filled
-      title={`Error, not found ${id}`}
+      title={t('accounts.detail.notFound', { id })}
       action={
         <Button
           component={RouterLink}
@@ -49,7 +49,7 @@ export default function AccountEditView({id}: Props) {
           startIcon={<Iconify icon="eva:arrow-ios-back-fill" width={16}/>}
           sx={{mt: 3}}
         >
-          Back
+          {t('accounts.actions.back')}
         </Button>
       }
       sx={{py: 10}}
@@ -58,13 +58,13 @@ export default function AccountEditView({id}: Props) {
 
   const accountName = currentAccount
     ? `${currentAccount.data.firstName} ${currentAccount.data.lastName}`
-    : `Account ${id}`;
+    : t('accounts.detail.titleFallback', { id });
   const description =
     currentAccount?.type === 'consumer'
-      ? 'Billing history and profile.'
+      ? t('accounts.detail.description.consumer')
       : currentAccount?.type === 'staff_field'
-      ? 'Readings history and profile.'
-      : 'Account profile.';
+      ? t('accounts.detail.description.staffField')
+      : t('accounts.detail.description.default');
 
   const renderAccount = currentAccount && (
       <AccountEditForm currentAccount={currentAccount}/>
@@ -77,9 +77,9 @@ export default function AccountEditView({id}: Props) {
             heading={accountName}
             description={description}
             links={[
-              { name: 'App', href: paths.dashboard.root },
-              { name: 'Accounts', href: paths.dashboard.accounts.root },
-              { name: 'Details' },
+              { name: t('sidebar.app'), href: paths.dashboard.root },
+              { name: t('accounts.title'), href: paths.dashboard.accounts.root },
+              { name: t('accounts.detail.breadcrumbs.details') },
             ]}
             sx={{ mb: { xs: 3, md: 5 } }}
           />

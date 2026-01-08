@@ -8,6 +8,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import Iconify from 'src/components/iconify';
 import { useGetRoles } from 'src/api/roles';
 import { useAuthContext } from 'src/auth/hooks';
+import { useLocales } from 'src/locales';
 // types
 import { IAccountTableFilters, IAccountTableFilterValue } from 'src/types/accounts';
 
@@ -25,12 +26,23 @@ export default function AccountTableToolbar({
 }: Props) {
     const { user } = useAuthContext();
     const { roles } = useGetRoles();
+    const { t } = useLocales();
     const allowedAccountRoles = Array.isArray(user?.allowedAccountRoles)
         ? (user?.allowedAccountRoles as string[])
         : null;
 
+    const typeLabels = useMemo(
+        () => ({
+            consumer: t('accounts.type.consumer'),
+            staff: t('accounts.type.staff'),
+            staff_field: t('accounts.type.staffField'),
+            staff_backoffice: t('accounts.type.staffBackoffice'),
+        }),
+        [t]
+    );
+
     const typeOptions = useMemo(() => {
-        const base: { value: string; label: string }[] = [{ value: '', label: 'All' }];
+        const base: { value: string; label: string }[] = [{ value: '', label: t('accounts.filters.all') }];
         if (!roles.length) return base;
 
         const allowed =
@@ -39,10 +51,15 @@ export default function AccountTableToolbar({
                 : roles;
 
         const hasStaff = allowed.some((role) => role.slug === 'staff_field' || role.slug === 'staff_backoffice');
-        const options = base.concat(hasStaff ? [{ value: 'staff', label: 'staff' }] : []);
+        const options = base.concat(hasStaff ? [{ value: 'staff', label: typeLabels.staff }] : []);
 
-        return options.concat(allowed.map((role) => ({ value: role.slug, label: role.slug })));
-    }, [roles, allowedAccountRoles]);
+        return options.concat(
+            allowed.map((role) => ({
+                value: role.slug,
+                label: typeLabels[role.slug] ?? role.slug,
+            }))
+        );
+    }, [roles, allowedAccountRoles, t, typeLabels]);
 
     const handleFilterName = useCallback(
         (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,7 +102,7 @@ export default function AccountTableToolbar({
                     fullWidth
                     value={filters.name}
                     onChange={handleFilterName}
-                    placeholder='search'
+                    placeholder={t('accounts.filters.searchPlaceholder')}
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
@@ -96,7 +113,7 @@ export default function AccountTableToolbar({
                 />
                 <TextField
                     select
-                    label="Type"
+                    label={t('accounts.filters.typeLabel')}
                     value={filters.type}
                     onChange={handleFilterType}
                     sx={{ minWidth: 160 }}
@@ -110,15 +127,15 @@ export default function AccountTableToolbar({
 
                 <TextField
                     select
-                    label="Status"
+                    label={t('accounts.filters.statusLabel')}
                     value={filters.status}
                     onChange={handleFilterStatus}
                     sx={{ minWidth: 160 }}
                 >
-                    <MenuItem value="">All</MenuItem>
-                    <MenuItem value="pending">Pending</MenuItem>
-                    <MenuItem value="verified">Verified</MenuItem>
-                    <MenuItem value="rejected">Rejected</MenuItem>
+                    <MenuItem value="">{t('accounts.filters.all')}</MenuItem>
+                    <MenuItem value="pending">{t('accounts.status.pending')}</MenuItem>
+                    <MenuItem value="verified">{t('accounts.status.verified')}</MenuItem>
+                    <MenuItem value="rejected">{t('accounts.status.rejected')}</MenuItem>
                 </TextField>
             </Stack>
         </Stack>
