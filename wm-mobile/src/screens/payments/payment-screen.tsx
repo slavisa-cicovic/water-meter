@@ -7,6 +7,7 @@ import { MobilePaymentInvoice } from "@src/api/types/mobile";
 import { useRouter } from "expo-router";
 import { useNotificationsStore } from "@src/state/notifications-store";
 import { useTranslation } from "@src/hooks/use-translation";
+import { formatCurrencyValue } from "@src/utils/format-currency";
 
 export default function PaymentScreen() {
   const router = useRouter();
@@ -98,11 +99,11 @@ export default function PaymentScreen() {
             </View>
             <View style={styles.row}>
               <Text style={styles.label}>{t("payment.label.unitPrice")}</Text>
-              <Text style={styles.value}>{formatAmount(invoice.unitPrice)}</Text>
+              <Text style={styles.value}>{formatCurrencyValue(invoice.unitPrice, invoice.currency)}</Text>
             </View>
             <View style={styles.row}>
               <Text style={styles.label}>{t("payment.label.subtotal")}</Text>
-              <Text style={styles.value}>{formatAmount(invoice.subtotal)}</Text>
+              <Text style={styles.value}>{formatCurrencyValue(invoice.subtotal, invoice.currency)}</Text>
             </View>
             <View style={styles.row}>
               <Text style={styles.label}>{t("payment.label.vatRate")}</Text>
@@ -110,11 +111,11 @@ export default function PaymentScreen() {
             </View>
             <View style={styles.row}>
               <Text style={styles.label}>{t("payment.label.vatAmount")}</Text>
-              <Text style={styles.value}>{formatAmount(invoice.vatAmount)}</Text>
+              <Text style={styles.value}>{formatCurrencyValue(invoice.vatAmount, invoice.currency)}</Text>
             </View>
             <View style={styles.rowTotal}>
               <Text style={styles.totalLabel}>{t("payment.label.total")}</Text>
-              <Text style={styles.totalValue}>{formatAmount(invoice.totalAmount)}</Text>
+              <Text style={styles.totalValue}>{formatCurrencyValue(invoice.totalAmount, invoice.currency)}</Text>
             </View>
 
             {invoice.lines.length ? (
@@ -127,10 +128,10 @@ export default function PaymentScreen() {
                       {line.description ? <Text style={styles.lineDescription}>{line.description}</Text> : null}
                     </View>
                     <View style={styles.lineMeta}>
-                      <Text style={styles.lineAmount}>{formatAmount(line.amount)}</Text>
+                      <Text style={styles.lineAmount}>{formatCurrencyValue(line.amount, invoice.currency)}</Text>
                       {line.quantity != null && line.unitPrice != null ? (
                         <Text style={styles.lineQuantity}>
-                          {line.quantity} x {formatAmount(line.unitPrice)}
+                          {line.quantity} x {formatCurrencyValue(line.unitPrice, invoice.currency)}
                         </Text>
                       ) : null}
                     </View>
@@ -160,8 +161,6 @@ const formatPeriod = (start: string | null, end: string | null) => {
   const endLabel = end ? new Date(end).toLocaleDateString() : "-";
   return `${startLabel} - ${endLabel}`;
 };
-
-const formatAmount = (value: number) => `${value.toFixed(2)}`;
 
 const formatPercent = (value: number) => `${value.toFixed(2)}%`;
 

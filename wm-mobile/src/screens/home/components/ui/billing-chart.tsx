@@ -2,12 +2,14 @@ import { StyleSheet, Text, View } from "react-native";
 import { MobileBillingData } from "@src/api/types/mobile";
 import { buildTicks } from "@src/screens/home/utils/chart";
 import { CHART_BAR_AREA_HEIGHT, monthLabels } from "@src/screens/home/utils/layout";
+import { formatCurrencyValue } from "@src/utils/format-currency";
 
 type BillingChartProps = {
   data: MobileBillingData["chart"];
+  currency?: string | null;
 };
 
-export default function BillingChart({ data }: BillingChartProps) {
+export default function BillingChart({ data, currency }: BillingChartProps) {
   const maxValue = data.reduce((max, item) => (item.amount > max ? item.amount : max), 0);
   const { maxScale, ticks } = buildTicks(maxValue, 10);
 
@@ -17,7 +19,9 @@ export default function BillingChart({ data }: BillingChartProps) {
         <View style={styles.chartYAxis}>
           {ticks.map((value, index) => (
             <View key={`${value}-${index}`} style={styles.chartTick}>
-              <Text style={styles.chartTickLabel}>{value === 0 ? "" : value}</Text>
+              <Text style={styles.chartTickLabel}>
+                {value === 0 ? "" : formatCurrencyValue(value, currency)}
+              </Text>
             </View>
           ))}
         </View>

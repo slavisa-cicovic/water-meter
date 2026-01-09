@@ -61,6 +61,7 @@ export type MobileBillingData = {
   year: number;
   chart: MobileBillingPoint[];
   rows: MobileBillingRow[];
+  currency: string;
 };
 
 export type MobileReadingContext = {
@@ -106,6 +107,7 @@ export type MobilePaymentInvoiceLine = {
 export type MobilePaymentInvoice = {
   id: string;
   status: "issued";
+  currency: string;
   meterSerialNumber?: string;
   periodStart: string | null;
   periodEnd: string | null;

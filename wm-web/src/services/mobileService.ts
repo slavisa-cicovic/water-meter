@@ -15,6 +15,7 @@ import { Prisma } from "@prisma/client";
 import { ReadingsService } from "src/services/readingsService";
 import { Reading, ReadingCreateInput } from "src/types/readings";
 import { AuthorizationService } from "src/services/authorizationService";
+import { SettingsService } from "src/services/settingsService";
 
 type ServiceResult<T> = { success: true; data: T } | { success: false; error: string; details?: Record<string, string[]> };
 
@@ -25,6 +26,11 @@ const normalizeLocale = (value?: string | null) => {
   if (!value) return DEFAULT_LOCALE;
   if (value === "sr") return "sr-Latn";
   return SUPPORTED_LOCALES.has(value) ? value : DEFAULT_LOCALE;
+};
+
+const resolveCurrency = async () => {
+  const settings = await SettingsService.getSettings();
+  return settings.success ? settings.data.currency : "RSD";
 };
 
 const toMobileAccountData = (record: {
@@ -132,8 +138,9 @@ export const MobileService = {
     const invoices = await MobileRepository.listInvoicesForYear(accountId, year);
     const rows = buildBillingRows(invoices, year);
     const chart = rows.map((row) => ({ month: row.month, amount: row.amount }));
+    const currency = await resolveCurrency();
 
-    return { success: true, data: { year, chart, rows } };
+    return { success: true, data: { year, chart, rows, currency } };
   },
 
   async getLatestIssuedInvoice(accountId: string): Promise<ServiceResult<{ invoice: MobilePaymentInvoice | null }>> {
@@ -141,6 +148,7 @@ export const MobileService = {
     if (!invoice) {
       return { success: true, data: { invoice: null } };
     }
+    const currency = await resolveCurrency();
 
     return {
       success: true,
@@ -148,6 +156,7 @@ export const MobileService = {
         invoice: {
           id: invoice.id,
           status: "issued",
+          currency,
           meterSerialNumber: invoice.meterSerialNumber,
           periodStart: invoice.periodStart ? invoice.periodStart.toISOString() : null,
           periodEnd: invoice.periodEnd ? invoice.periodEnd.toISOString() : null,

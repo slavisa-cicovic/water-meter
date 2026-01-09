@@ -81,7 +81,7 @@ const consumers: ConsumerSeed[] = [
     phone: '+381621234567',
     address: 'Cara Dusana 5, Novi Sad',
     householdSize: 2,
-    verificationStatus: 'pending',
+    verificationStatus: 'verified',
     password: 'password123',
   },
   {
@@ -773,113 +773,118 @@ async function seedInvoices() {
     return;
   }
 
-  const singleMeters = await prisma.meterConsumer.groupBy({
-    by: ['meterId'],
-    _count: { meterId: true },
+  const marko = await prisma.account.findFirst({
+    where: { email: 'marko.petrovic@example.com' },
+    select: { id: true },
   });
-  const singleMeter = singleMeters.find((m) => m._count.meterId === 1);
-  if (!singleMeter) {
-    console.log('Billing seed skipped: no single-consumer meters');
+  if (!marko) {
+    console.log('Billing seed skipped: Marko Petrovic not found');
     return;
   }
 
-  const meterId = singleMeter.meterId;
-  const consumer = await prisma.meterConsumer.findFirst({ where: { meterId } });
+  const consumer = await prisma.meterConsumer.findFirst({ where: { accountId: marko.id } });
   if (!consumer) {
-    console.log('Billing seed skipped: no consumer for meter');
+    console.log('Billing seed skipped: Marko has no meter');
     return;
   }
 
-  const endReading = await prisma.reading.findFirst({
+  const meterId = consumer.meterId;
+  const readings = await prisma.reading.findMany({
     where: { meterId },
-    orderBy: { readAt: 'desc' },
+    orderBy: { readAt: 'asc' },
   });
-  if (!endReading) {
-    console.log('Billing seed skipped: no readings');
+  if (readings.length < 2) {
+    console.log('Billing seed skipped: not enough readings for Marko');
     return;
   }
 
-  const startReading = await prisma.reading.findFirst({
-    where: { meterId, readAt: { lt: endReading.readAt } },
-    orderBy: { readAt: 'desc' },
-  });
-  if (!startReading) {
-    console.log('Billing seed skipped: no start reading');
-    return;
+  const pairs = readings.slice(1).map((end, idx) => ({
+    start: readings[idx],
+    end,
+  }));
+  const needed = 12;
+  const pairsForSeed = pairs.length >= needed ? pairs.slice(-needed) : [...pairs];
+  while (pairsForSeed.length < needed) {
+    pairsForSeed.unshift(pairs[pairs.length - 1]);
   }
 
-  let consumption = Number(endReading.value) - Number(startReading.value);
-  if (consumption <= 0) {
-    consumption = 10;
-    console.log('Billing seed: non-positive consumption, using fallback 10');
-  }
+  const statuses: Array<'paid' | 'issued' | 'draft'> = Array.from({ length: 10 }, () => 'paid' as const);
+  statuses.push('issued', 'draft');
 
-  const unitPrice = Number(tariff.basePrice);
-  const subtotal = Number((consumption * unitPrice).toFixed(2));
-  const vatRate = 0.19;
-  const vatAmount = Number((subtotal * vatRate).toFixed(2));
-  const totalAmount = Number((subtotal + vatAmount).toFixed(2));
+  for (let i = 0; i < statuses.length; i += 1) {
+    const pair = pairsForSeed[i];
+    const startReading = pair.start;
+    const endReading = pair.end;
 
-  const periodStart = startReading.readAt;
-  const periodEnd = endReading.readAt;
+    let consumption = Number(endReading.value) - Number(startReading.value);
+    if (consumption <= 0) {
+      consumption = 10;
+    }
 
-  const invoice = await prisma.invoice.create({
-    data: {
-      accountId: consumer.accountId,
-      meterId,
-      periodStart,
-      periodEnd,
-      status: 'draft',
-      consumption,
-      unitPrice,
-      subtotal,
-      vatRate,
-      vatAmount,
-      totalAmount,
-      tariffId: tariff.id,
-      tariffSnapshot: {
-        id: tariff.id,
-        name: tariff.name,
-        basePrice: tariff.basePrice.toString(),
-        greenLimit: tariff.greenLimit,
-        blueLimit: tariff.blueLimit,
-        blueMultiplier: tariff.blueMultiplier.toString(),
-        redMultiplier: tariff.redMultiplier.toString(),
-        validFrom: tariff.validFrom.toISOString(),
-        validTo: tariff.validTo ? tariff.validTo.toISOString() : null,
-        groupCode: tariff.groupCode ?? null,
+    const unitPrice = Number(tariff.basePrice);
+    const subtotal = Number((consumption * unitPrice).toFixed(2));
+    const vatRate = 0.19;
+    const vatAmount = Number((subtotal * vatRate).toFixed(2));
+    const totalAmount = Number((subtotal + vatAmount).toFixed(2));
+
+    const invoice = await prisma.invoice.create({
+      data: {
+        accountId: consumer.accountId,
+        meterId,
+        periodStart: startReading.readAt,
+        periodEnd: endReading.readAt,
+        status: statuses[i],
+        consumption,
+        unitPrice,
+        subtotal,
+        vatRate,
+        vatAmount,
+        totalAmount,
+        tariffId: tariff.id,
+        tariffSnapshot: {
+          id: tariff.id,
+          name: tariff.name,
+          basePrice: tariff.basePrice.toString(),
+          greenLimit: tariff.greenLimit,
+          blueLimit: tariff.blueLimit,
+          blueMultiplier: tariff.blueMultiplier.toString(),
+          redMultiplier: tariff.redMultiplier.toString(),
+          validFrom: tariff.validFrom.toISOString(),
+          validTo: tariff.validTo ? tariff.validTo.toISOString() : null,
+          groupCode: tariff.groupCode ?? null,
+        },
       },
-    },
-  });
+    });
 
-  await prisma.invoiceLine.create({
-    data: {
-      invoiceId: invoice.id,
-      type: 'consumption',
-      description: 'Water consumption',
-      quantity: consumption,
-      unitPrice,
-      amount: subtotal,
-    },
-  });
+    await prisma.invoiceLine.create({
+      data: {
+        invoiceId: invoice.id,
+        type: 'consumption',
+        description: 'Water consumption',
+        quantity: consumption,
+        unitPrice,
+        amount: subtotal,
+      },
+    });
 
-  await prisma.invoiceLine.create({
-    data: {
-      invoiceId: invoice.id,
-      type: 'vat',
-      description: `VAT ${vatRate * 100}%`,
-      amount: vatAmount,
-    },
-  });
+    await prisma.invoiceLine.create({
+      data: {
+        invoiceId: invoice.id,
+        type: 'vat',
+        description: `VAT ${vatRate * 100}%`,
+        amount: vatAmount,
+      },
+    });
 
-  await prisma.invoiceReadingLink.create({
-    data: { invoiceId: invoice.id, readingId: startReading.id, role: 'start' },
-  });
-  await prisma.invoiceReadingLink.create({
-    data: { invoiceId: invoice.id, readingId: endReading.id, role: 'end' },
-  });
+    await prisma.invoiceReadingLink.create({
+      data: { invoiceId: invoice.id, readingId: startReading.id, role: 'start' },
+    });
+    await prisma.invoiceReadingLink.create({
+      data: { invoiceId: invoice.id, readingId: endReading.id, role: 'end' },
+    });
+  }
 
-  console.log('Seeded 1 invoice with lines and reading links');
+  console.log('Seeded 12 invoices for Marko Petrovic (10 paid, 1 issued, 1 draft)');
 }
 
 async function main() {

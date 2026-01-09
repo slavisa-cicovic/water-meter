@@ -1,12 +1,14 @@
 import { StyleSheet, Text, View } from "react-native";
 import { MobileBillingData } from "@src/api/types/mobile";
 import { monthLabels, TABLE_HEADER_HEIGHT, TABLE_ROW_HEIGHT } from "@src/screens/home/utils/layout";
+import { formatCurrencyValue } from "@src/utils/format-currency";
 
 type BillingTableProps = {
   rows: MobileBillingData["rows"];
+  currency?: string | null;
 };
 
-export default function BillingTable({ rows }: BillingTableProps) {
+export default function BillingTable({ rows, currency }: BillingTableProps) {
   return (
     <View>
       <View style={styles.tableHeader}>
@@ -20,7 +22,7 @@ export default function BillingTable({ rows }: BillingTableProps) {
         <View key={row.month} style={styles.tableRow}>
           <Text style={[styles.tableCell, styles.tableCellMonth]}>{monthLabels[row.month - 1]}</Text>
           <Text style={[styles.tableCell, styles.tableCellAmount]}>
-            {row.status ? row.amount : "-"}
+            {row.status ? formatCurrencyValue(row.amount, currency) : "-"}
           </Text>
           <Text style={[styles.tableCell, styles.tableCellStatus]}>{row.status ?? "-"}</Text>
         </View>

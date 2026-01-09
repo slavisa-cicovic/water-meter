@@ -12,6 +12,7 @@ type BillingSectionProps = {
   selectedYear: number;
   minYear: number;
   maxYear: number;
+  currency?: string | null;
   refreshing: boolean;
   onTabChange: (value: "chart" | "table") => void;
   onYearChange: (year: number) => void;
@@ -24,6 +25,7 @@ export default function BillingSection({
   selectedYear,
   minYear,
   maxYear,
+  currency,
   refreshing,
   onTabChange,
   onYearChange,
@@ -65,11 +67,11 @@ export default function BillingSection({
 
       {tab === "chart" ? (
         <View style={styles.chartCard}>
-          <BillingChart data={data?.chart ?? []} />
+          <BillingChart data={data?.chart ?? []} currency={currency} />
         </View>
       ) : (
         <View style={styles.tableCard}>
-          <BillingTable rows={data?.rows ?? []} />
+          <BillingTable rows={data?.rows ?? []} currency={currency} />
         </View>
       )}
     </View>

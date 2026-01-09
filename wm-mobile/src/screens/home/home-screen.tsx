@@ -201,6 +201,7 @@ export default function HomeScreen() {
             selectedYear={billingYear}
             minYear={minYear}
             maxYear={currentYear}
+            currency={billing?.currency}
             refreshing={refreshingBilling}
             onTabChange={setBillingTab}
             onYearChange={setBillingYear}
