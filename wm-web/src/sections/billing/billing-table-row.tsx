@@ -98,8 +98,8 @@ export function BillingTableRow({
         <TableCell sx={{ minWidth: 200 }}>{period}</TableCell>
         <TableCell sx={{ width: 160 }}>{row.createdAt?.slice(0, 10) || '-'}</TableCell>
         <TableCell sx={{ width: 160 }}>{row.updatedAt?.slice(0, 10) || '-'}</TableCell>
-        <TableCell sx={{ width: 120 }}>{row.consumption}</TableCell>
-        <TableCell sx={{ width: 140 }}>{formatCurrencyValue(row.totalAmount, currency)}</TableCell>
+        <TableCell align="right" sx={{ width: 120 }}>{row.consumption}</TableCell>
+        <TableCell align="right" sx={{ width: 140 }}>{formatCurrencyValue(row.totalAmount, currency)}</TableCell>
         <TableCell sx={{ width: 120 }}>
           <Chip
             size="small"
