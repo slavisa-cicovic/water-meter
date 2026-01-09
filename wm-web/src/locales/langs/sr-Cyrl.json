@@ -18,9 +18,20 @@
     "accounts": "Налози",
     "meters": "Водомери",
     "billing": "Наплата",
+    "messages": "Поруке",
     "tariffs": "Тарифе",
     "jobs": "Задаци",
     "settings": "Подешавања"
+  },
+  "messages": {
+    "title": "Поруке",
+    "empty": "Још нема порука.",
+    "threadEmpty": "У овој конверзацији још нема порука.",
+    "selectThread": "Изаберите конверзацију да видите поруке.",
+    "inputPlaceholder": "Напишите одговор...",
+    "send": "Пошаљи",
+    "loadOlder": "Учитај старије",
+    "openInInbox": "Отвори у inbox-у"
   },
   "accounts": {
     "title": "Налози",

@@ -10,6 +10,8 @@ import {
   MobilePaymentData,
   MobileNotificationsData,
   MobileStaffMetersData,
+  MobileMessagesData,
+  MobileMessage,
 } from "@src/api/types/mobile";
 import { useAuthStore } from "@src/state/auth-store";
 import { defaultLocale, normalizeLocale, translations } from "@src/constants/translations";
@@ -299,6 +301,58 @@ export const MobileService = {
       const message = code
         ? translate(ERROR_MESSAGE_KEYS[code] || "errors.loadNotifications", "Unable to load notifications.")
         : translate("errors.loadNotifications", "Unable to load notifications.");
+      return { success: false, message };
+    }
+  },
+
+  async getMessages(): Promise<ServiceResult<MobileMessagesData>> {
+    try {
+      const res = await MobileApi.getMessages();
+      if (!res.success) {
+        const message = res.error
+          ? translate(ERROR_MESSAGE_KEYS[res.error] || "errors.loadMessages", "Unable to load messages.")
+          : translate("errors.loadMessages", "Unable to load messages.");
+        return { success: false, message, details: res.details };
+      }
+
+      const data = res.data as MobileMessagesData | undefined;
+      if (!data) {
+        return { success: false, message: translate("errors.invalidMessagesResponse", "Invalid messages response.") };
+      }
+
+      return { success: true, data };
+    } catch (error: unknown) {
+      const apiError = error as { response?: { data?: { error?: string } } };
+      const code = apiError.response?.data?.error;
+      const message = code
+        ? translate(ERROR_MESSAGE_KEYS[code] || "errors.loadMessages", "Unable to load messages.")
+        : translate("errors.loadMessages", "Unable to load messages.");
+      return { success: false, message };
+    }
+  },
+
+  async sendMessage(body: string): Promise<ServiceResult<{ message: MobileMessage }>> {
+    try {
+      const res = await MobileApi.sendMessage(body);
+      if (!res.success) {
+        const message = res.error
+          ? translate(ERROR_MESSAGE_KEYS[res.error] || "errors.sendMessage", "Unable to send message.")
+          : translate("errors.sendMessage", "Unable to send message.");
+        return { success: false, message, details: res.details };
+      }
+
+      const data = res.data as { message?: MobileMessage } | undefined;
+      if (!data?.message) {
+        return { success: false, message: translate("errors.invalidMessagesResponse", "Invalid messages response.") };
+      }
+
+      return { success: true, data: { message: data.message } };
+    } catch (error: unknown) {
+      const apiError = error as { response?: { data?: { error?: string } } };
+      const code = apiError.response?.data?.error;
+      const message = code
+        ? translate(ERROR_MESSAGE_KEYS[code] || "errors.sendMessage", "Unable to send message.")
+        : translate("errors.sendMessage", "Unable to send message.");
       return { success: false, message };
     }
   },

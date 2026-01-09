@@ -5,6 +5,7 @@ import { endpoints, fetcher } from 'src/utils/axios';
 export type NotificationsSummary = {
   reviewFlags: Record<string, number>;
   draftInvoices: number;
+  unreadMessages?: number;
   suppressed?: boolean;
 };
 

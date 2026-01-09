@@ -151,3 +151,20 @@ export type MobilePaymentData = {
 export type MobileNotificationsData = {
   hasIssuedInvoice: boolean;
 };
+
+export type MobileMessage = {
+  id: string;
+  body: string;
+  senderType: "mobile" | "web";
+  senderAccountId: string | null;
+  senderName: string | null;
+  createdAt: string;
+  readAtMobile: string | null;
+  readAtWeb: string | null;
+};
+
+export type MobileMessagesData = {
+  threadId: string;
+  messages: MobileMessage[];
+  unreadCount: number;
+};

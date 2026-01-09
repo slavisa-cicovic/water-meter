@@ -1,4 +1,5 @@
 import { BillingRepository } from 'src/repositories/billingRepository';
+import { MessageRepository } from 'src/repositories/messageRepository';
 
 const REVIEW_FLAG_MAP = {
   invalid_reading: 'non_positive_consumption',
@@ -24,8 +25,11 @@ export const NotificationService = {
       return acc;
     }, {} as Record<ReviewFlagKey, number>);
 
-    const draftInvoices = await BillingRepository.countDraftInvoicesWithoutFlags();
+    const [draftInvoices, unreadMessages] = await Promise.all([
+      BillingRepository.countDraftInvoicesWithoutFlags(),
+      MessageRepository.countUnreadForWeb(),
+    ]);
 
-    return { success: true, data: { reviewFlags, draftInvoices } };
+    return { success: true, data: { reviewFlags, draftInvoices, unreadMessages } };
   },
 };

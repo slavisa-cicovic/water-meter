@@ -390,6 +390,8 @@ const permissions: PermissionSeed[] = [
   { slug: 'readings:create', name: 'Create reading', resource: 'readings', action: 'create' },
   { slug: 'readings:update', name: 'Update reading', resource: 'readings', action: 'update' },
   { slug: 'notifications:read', name: 'Read notifications', resource: 'notifications', action: 'read' },
+  { slug: 'messages:read', name: 'Read messages', resource: 'messages', action: 'read' },
+  { slug: 'messages:reply', name: 'Reply to messages', resource: 'messages', action: 'reply' },
   { slug: 'billing:list', name: 'List invoices', resource: 'billing', action: 'list' },
   { slug: 'billing:generate', name: 'Generate invoices', resource: 'billing', action: 'generate' },
   { slug: 'billing:confirm', name: 'Confirm invoices', resource: 'billing', action: 'confirm' },
@@ -420,6 +422,8 @@ const permissions: PermissionSeed[] = [
   { slug: 'mobile_meters:list', name: 'List mobile meters', resource: 'mobile_meters', action: 'list' },
   { slug: 'mobile_consumption:read', name: 'Read mobile consumption', resource: 'mobile_consumption', action: 'read' },
   { slug: 'mobile_notifications:read', name: 'Read mobile notifications', resource: 'mobile_notifications', action: 'read' },
+  { slug: 'mobile_messages:read', name: 'Read mobile messages', resource: 'mobile_messages', action: 'read' },
+  { slug: 'mobile_messages:create', name: 'Create mobile messages', resource: 'mobile_messages', action: 'create' },
   { slug: 'mobile_payments:read', name: 'Read mobile payments', resource: 'mobile_payments', action: 'read' },
   { slug: 'mobile_payments:pay', name: 'Pay mobile invoice', resource: 'mobile_payments', action: 'pay' },
   { slug: 'mobile_billing:read', name: 'Read mobile billing', resource: 'mobile_billing', action: 'read' },
@@ -452,7 +456,7 @@ async function seedRbac() {
 
   const adminPermissions = permissions
     .map((permission) => permission.slug)
-    .filter((slug) => !['roles:create', 'roles:update'].includes(slug));
+    .filter((slug) => !['roles:create', 'roles:update', 'messages:read', 'messages:reply'].includes(slug));
   const superAdminPermissions = permissions.map((permission) => permission.slug);
   const backofficePermissions = [
     'settings:read',
@@ -470,6 +474,8 @@ async function seedRbac() {
     'readings:create',
     'readings:update',
     'notifications:read',
+    'messages:read',
+    'messages:reply',
     'billing:list',
     'billing:generate',
     'billing:confirm',
@@ -518,6 +524,8 @@ async function seedRbac() {
         'mobile_readings:create',
         'mobile_meters:list',
         'mobile_notifications:read',
+        'mobile_messages:read',
+        'mobile_messages:create',
       ],
     },
     {
@@ -529,6 +537,8 @@ async function seedRbac() {
         'mobile_readings:create',
         'mobile_consumption:read',
         'mobile_notifications:read',
+        'mobile_messages:read',
+        'mobile_messages:create',
         'mobile_payments:read',
         'mobile_payments:pay',
         'mobile_billing:read',

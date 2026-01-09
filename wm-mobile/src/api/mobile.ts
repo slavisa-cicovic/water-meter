@@ -12,6 +12,7 @@ import {
   MobilePaymentData,
   MobileNotificationsData,
   MobileStaffMetersData,
+  MobileMessagesData,
 } from "@src/api/types/mobile";
 
 export const MobileApi = {
@@ -67,6 +68,17 @@ export const MobileApi = {
   },
   getNotifications: async (): Promise<ApiResponse<MobileNotificationsData>> => {
     const res = await apiClient.get<ApiResponse<MobileNotificationsData>>("/api/mobile/notifications");
+    return res.data;
+  },
+  getMessages: async (): Promise<ApiResponse<MobileMessagesData>> => {
+    const res = await apiClient.get<ApiResponse<MobileMessagesData>>("/api/mobile/messages");
+    return res.data;
+  },
+  sendMessage: async (body: string): Promise<ApiResponse<{ message: MobileMessagesData["messages"][number] }>> => {
+    const res = await apiClient.post<ApiResponse<{ message: MobileMessagesData["messages"][number] }>>(
+      "/api/mobile/messages",
+      { body }
+    );
     return res.data;
   },
   getStaffMeters: async (): Promise<ApiResponse<MobileStaffMetersData>> => {

@@ -78,6 +78,16 @@ export function NotificationPopover() {
           },
         ]
       : []),
+    ...(summary?.unreadMessages
+      ? [
+          {
+            id: 'unread-messages',
+            count: summary.unreadMessages,
+            title: `You have ${summary.unreadMessages} unread messages`,
+            href: paths.dashboard.messages.root,
+          },
+        ]
+      : []),
   ];
 
   const unreadCount = notificationItems.reduce((total, item) => total + item.count, 0);

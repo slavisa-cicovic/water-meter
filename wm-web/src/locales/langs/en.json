@@ -18,9 +18,20 @@
     "accounts": "Accounts",
     "meters": "Meters",
     "billing": "Billing",
+    "messages": "Messages",
     "tariffs": "Tariffs",
     "jobs": "Jobs",
     "settings": "Settings"
+  },
+  "messages": {
+    "title": "Messages",
+    "empty": "No messages yet.",
+    "threadEmpty": "No messages in this thread yet.",
+    "selectThread": "Select a conversation to view messages.",
+    "inputPlaceholder": "Write a reply...",
+    "send": "Send",
+    "loadOlder": "Load older",
+    "openInInbox": "Open in inbox"
   },
   "accounts": {
     "title": "Accounts",

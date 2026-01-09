@@ -5,6 +5,7 @@ import { AppState } from "react-native";
 import { MobileService } from "@src/services/mobile.service";
 import { useAuthStore } from "@src/state/auth-store";
 import { useNotificationsStore } from "@src/state/notifications-store";
+import { useMessagesStore } from "@src/state/messages-store";
 import { useTranslation } from "@src/hooks/use-translation";
 
 export default function TabsLayout() {
@@ -14,6 +15,8 @@ export default function TabsLayout() {
   const hasIssuedInvoice = useNotificationsStore((state) => state.hasIssuedInvoice);
   const refreshNotifications = useNotificationsStore((state) => state.refreshNotifications);
   const setHasIssuedInvoice = useNotificationsStore((state) => state.setHasIssuedInvoice);
+  const unreadMessages = useMessagesStore((state) => state.unreadCount);
+  const refreshMessages = useMessagesStore((state) => state.refreshMessages);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -73,6 +76,38 @@ export default function TabsLayout() {
       subscription.remove();
     };
   }, [refreshNotifications, setHasIssuedInvoice, user?.id]);
+
+  useEffect(() => {
+    let active = true;
+    if (!user) {
+      return () => {
+        active = false;
+      };
+    }
+
+    const refresh = async () => {
+      await refreshMessages();
+    };
+
+    refresh();
+
+    const interval = setInterval(() => {
+      if (active) {
+        refresh();
+      }
+    }, 30000);
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        refresh();
+      }
+    });
+
+    return () => {
+      active = false;
+      clearInterval(interval);
+      subscription.remove();
+    };
+  }, [refreshMessages, user?.id]);
 
   const hideReadings = user?.role === "consumer" && sharedMeter === true;
   const paymentEnabled = user?.role === "consumer" ? hasIssuedInvoice : false;
@@ -145,7 +180,7 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="send-message"
+        name="messages"
         options={{
           title: t("tabs.message"),
           tabBarIcon: ({ focused, size }) => (
@@ -155,6 +190,7 @@ export default function TabsLayout() {
               size={size}
             />
           ),
+          tabBarBadge: unreadMessages ? String(unreadMessages) : undefined,
         }}
       />
       <Tabs.Screen

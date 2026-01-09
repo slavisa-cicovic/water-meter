@@ -55,6 +55,11 @@ enum JobRunStatus {
   failed
 }
 
+enum MessageSenderType {
+  mobile
+  web
+}
+
 enum TariffStatus {
   active
   inactive
@@ -143,6 +148,44 @@ model Account {
   invoiceOverrideLogs InvoiceOverrideLog[]
   accountRoleLinks AccountRoleLink[]
   rolePermissionAuditLogs RolePermissionAuditLog[]
+  messageThreads MessageThread[]
+  sentMessages Message[] @relation("MessageSender")
+}
+
+model MessageThread {
+  id            String   @id @default(uuid())
+  accountId     String
+  lastMessageAt DateTime?
+  archivedAt    DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  account  Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@index([accountId])
+  @@index([lastMessageAt])
+  @@index([archivedAt])
+}
+
+model Message {
+  id              String            @id @default(uuid())
+  threadId        String
+  body            String            @db.Text
+  senderType      MessageSenderType
+  senderAccountId String?
+  readAtMobile    DateTime?
+  readAtWeb       DateTime?
+  archivedAt      DateTime?
+  createdAt       DateTime          @default(now())
+
+  thread        MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  senderAccount Account?      @relation("MessageSender", fields: [senderAccountId], references: [id], onDelete: SetNull)
+
+  @@index([threadId, createdAt])
+  @@index([senderType, readAtWeb])
+  @@index([senderType, readAtMobile])
+  @@index([archivedAt])
 }
 
 model Translation {

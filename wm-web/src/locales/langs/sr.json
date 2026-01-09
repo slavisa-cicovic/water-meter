@@ -18,9 +18,20 @@
     "accounts": "Nalozi",
     "meters": "Vodomeri",
     "billing": "Naplata",
+    "messages": "Poruke",
     "tariffs": "Tarife",
     "jobs": "Zadaci",
     "settings": "Podesavanja"
+  },
+  "messages": {
+    "title": "Poruke",
+    "empty": "Jos nema poruka.",
+    "threadEmpty": "U ovoj konverzaciji jos nema poruka.",
+    "selectThread": "Izaberite konverzaciju da vidite poruke.",
+    "inputPlaceholder": "Napisite odgovor...",
+    "send": "Posalji",
+    "loadOlder": "Ucitaj starije",
+    "openInInbox": "Otvori u inbox-u"
   },
   "accounts": {
     "title": "Nalozi",

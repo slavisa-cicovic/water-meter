@@ -39,6 +39,9 @@ export const paths = {
         details: (id: string) => `${ROOTS.DASHBOARD}/billing/tariffs/${id}`,
       },
     },
+    messages: {
+      root: `${ROOTS.DASHBOARD}/messages`,
+    },
     jobs: {
       root: `${ROOTS.DASHBOARD}/jobs`,
     },

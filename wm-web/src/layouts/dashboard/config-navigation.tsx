@@ -18,6 +18,7 @@ const ICONS = {
   dashboard: icon('ic_dashboard'),
   meters: icon('ic_dashboard'),
   billing: icon('ic_dashboard'),
+  messages: icon('ic_dashboard'),
   jobs: icon('ic_dashboard'),
   settings: icon('ic_dashboard'),
 };
@@ -58,6 +59,13 @@ export function useNavData() {
             path: paths.dashboard.billing.root,
             icon: ICONS.billing,
             permissions: [PERMISSIONS.BILLING_LIST],
+          },
+          {
+            title: 'Messages',
+            titleKey: 'sidebar.messages',
+            path: paths.dashboard.messages.root,
+            icon: ICONS.messages,
+            permissions: [PERMISSIONS.MESSAGES_READ],
           },
           {
             title: 'Tariffs',

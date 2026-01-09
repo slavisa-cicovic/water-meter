@@ -73,6 +73,9 @@ export const endpoints = {
   notifications: {
     summary: '/api/notifications',
   },
+  messages: {
+    root: '/api/messages',
+  },
   settings: '/api/settings',
   translations: '/api/translations',
 };

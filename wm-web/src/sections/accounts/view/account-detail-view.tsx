@@ -3,11 +3,14 @@
 // @mui
 import Container from '@mui/material/Container';
 import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
 // routes
 import {paths} from 'src/routes/paths';
 import {RouterLink} from "src/routes/components";
 // api
 import {useGetAccount} from "src/api/accounts";
+import { useAuthContext } from "src/auth/hooks";
 // locales
 import {useLocales} from 'src/locales';
 // components
@@ -16,6 +19,8 @@ import EmptyContent from "src/components/empty-content";
 import Iconify from "src/components/iconify";
 import CustomBreadcrumbs from 'src/components/custom-breadcrumbs';
 import PermissionDenied from 'src/components/permission-denied';
+import { PERMISSIONS } from "src/constants/permissions";
+import MessageThreadPanel from "src/sections/messages/components/message-thread-panel";
 //
 import { AccountDetailsSkeleton } from '../account-skeleton';
 import AccountEditForm from '../account-edit-form';
@@ -29,6 +34,7 @@ type Props = {
 export default function AccountEditView({id}: Props) {
 
   const {t} = useLocales();
+  const { user } = useAuthContext();
 
   const settings = useSettingsContext();
 
@@ -69,6 +75,8 @@ export default function AccountEditView({id}: Props) {
   const renderAccount = currentAccount && (
       <AccountEditForm currentAccount={currentAccount}/>
   )
+  const currentPermissions = (user as any)?.permissions as string[] | undefined;
+  const canViewMessages = currentPermissions?.includes(PERMISSIONS.MESSAGES_READ) ?? false;
 
   return (
       <Container maxWidth={settings.themeStretch ? false : 'lg'}>
@@ -88,6 +96,20 @@ export default function AccountEditView({id}: Props) {
         {forbidden && <PermissionDenied sx={{ py: 6 }} illustrationSx={{ my: 6 }} />}
         {accountError && !forbidden && renderError}
         {currentAccount && renderAccount}
+        {currentAccount && canViewMessages && (
+          <Box sx={{ mt: 3 }}>
+            <Stack spacing={1.5}>
+              <Button
+                component={RouterLink}
+                href={`${paths.dashboard.messages.root}?accountId=${currentAccount.id}`}
+                sx={{ alignSelf: 'flex-start' }}
+              >
+                {t('messages.openInInbox')}
+              </Button>
+              <MessageThreadPanel accountId={currentAccount.id} compact />
+            </Stack>
+          </Box>
+        )}
       </Container>
   );
 }
