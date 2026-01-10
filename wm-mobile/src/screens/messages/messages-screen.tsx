@@ -124,6 +124,7 @@ export default function MessagesScreen() {
         data={reversedMessages}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
+        keyboardShouldPersistTaps="handled"
         inverted
         onContentSizeChange={() => listRef.current?.scrollToOffset({ offset: 0, animated: true })}
         renderItem={({ item }) => <MessageRow item={item} />}
@@ -193,6 +194,10 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#e1e6f3",
     backgroundColor: "#ffffff",
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "flex-end",
+    minHeight: 64,
   },
   input: {
     minHeight: 44,
@@ -203,7 +208,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     color: "#1f2a44",
-    marginBottom: 10,
+    flex: 1,
+    backgroundColor: "#ffffff",
   },
   sendButton: {
     alignSelf: "flex-end",
