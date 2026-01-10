@@ -12,7 +12,7 @@ export type NotificationsSummary = {
 export function useGetNotifications() {
   const { data, isLoading, error, isValidating, mutate } = useSWR(endpoints.notifications.summary, fetcher, {
     revalidateOnFocus: true,
-    refreshInterval: 3600000,
+    refreshInterval: 30000,
   });
 
   return useMemo(

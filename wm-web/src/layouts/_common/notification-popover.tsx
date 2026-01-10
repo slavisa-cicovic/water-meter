@@ -27,13 +27,14 @@ export function NotificationPopover() {
   };
 
   const reviewFlags = summary?.reviewFlags ?? {};
+  const formatCount = (value: number) => (value > 99 ? '99+' : String(value));
   const notificationItems = [
     ...(reviewFlags.invalid_reading
       ? [
           {
             id: 'review-invalid-reading',
             count: reviewFlags.invalid_reading,
-            title: `You have ${reviewFlags.invalid_reading} invalid readings`,
+            title: `You have ${formatCount(reviewFlags.invalid_reading)} invalid readings`,
             href: buildBillingHref({ review: 'invalid_reading' }),
           },
         ]
@@ -43,7 +44,7 @@ export function NotificationPopover() {
           {
             id: 'review-no-reading',
             count: reviewFlags.no_reading,
-            title: `You have ${reviewFlags.no_reading} consumers missing current readings`,
+            title: `You have ${formatCount(reviewFlags.no_reading)} consumers missing current readings`,
             href: buildBillingHref({ review: 'no_reading' }),
           },
         ]
@@ -53,7 +54,7 @@ export function NotificationPopover() {
           {
             id: 'review-no-previous-reading',
             count: reviewFlags.no_previous_reading,
-            title: `You have ${reviewFlags.no_previous_reading} consumers missing previous readings`,
+            title: `You have ${formatCount(reviewFlags.no_previous_reading)} consumers missing previous readings`,
             href: buildBillingHref({ review: 'no_previous_reading' }),
           },
         ]
@@ -63,7 +64,7 @@ export function NotificationPopover() {
           {
             id: 'review-no-household-size',
             count: reviewFlags.no_household_size,
-            title: `You have ${reviewFlags.no_household_size} consumers missing household size`,
+            title: `You have ${formatCount(reviewFlags.no_household_size)} consumers missing household size`,
             href: buildBillingHref({ review: 'no_household_size' }),
           },
         ]
@@ -73,7 +74,7 @@ export function NotificationPopover() {
           {
             id: 'draft-invoices',
             count: summary.draftInvoices,
-            title: `You have ${summary.draftInvoices} draft invoices awaiting confirmation`,
+            title: `You have ${formatCount(summary.draftInvoices)} draft invoices awaiting confirmation`,
             href: buildBillingHref({ status: 'draft', review: 'no_flags' }),
           },
         ]
@@ -83,7 +84,7 @@ export function NotificationPopover() {
           {
             id: 'unread-messages',
             count: summary.unreadMessages,
-            title: `You have ${summary.unreadMessages} unread messages`,
+            title: `You have ${formatCount(summary.unreadMessages)} unread messages`,
             href: paths.dashboard.messages.root,
           },
         ]
@@ -91,10 +92,11 @@ export function NotificationPopover() {
   ];
 
   const unreadCount = notificationItems.reduce((total, item) => total + item.count, 0);
+  const badgeLabel = unreadCount > 99 ? '99+' : unreadCount;
 
   return (
     <>
-      <Badge badgeContent={unreadCount} color="error" invisible={unreadCount === 0}>
+      <Badge badgeContent={badgeLabel} color="error" invisible={unreadCount === 0}>
         <IconButton onClick={popover.onOpen} aria-label="notifications" sx={{ width: 40, height: 40 }}>
           <Iconify icon="solar:bell-bing-bold-duotone" width={24} />
         </IconButton>

@@ -220,7 +220,7 @@ export default function TabsLayout() {
               size={size}
             />
           ),
-          tabBarBadge: unreadMessages ? String(unreadMessages) : undefined,
+          tabBarBadge: unreadMessages > 99 ? "99+" : unreadMessages ? String(unreadMessages) : undefined,
         }}
       />
       <Tabs.Screen
