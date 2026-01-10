@@ -68,7 +68,7 @@ const Chart = styled(ApexChart)(({ theme }) => ({
 }));
 
 export type ChartWrapperProps = {
-  type?: ApexOptions['chart']['type'];
+  type?: NonNullable<ApexOptions['chart']>['type'];
   series: ApexOptions['series'];
   options: ApexOptions;
   height?: number | string;
