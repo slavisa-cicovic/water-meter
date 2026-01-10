@@ -28,6 +28,8 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Divider from '@mui/material/Divider';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
 import * as Yup from 'yup';
 import { format } from 'date-fns';
 import { useForm } from 'react-hook-form';
@@ -266,6 +268,9 @@ export function MeterEditForm({ currentMeter }: Props) {
     () => sortedReadings.find((reading) => reading.id === editingReadingId) ?? null,
     [sortedReadings, editingReadingId]
   );
+  const editingImageUrl = editingReading?.imageFilename
+    ? `/uploads/${editingReading.imageFilename}`
+    : null;
 
   const getMonthKey = (date: string) => {
     const parsed = new Date(date);
@@ -767,6 +772,30 @@ export function MeterEditForm({ currentMeter }: Props) {
               multiline
               minRows={2}
             />
+            <Divider />
+            <Stack spacing={1}>
+              <Typography variant="subtitle2">{t('meters.readings.image.title')}</Typography>
+              {editingReading?.method === 'photo_ocr' && !editingReading.imageFilename ? (
+                <Alert severity="warning">{t('meters.readings.image.missing')}</Alert>
+              ) : null}
+              {editingImageUrl ? (
+                <Box
+                  component="img"
+                  src={editingImageUrl}
+                  alt={t('meters.readings.image.alt')}
+                  sx={{
+                    width: '100%',
+                    borderRadius: 1.5,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                  }}
+                />
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  {t('meters.readings.image.empty')}
+                </Typography>
+              )}
+            </Stack>
             <Divider />
             <Stack spacing={1}>
               <Typography variant="subtitle2">{t('meters.readings.barcode.title')}</Typography>

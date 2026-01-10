@@ -180,6 +180,12 @@
           "updateFailed": "Failed to update reading."
         }
       },
+      "image": {
+        "title": "Reading photo",
+        "alt": "Uploaded reading photo",
+        "empty": "No photo uploaded.",
+        "missing": "Photo OCR reading is missing the required photo."
+      },
       "meterLabel": "Group: {{group}}, {{address}}, {{serial}}",
       "loading": "Loading readings...",
       "empty": "No readings found."
@@ -321,6 +327,12 @@
           "missingEditor": "Missing editor information.",
           "updateFailed": "Failed to update reading."
         }
+      },
+      "image": {
+        "title": "Reading photo",
+        "alt": "Uploaded reading photo",
+        "empty": "No photo uploaded.",
+        "missing": "Photo OCR reading is missing the required photo."
       },
       "barcode": {
         "title": "Barcode review",

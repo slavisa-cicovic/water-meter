@@ -180,6 +180,12 @@
           "updateFailed": "Azuriranje ocitavanja nije uspelo."
         }
       },
+      "image": {
+        "title": "Fotografija ocitavanja",
+        "alt": "Uploudovana fotografija ocitavanja",
+        "empty": "Nema uplaodovane fotografije.",
+        "missing": "Ocitavanje sa photo_ocr metodom nema obaveznu fotografiju."
+      },
       "meterLabel": "Grupa: {{group}}, {{address}}, {{serial}}",
       "loading": "Ucitavanje ocitavanja...",
       "empty": "Nema ocitavanja."
@@ -321,6 +327,12 @@
           "missingEditor": "Nedostaju podaci o uredniku.",
           "updateFailed": "Azuriranje ocitavanja nije uspelo."
         }
+      },
+      "image": {
+        "title": "Fotografija ocitavanja",
+        "alt": "Uploudovana fotografija ocitavanja",
+        "empty": "Nema uplaodovane fotografije.",
+        "missing": "Ocitavanje sa photo_ocr metodom nema obaveznu fotografiju."
       },
       "barcode": {
         "title": "Provera barkoda",
