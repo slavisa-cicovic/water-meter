@@ -1,4 +1,6 @@
 import { MessageRepository } from 'src/repositories/messageRepository';
+import { AiMessagingService } from 'src/services/aiMessagingService';
+import { validateAiMessageInput } from 'src/validation/aiMessaging';
 
 type ServiceResult<T> = { success: true; data: T } | { success: false; error: string };
 
@@ -11,16 +13,18 @@ const normalizeBody = (body?: string | null) => (typeof body === 'string' ? body
 const toMessageItem = (row: {
   id: string;
   body: string;
-  senderType: 'mobile' | 'web';
+  senderType: 'mobile' | 'web' | 'ai';
   senderAccountId: string | null;
   createdAt: Date;
   readAtMobile: Date | null;
   readAtWeb: Date | null;
+  status: 'received' | 'processing' | 'ai_replied' | 'needs_human' | 'human_replied' | 'closed' | null;
   senderAccount?: { id: string; firstName: string; lastName: string } | null;
 }) => ({
   id: row.id,
   body: row.body,
   senderType: row.senderType,
+  status: row.status ?? null,
   senderAccountId: row.senderAccountId ?? null,
   senderName: row.senderAccount
     ? `${row.senderAccount.firstName} ${row.senderAccount.lastName}`.trim()
@@ -38,39 +42,78 @@ export const MessageService = {
   }>> {
     const thread = await MessageRepository.getOrCreateThread(accountId);
     const since = new Date(Date.now() - MOBILE_MESSAGE_WINDOW_DAYS * 24 * 60 * 60 * 1000);
-    const [mobileMessages, webMessages, unreadCount] = await Promise.all([
+    const [mobileMessages, webMessages, aiMessages, unreadCount] = await Promise.all([
       MessageRepository.listMessagesBySender(thread.id, 'mobile', MOBILE_LIMIT_PER_SENDER, since),
       MessageRepository.listMessagesBySender(thread.id, 'web', MOBILE_LIMIT_PER_SENDER, since),
+      MessageRepository.listMessagesBySender(thread.id, 'ai', MOBILE_LIMIT_PER_SENDER, since),
       MessageRepository.countUnreadForMobile(thread.id, since),
     ]);
 
-    const merged = [...mobileMessages, ...webMessages]
+    const merged = [...mobileMessages, ...webMessages, ...aiMessages]
       .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
       .map(toMessageItem);
 
-    if (webMessages.length) {
+    if (webMessages.length || aiMessages.length) {
       await MessageRepository.markThreadReadForMobile(thread.id, new Date());
     }
 
     return { success: true, data: { threadId: thread.id, messages: merged, unreadCount } };
   },
 
-  async createMobileMessage(accountId: string, body?: string | null): Promise<ServiceResult<{
+  async createMobileMessage(
+    accountId: string,
+    body?: string | null,
+    options?: { allowAi?: boolean }
+  ): Promise<ServiceResult<{
     message: ReturnType<typeof toMessageItem>;
+    aiMessage?: ReturnType<typeof toMessageItem>;
   }>> {
     const normalized = normalizeBody(body);
-    if (!normalized) return { success: false, error: 'VALIDATION_FAILED' };
+    const validation = validateAiMessageInput({ body: normalized });
+    if (!validation.valid) return { success: false, error: 'VALIDATION_FAILED' };
 
     const thread = await MessageRepository.getOrCreateThread(accountId);
     const now = new Date();
+    const allowAi = options?.allowAi ?? true;
     const message = await MessageRepository.createMessage(thread.id, {
       body: normalized,
       senderType: 'mobile',
       senderAccountId: accountId,
       readAtMobile: now,
       readAtWeb: null,
+      status: allowAi ? 'processing' : 'needs_human',
     });
     await MessageRepository.touchThread(thread.id, now);
+
+    if (!allowAi) {
+      return {
+        success: true,
+        data: {
+          message: toMessageItem({
+            ...message,
+            senderAccountId: accountId,
+            readAtMobile: message.readAtMobile ?? now,
+            readAtWeb: message.readAtWeb ?? null,
+            status: 'needs_human',
+          }),
+        },
+      };
+    }
+
+    let aiResult: { status: 'received' | 'processing' | 'ai_replied' | 'needs_human' | 'human_replied' | 'closed'; aiMessage?: ReturnType<typeof toMessageItem> };
+    try {
+      aiResult = await AiMessagingService.processMobileMessage({
+        threadId: thread.id,
+        messageId: message.id,
+        accountId,
+        body: normalized,
+        toMessageItem,
+      });
+    } catch (error) {
+      await MessageRepository.updateMessageStatus(message.id, 'needs_human');
+      aiResult = { status: 'needs_human' };
+      console.error('[AiMessaging] Failed to process message', error);
+    }
 
     return {
       success: true,
@@ -80,7 +123,9 @@ export const MessageService = {
           senderAccountId: accountId,
           readAtMobile: message.readAtMobile ?? now,
           readAtWeb: message.readAtWeb ?? null,
+          status: aiResult.status,
         }),
+        aiMessage: aiResult.aiMessage,
       },
     };
   },
@@ -89,12 +134,12 @@ export const MessageService = {
     threads: Array<{
       threadId: string;
       account: { id: string; firstName: string; lastName: string; email: string };
-      lastMessage: { body: string; senderType: 'mobile' | 'web'; createdAt: string } | null;
+      lastMessage: { body: string; senderType: 'mobile' | 'web' | 'ai'; createdAt: string } | null;
       lastMessageAt: string | null;
       unreadCount: number;
     }>;
   }>> {
-    const threads = await MessageRepository.listThreads();
+    const threads = await MessageRepository.listThreadsNeedingHuman();
     const unreadByThread = await MessageRepository.groupUnreadForWebThreads(threads.map((thread) => thread.id));
 
     const mapped = threads.map((thread) => {
@@ -131,6 +176,11 @@ export const MessageService = {
     const candidate = options?.before ? new Date(options.before) : undefined;
     const beforeDate = candidate && !Number.isNaN(candidate.getTime()) ? candidate : undefined;
     const messages = await MessageRepository.listMessages(thread.id, limit, beforeDate);
+    const visibleMessages = messages.filter((item) => {
+      if (item.senderType === 'ai') return false;
+      if (item.senderType !== 'mobile') return true;
+      return item.status !== 'processing' && item.status !== 'ai_replied';
+    });
     const unreadCount = await MessageRepository.countUnreadForWebThread(thread.id);
 
     if (!beforeDate) {
@@ -142,7 +192,7 @@ export const MessageService = {
       data: {
         threadId: thread.id,
         account,
-        messages: messages
+        messages: visibleMessages
           .slice()
           .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
           .map(toMessageItem),
@@ -167,8 +217,10 @@ export const MessageService = {
       senderAccountId,
       readAtWeb: now,
       readAtMobile: null,
+      status: 'human_replied',
     });
     await MessageRepository.touchThread(thread.id, now);
+    await MessageRepository.markLatestMobileMessageReplied(thread.id);
 
     return {
       success: true,

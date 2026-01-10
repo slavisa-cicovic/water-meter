@@ -18,7 +18,10 @@ export const POST = withPermission(
   PERMISSIONS.MOBILE_MESSAGES_CREATE,
   async (req: NextRequest, _ctx, guard) => {
     const payload = await req.json().catch(() => ({}));
-    const result = await MessageService.createMobileMessage(guard.payload.accountId, payload?.body);
+    const roles = guard.payload.roles ?? [];
+    const primaryRole = guard.payload.role;
+    const allowAi = roles.includes('consumer') || roles.includes('staff_field') || primaryRole === 'consumer' || primaryRole === 'staff_field';
+    const result = await MessageService.createMobileMessage(guard.payload.accountId, payload?.body, { allowAi });
     if (!result.success) {
       return NextResponse.json({ success: false, error: result.error }, { status: 400 });
     }

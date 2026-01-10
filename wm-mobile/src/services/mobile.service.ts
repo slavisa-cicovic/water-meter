@@ -332,7 +332,7 @@ export const MobileService = {
     }
   },
 
-  async sendMessage(body: string): Promise<ServiceResult<{ message: MobileMessage }>> {
+  async sendMessage(body: string): Promise<ServiceResult<{ message: MobileMessage; aiMessage?: MobileMessage }>> {
     try {
       const res = await MobileApi.sendMessage(body);
       if (!res.success) {
@@ -342,12 +342,12 @@ export const MobileService = {
         return { success: false, message, details: res.details };
       }
 
-      const data = res.data as { message?: MobileMessage } | undefined;
+      const data = res.data as { message?: MobileMessage; aiMessage?: MobileMessage } | undefined;
       if (!data?.message) {
         return { success: false, message: translate("errors.invalidMessagesResponse", "Invalid messages response.") };
       }
 
-      return { success: true, data: { message: data.message } };
+      return { success: true, data: { message: data.message, aiMessage: data.aiMessage } };
     } catch (error: unknown) {
       const apiError = error as { response?: { data?: { error?: string } } };
       const code = apiError.response?.data?.error;

@@ -22,17 +22,22 @@ import { useMessagesStore } from "@src/state/messages-store";
 const sortMessages = (items: MobileMessage[]) =>
   items.slice().sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
-const MessageRow = memo(({ item }: { item: MobileMessage }) => (
-  <View
-    style={[
-      styles.messageBubble,
-      item.senderType === "mobile" ? styles.messageOutgoing : styles.messageIncoming,
-    ]}
-  >
-    <Text style={styles.messageText}>{item.body}</Text>
-    <Text style={styles.messageMeta}>{new Date(item.createdAt).toLocaleString()}</Text>
-  </View>
-));
+const MessageRow = memo(({ item }: { item: MobileMessage }) => {
+  const isOutgoing = item.senderType === "mobile";
+  const isAi = item.senderType === "ai";
+  const meta = `${isAi ? "AI - " : ""}${new Date(item.createdAt).toLocaleString()}`;
+  return (
+    <View
+      style={[
+        styles.messageBubble,
+        isOutgoing ? styles.messageOutgoing : isAi ? styles.messageAi : styles.messageIncoming,
+      ]}
+    >
+      <Text style={styles.messageText}>{item.body}</Text>
+      <Text style={styles.messageMeta}>{meta}</Text>
+    </View>
+  );
+});
 
 MessageRow.displayName = "MessageRow";
 
@@ -111,7 +116,12 @@ export default function MessagesScreen() {
     setSending(true);
     const result = await MobileService.sendMessage(body);
     if (result.success) {
-      setMessages((prev) => sortMessages([...prev, result.data.message]));
+      setMessages((prev) => {
+        const next = result.data.aiMessage
+          ? [...prev, result.data.message, result.data.aiMessage]
+          : [...prev, result.data.message];
+        return sortMessages(next);
+      });
       setInput("");
       setError(null);
     } else {
@@ -211,6 +221,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     borderWidth: 1,
     borderColor: "#e1e6f3",
+  },
+  messageAi: {
+    alignSelf: "flex-start",
+    backgroundColor: "#e6f4ff",
+    borderWidth: 1,
+    borderColor: "#c7ddff",
   },
   messageOutgoing: {
     alignSelf: "flex-end",

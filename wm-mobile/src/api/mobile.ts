@@ -75,8 +75,12 @@ export const MobileApi = {
     const res = await apiClient.get<ApiResponse<MobileMessagesData>>("/api/mobile/messages");
     return res.data;
   },
-  sendMessage: async (body: string): Promise<ApiResponse<{ message: MobileMessagesData["messages"][number] }>> => {
-    const res = await apiClient.post<ApiResponse<{ message: MobileMessagesData["messages"][number] }>>(
+  sendMessage: async (
+    body: string
+  ): Promise<ApiResponse<{ message: MobileMessagesData["messages"][number]; aiMessage?: MobileMessagesData["messages"][number] }>> => {
+    const res = await apiClient.post<
+      ApiResponse<{ message: MobileMessagesData["messages"][number]; aiMessage?: MobileMessagesData["messages"][number] }>
+    >(
       "/api/mobile/messages",
       { body }
     );

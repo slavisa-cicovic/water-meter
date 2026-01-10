@@ -10,7 +10,8 @@ type AccountSummary = {
 type MessageRow = {
   id: string;
   body: string;
-  senderType: 'mobile' | 'web';
+  senderType: 'mobile' | 'web' | 'ai';
+  status: 'received' | 'processing' | 'ai_replied' | 'needs_human' | 'human_replied' | 'closed' | null;
   senderAccountId: string | null;
   createdAt: Date;
   readAtMobile: Date | null;
@@ -60,9 +61,18 @@ export const MessageRepository = {
     return this.createThread(accountId);
   },
 
-  async listThreads() {
+  async listThreadsNeedingHuman() {
     return prisma.messageThread.findMany({
-      where: { archivedAt: null },
+      where: {
+        archivedAt: null,
+        messages: {
+          some: {
+            senderType: 'mobile',
+            archivedAt: null,
+            OR: [{ status: null }, { status: 'needs_human' }],
+          },
+        },
+      },
       orderBy: [{ lastMessageAt: 'desc' }, { updatedAt: 'desc' }],
       include: {
         account: { select: selectAccount },
@@ -75,6 +85,7 @@ export const MessageRepository = {
             senderType: true,
             senderAccountId: true,
             createdAt: true,
+            status: true,
           },
         },
       },
@@ -100,7 +111,7 @@ export const MessageRepository = {
 
   async listMessagesBySender(
     threadId: string,
-    senderType: 'mobile' | 'web',
+    senderType: 'mobile' | 'web' | 'ai',
     limit: number,
     since?: Date
   ) {
@@ -125,7 +136,8 @@ export const MessageRepository = {
     threadId: string,
     data: {
       body: string;
-      senderType: 'mobile' | 'web';
+      senderType: 'mobile' | 'web' | 'ai';
+      status?: MessageRow['status'];
       senderAccountId?: string | null;
       readAtMobile?: Date | null;
       readAtWeb?: Date | null;
@@ -136,6 +148,7 @@ export const MessageRepository = {
         threadId,
         body: data.body,
         senderType: data.senderType,
+        status: data.status ?? undefined,
         senderAccountId: data.senderAccountId ?? undefined,
         readAtMobile: data.readAtMobile ?? undefined,
         readAtWeb: data.readAtWeb ?? undefined,
@@ -145,13 +158,24 @@ export const MessageRepository = {
 
   async countUnreadForWeb() {
     return prisma.message.count({
-      where: { senderType: 'mobile', readAtWeb: null, archivedAt: null },
+      where: {
+        senderType: 'mobile',
+        readAtWeb: null,
+        archivedAt: null,
+        OR: [{ status: null }, { status: 'needs_human' }],
+      },
     });
   },
 
   async countUnreadForWebThread(threadId: string) {
     return prisma.message.count({
-      where: { threadId, senderType: 'mobile', readAtWeb: null, archivedAt: null },
+      where: {
+        threadId,
+        senderType: 'mobile',
+        readAtWeb: null,
+        archivedAt: null,
+        OR: [{ status: null }, { status: 'needs_human' }],
+      },
     });
   },
 
@@ -159,7 +183,7 @@ export const MessageRepository = {
     return prisma.message.count({
       where: {
         threadId,
-        senderType: 'web',
+        senderType: { in: ['web', 'ai'] },
         readAtMobile: null,
         archivedAt: null,
         ...(since ? { createdAt: { gte: since } } : {}),
@@ -171,7 +195,13 @@ export const MessageRepository = {
     if (!threadIds.length) return new Map<string, number>();
     const counts = await prisma.message.groupBy({
       by: ['threadId'],
-      where: { threadId: { in: threadIds }, senderType: 'mobile', readAtWeb: null, archivedAt: null },
+      where: {
+        threadId: { in: threadIds },
+        senderType: 'mobile',
+        readAtWeb: null,
+        archivedAt: null,
+        OR: [{ status: null }, { status: 'needs_human' }],
+      },
       _count: { _all: true },
     });
     return new Map(counts.map((entry) => [entry.threadId, entry._count._all]));
@@ -179,16 +209,59 @@ export const MessageRepository = {
 
   async markThreadReadForWeb(threadId: string, at: Date) {
     await prisma.message.updateMany({
-      where: { threadId, senderType: 'mobile', readAtWeb: null, archivedAt: null },
+      where: {
+        threadId,
+        senderType: 'mobile',
+        readAtWeb: null,
+        archivedAt: null,
+        OR: [{ status: null }, { status: 'needs_human' }],
+      },
       data: { readAtWeb: at },
     });
   },
 
   async markThreadReadForMobile(threadId: string, at: Date) {
     await prisma.message.updateMany({
-      where: { threadId, senderType: 'web', readAtMobile: null, archivedAt: null },
+      where: { threadId, senderType: { in: ['web', 'ai'] }, readAtMobile: null, archivedAt: null },
       data: { readAtMobile: at },
     });
+  },
+
+  async updateMessageStatus(messageId: string, status: MessageRow['status']) {
+    return prisma.message.update({
+      where: { id: messageId },
+      data: { status: status ?? undefined },
+    });
+  },
+
+  async markLatestMobileMessageReplied(threadId: string) {
+    const latest = await prisma.message.findFirst({
+      where: {
+        threadId,
+        senderType: 'mobile',
+        archivedAt: null,
+        OR: [{ status: null }, { status: 'needs_human' }],
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (!latest) return null;
+    return prisma.message.update({
+      where: { id: latest.id },
+      data: { status: 'human_replied' },
+    });
+  },
+
+  async listRecentMessages(threadId: string, limit: number) {
+    return prisma.message.findMany({
+      where: { threadId, archivedAt: null },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      include: {
+        senderAccount: {
+          select: { id: true, firstName: true, lastName: true },
+        },
+      },
+    }) as Promise<MessageRow[]>;
   },
 
   async findAccount(accountId: string): Promise<AccountSummary | null> {

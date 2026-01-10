@@ -1,4 +1,5 @@
 import prisma from 'src/utils/prisma';
+import { HOSTNAME, NEXT_RUNTIME } from 'src/config-global';
 import { JobDefinition } from 'src/types/jobs';
 import { computeNextRunAt } from 'src/services/jobsService';
 import { jobHandlers } from 'src/services/job-handlers';
@@ -7,7 +8,7 @@ const POLL_INTERVAL_MS = 30_000;
 const LOCK_TTL_MS = 5 * 60 * 1000;
 
 const getInstanceId = () => {
-  const host = process.env.HOSTNAME;
+  const host = HOSTNAME;
   if (host) return host;
   return `instance-${Math.random().toString(36).slice(2, 10)}`;
 };
@@ -182,7 +183,7 @@ const pollJobs = async () => {
 
 export const startJobScheduler = () => {
   if (typeof window !== 'undefined') return;
-  if (process.env.NEXT_RUNTIME === 'edge') return;
+  if (NEXT_RUNTIME === 'edge') return;
   
   if (!globalState.jobScheduler) {
     globalState.jobScheduler = { started: false };

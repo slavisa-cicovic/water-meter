@@ -1,7 +1,9 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-const rawAllowedOrigins = process.env.NEXT_ALLOWED_DEV_ORIGINS || "";
+import { NEXT_ALLOWED_DEV_ORIGINS, NODE_ENV } from "src/config-global";
+
+const rawAllowedOrigins = NEXT_ALLOWED_DEV_ORIGINS;
 
 const allowedOrigins = rawAllowedOrigins
   .split(",")
@@ -25,7 +27,7 @@ const isOriginAllowed = (origin: string | null) => {
 
 const buildCorsHeaders = (origin: string | null) => {
   const headers = new Headers();
-  if (process.env.NODE_ENV !== "production") {
+  if (NODE_ENV !== "production") {
     if (allowedOrigins.length === 0) {
       headers.set("Access-Control-Allow-Origin", "*");
     } else if (isOriginAllowed(origin)) {

@@ -122,32 +122,41 @@ export default function MessageThreadPanel({ accountId, compact }: Props) {
 
           {!threadLoading && !threadError && mergedMessages.length > 0 && (
             <Stack spacing={1.5} divider={<Divider flexItem />}>
-              {mergedMessages.map((item) => (
-                <Box
-                  key={item.id}
-                  sx={{
-                    alignSelf: item.senderType === 'web' ? 'flex-end' : 'flex-start',
-                    width: item.senderType === 'web' ? '80%' : '100%',
-                    bgcolor: item.senderType === 'web' ? 'primary.light' : 'grey.100',
-                    color: 'text.primary',
-                    borderRadius: 2,
-                    px: 1.5,
-                    py: 1,
-                  }}
-                >
-                  {item.senderType === 'web' && item.senderName ? (
-                    <Typography variant="caption" color="text.secondary">
-                      {item.senderName}
+              {mergedMessages.map((item) => {
+                const isWeb = item.senderType === 'web';
+                const isAi = item.senderType === 'ai';
+                return (
+                  <Box
+                    key={item.id}
+                    sx={{
+                      alignSelf: isWeb ? 'flex-end' : 'flex-start',
+                      width: isWeb ? '80%' : '100%',
+                      bgcolor: isWeb ? 'primary.light' : isAi ? 'info.light' : 'grey.100',
+                      color: 'text.primary',
+                      borderRadius: 2,
+                      px: 1.5,
+                      py: 1,
+                    }}
+                  >
+                    {isWeb && item.senderName ? (
+                      <Typography variant="caption" color="text.secondary">
+                        {item.senderName}
+                      </Typography>
+                    ) : null}
+                    {isAi ? (
+                      <Typography variant="caption" color="text.secondary">
+                        AI Assistant
+                      </Typography>
+                    ) : null}
+                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                      {item.body}
                     </Typography>
-                  ) : null}
-                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                    {item.body}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {new Date(item.createdAt).toLocaleString()}
-                  </Typography>
-                </Box>
-              ))}
+                    <Typography variant="caption" color="text.secondary">
+                      {new Date(item.createdAt).toLocaleString()}
+                    </Typography>
+                  </Box>
+                );
+              })}
               <Button
                 size="small"
                 variant="text"

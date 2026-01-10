@@ -1,9 +1,18 @@
-export type MessageSenderType = 'mobile' | 'web';
+export type MessageSenderType = 'mobile' | 'web' | 'ai';
+
+export type MessageStatus =
+  | 'received'
+  | 'processing'
+  | 'ai_replied'
+  | 'needs_human'
+  | 'human_replied'
+  | 'closed';
 
 export type MessageItem = {
   id: string;
   body: string;
   senderType: MessageSenderType;
+  status: MessageStatus | null;
   senderAccountId: string | null;
   senderName: string | null;
   createdAt: string;
