@@ -18,7 +18,6 @@ import { componentsOverrides } from './overrides';
 // options
 import { presets } from './options/presets';
 import { darkMode } from './options/dark-mode';
-import { contrast } from './options/contrast';
 //
 import NextAppDirEmotionCacheProvider from './next-emotion-cache';
 
@@ -36,8 +35,6 @@ export default function ThemeProvider({ children }: Props) {
   const darkModeOption = darkMode(settings.themeMode);
 
   const presetsOption = presets(settings.themeColorPresets);
-
-  const contrastOption = contrast(settings.themeContrast === 'bold', settings.themeMode);
 
   const baseOption = useMemo(
     () => ({
@@ -59,16 +56,14 @@ export default function ThemeProvider({ children }: Props) {
         // Dark mode: remove if not in use
         darkModeOption,
         // Presets: remove if not in use
-        presetsOption,
-        // Contrast: remove if not in use
-        contrastOption.theme
-      ),
-    [baseOption, darkModeOption, presetsOption, contrastOption.theme]
+        presetsOption
+    ),
+    [baseOption, darkModeOption, presetsOption]
   );
 
   const theme = createTheme(memoizedValue as ThemeOptions);
 
-  theme.components = merge(componentsOverrides(theme), contrastOption.components);
+  theme.components = merge(componentsOverrides(theme));
 
   const themeWithLocale = useMemo(
     () => createTheme(theme, currentLang.systemValue),

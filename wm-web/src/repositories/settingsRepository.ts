@@ -2,7 +2,10 @@ import { Prisma } from "@prisma/client";
 import prisma from "src/utils/prisma";
 import { SettingsKey, SettingsValue } from "src/types/settings";
 
-const toJsonValue = (value: SettingsValue): Prisma.JsonValue => value as Prisma.JsonValue;
+const toJsonValue = (
+  value: SettingsValue
+): Prisma.InputJsonValue | Prisma.JsonNullValueInput =>
+  value === null ? Prisma.JsonNull : value;
 
 export const SettingsRepository = {
   async list(keys: SettingsKey[]) {

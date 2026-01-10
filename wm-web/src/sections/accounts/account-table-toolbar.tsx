@@ -31,7 +31,7 @@ export default function AccountTableToolbar({
         ? (user?.allowedAccountRoles as string[])
         : null;
 
-    const typeLabels = useMemo(
+    const typeLabels = useMemo<Record<string, string>>(
         () => ({
             consumer: t('accounts.type.consumer'),
             staff: t('accounts.type.staff'),

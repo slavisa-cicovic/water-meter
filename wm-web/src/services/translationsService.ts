@@ -68,18 +68,18 @@ const toBundle = (
   rows: Array<{ key: string; value: string; updatedAt: Date }>
 ) => {
   const translations: Record<string, string> = {};
-  let updatedAt: Date | null = null;
+  let updatedAtIso: string | null = null;
   rows.forEach((row) => {
     translations[row.key] = row.value;
-    if (!updatedAt || row.updatedAt > updatedAt) {
-      updatedAt = row.updatedAt;
+    if (!updatedAtIso || row.updatedAt > new Date(updatedAtIso)) {
+      updatedAtIso = row.updatedAt.toISOString();
     }
   });
 
   return {
     target,
     locale,
-    updatedAt: updatedAt ? updatedAt.toISOString() : null,
+    updatedAt: updatedAtIso,
     translations,
   } satisfies TranslationBundle;
 };
