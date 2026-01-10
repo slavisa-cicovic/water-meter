@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import dynamic from 'next/dynamic';
-import type { ApexAxisChartSeries, ApexNonAxisChartSeries, ApexOptions } from 'apexcharts';
+import type { ApexOptions } from 'apexcharts';
 // @mui
 import { alpha, styled } from '@mui/material/styles';
 // theme
@@ -69,7 +69,7 @@ const Chart = styled(ApexChart)(({ theme }) => ({
 
 export type ChartWrapperProps = {
   type?: ApexOptions['chart']['type'];
-  series: ApexAxisChartSeries | ApexNonAxisChartSeries;
+  series: ApexOptions['series'];
   options: ApexOptions;
   height?: number | string;
   width?: number | string;
