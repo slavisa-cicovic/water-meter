@@ -40,6 +40,7 @@ export default function MessagesScreen() {
   const { t } = useTranslation();
   const [messages, setMessages] = useState<MobileMessage[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -48,21 +49,35 @@ export default function MessagesScreen() {
 
   const reversedMessages = useMemo(() => messages.slice().reverse(), [messages]);
 
-  const loadMessages = useCallback(async () => {
-    setLoading(true);
+  const loadMessages = useCallback(async (options?: { initial?: boolean }) => {
+    const isInitial = options?.initial ?? false;
+    if (isInitial) {
+      setLoading(true);
+    } else {
+      setRefreshing(true);
+    }
     const result = await MobileService.getMessages();
     if (result.success) {
-      setMessages(sortMessages(result.data.messages));
+      const next = sortMessages(result.data.messages);
+      setMessages((prev) => {
+        const sameLength = prev.length === next.length;
+        const sameLastId = prev[prev.length - 1]?.id === next[next.length - 1]?.id;
+        return sameLength && sameLastId ? prev : next;
+      });
       setUnreadCount(result.data.unreadCount ?? 0);
       setError(null);
     } else {
       setError(result.message);
     }
-    setLoading(false);
+    if (isInitial) {
+      setLoading(false);
+    } else {
+      setRefreshing(false);
+    }
   }, [setUnreadCount]);
 
   useEffect(() => {
-    loadMessages();
+    loadMessages({ initial: true });
   }, [loadMessages]);
 
 
@@ -148,7 +163,14 @@ export default function MessagesScreen() {
             <Text style={styles.errorText}>{error}</Text>
           </View>
         ) : null}
-        <View style={styles.body}>{content}</View>
+        <View style={styles.body}>
+          {refreshing ? (
+            <View style={styles.refreshHint}>
+              <Text style={styles.refreshText}>Refreshing...</Text>
+            </View>
+          ) : null}
+          {content}
+        </View>
         <View style={styles.composer}>
           <TextInput
             style={styles.input}
@@ -174,6 +196,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f7ff" },
   keyboard: { flex: 1 },
   body: { flex: 1, paddingHorizontal: 16 },
+  refreshHint: { paddingTop: 8, paddingBottom: 4 },
+  refreshText: { color: "#6b7aa6", fontSize: 12 },
   centered: { flex: 1, alignItems: "center", justifyContent: "center" },
   listContent: { paddingVertical: 16, gap: 12 },
   messageBubble: {
