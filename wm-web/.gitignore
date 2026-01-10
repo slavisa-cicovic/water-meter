@@ -25,6 +25,9 @@ pnpm-debug.log*
 # Testing / coverage
 coverage/
 
+# Uploads
+public/uploads/
+
 # Editor settings
 .vscode/
 .idea/

@@ -241,6 +241,7 @@ export default function ReadingsScreen() {
     const originalValue = recognizedValue ?? normalizedValue;
     let capturedUri = photoUri;
     let payloadFilename = imageFilename ?? "meter-photo.jpg";
+    let uploadedFilename: string | null = null;
     if (sourceUri && viewShotRef.current?.capture) {
       try {
         capturedUri = await viewShotRef.current.capture();
@@ -255,17 +256,33 @@ export default function ReadingsScreen() {
       }
     }
 
+    setSubmitting(true);
+    if (sourceUri && capturedUri) {
+      const ext = payloadFilename.split(".").pop()?.toLowerCase();
+      const mimeType = ext === "png" ? "image/png" : "image/jpeg";
+      const uploadResult = await MobileService.uploadFile({
+        uri: capturedUri,
+        name: payloadFilename,
+        type: mimeType,
+      });
+      if (!uploadResult.success) {
+        setSubmitting(false);
+        Alert.alert(t("readings.alert.submitFailedTitle"), uploadResult.message);
+        return;
+      }
+      uploadedFilename = uploadResult.data.filename;
+    }
+
     const payload = {
       meterId: meter.id,
       accountId: user.id,
       method,
       value: normalizedValue,
       originalValue,
-      imageFilename: sourceUri ? payloadFilename : null,
+      imageFilename: sourceUri ? uploadedFilename : null,
       barcode: sortedBarcodes[0] ?? null,
     };
 
-    setSubmitting(true);
     const result = await MobileService.createReading(payload);
     setSubmitting(false);
 

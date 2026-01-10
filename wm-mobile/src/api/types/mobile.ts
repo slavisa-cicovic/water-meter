@@ -168,3 +168,10 @@ export type MobileMessagesData = {
   messages: MobileMessage[];
   unreadCount: number;
 };
+
+export type MobileUploadResult = {
+  filename: string;
+  url: string;
+  size: number;
+  mimeType: string;
+};

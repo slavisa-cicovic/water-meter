@@ -13,6 +13,7 @@ import {
   MobileNotificationsData,
   MobileStaffMetersData,
   MobileMessagesData,
+  MobileUploadResult,
 } from "@src/api/types/mobile";
 
 export const MobileApi = {
@@ -79,6 +80,14 @@ export const MobileApi = {
       "/api/mobile/messages",
       { body }
     );
+    return res.data;
+  },
+  uploadFile: async (payload: FormData): Promise<ApiResponse<MobileUploadResult>> => {
+    const res = await apiClient.post<ApiResponse<MobileUploadResult>>("/api/mobile/uploads", payload, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return res.data;
   },
   getStaffMeters: async (): Promise<ApiResponse<MobileStaffMetersData>> => {

@@ -12,6 +12,7 @@ import {
   MobileStaffMetersData,
   MobileMessagesData,
   MobileMessage,
+  MobileUploadResult,
 } from "@src/api/types/mobile";
 import { useAuthStore } from "@src/state/auth-store";
 import { defaultLocale, normalizeLocale, translations } from "@src/constants/translations";
@@ -353,6 +354,44 @@ export const MobileService = {
       const message = code
         ? translate(ERROR_MESSAGE_KEYS[code] || "errors.sendMessage", "Unable to send message.")
         : translate("errors.sendMessage", "Unable to send message.");
+      return { success: false, message };
+    }
+  },
+
+  async uploadFile(input: {
+    uri: string;
+    name?: string;
+    type?: string;
+  }): Promise<ServiceResult<MobileUploadResult>> {
+    try {
+      const fallbackName = input.uri.split("/").pop() || `upload_${Date.now()}`;
+      const formData = new FormData();
+      formData.append("file", {
+        uri: input.uri,
+        name: input.name || fallbackName,
+        type: input.type || "application/octet-stream",
+      } as any);
+
+      const res = await MobileApi.uploadFile(formData);
+      if (!res.success) {
+        const message = res.error
+          ? translate(ERROR_MESSAGE_KEYS[res.error] || "errors.uploadFailed", "Unable to upload file.")
+          : translate("errors.uploadFailed", "Unable to upload file.");
+        return { success: false, message, details: res.details };
+      }
+
+      const data = res.data as MobileUploadResult | undefined;
+      if (!data) {
+        return { success: false, message: translate("errors.uploadFailed", "Unable to upload file.") };
+      }
+
+      return { success: true, data };
+    } catch (error: unknown) {
+      const apiError = error as { response?: { data?: { error?: string } } };
+      const code = apiError.response?.data?.error;
+      const message = code
+        ? translate(ERROR_MESSAGE_KEYS[code] || "errors.uploadFailed", "Unable to upload file.")
+        : translate("errors.uploadFailed", "Unable to upload file.");
       return { success: false, message };
     }
   },
