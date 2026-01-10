@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -20,6 +20,20 @@ import { useMessagesStore } from "@src/state/messages-store";
 
 const sortMessages = (items: MobileMessage[]) =>
   items.slice().sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+const MessageRow = memo(({ item }: { item: MobileMessage }) => (
+  <View
+    style={[
+      styles.messageBubble,
+      item.senderType === "mobile" ? styles.messageOutgoing : styles.messageIncoming,
+    ]}
+  >
+    <Text style={styles.messageText}>{item.body}</Text>
+    <Text style={styles.messageMeta}>{new Date(item.createdAt).toLocaleString()}</Text>
+  </View>
+));
+
+MessageRow.displayName = "MessageRow";
 
 export default function MessagesScreen() {
   const { t } = useTranslation();
@@ -101,19 +115,7 @@ export default function MessagesScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
-        renderItem={({ item }) => (
-          <View
-            style={[
-              styles.messageBubble,
-              item.senderType === "mobile" ? styles.messageOutgoing : styles.messageIncoming,
-            ]}
-          >
-            <Text style={styles.messageText}>{item.body}</Text>
-            <Text style={styles.messageMeta}>
-              {new Date(item.createdAt).toLocaleString()}
-            </Text>
-          </View>
-        )}
+        renderItem={({ item }) => <MessageRow item={item} />}
       />
     );
   }, [loading, messages, t]);

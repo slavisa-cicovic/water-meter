@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Tabs } from "expo-router";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { AppState } from "react-native";
+import { AppState, Keyboard, Platform } from "react-native";
 import { MobileService } from "@src/services/mobile.service";
 import { useAuthStore } from "@src/state/auth-store";
 import { useNotificationsStore } from "@src/state/notifications-store";
 import { useMessagesStore } from "@src/state/messages-store";
 import { useTranslation } from "@src/hooks/use-translation";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabsLayout() {
   const user = useAuthStore((state) => state.user);
@@ -18,6 +19,8 @@ export default function TabsLayout() {
   const unreadMessages = useMessagesStore((state) => state.unreadCount);
   const refreshMessages = useMessagesStore((state) => state.refreshMessages);
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -109,6 +112,36 @@ export default function TabsLayout() {
     };
   }, [refreshMessages, user?.id]);
 
+  useEffect(() => {
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showSub = Keyboard.addListener(showEvent, (event) => {
+      setKeyboardHeight(event.endCoordinates.height);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  const tabBarStyle = useMemo(
+    () => ({
+      borderTopColor: "#e1e6f3",
+      borderTopWidth: 1,
+      backgroundColor: "#ffffff",
+      paddingBottom: insets.bottom,
+      height: 56 + insets.bottom,
+      position: "absolute" as const,
+      left: 0,
+      right: 0,
+      bottom: Platform.OS === "ios" ? keyboardHeight : 0,
+    }),
+    [insets.bottom, keyboardHeight]
+  );
+
   const hideReadings = user?.role === "consumer" && sharedMeter === true;
   const paymentEnabled = user?.role === "consumer" ? hasIssuedInvoice : false;
 
@@ -123,11 +156,8 @@ export default function TabsLayout() {
         tabBarActiveTintColor: "#3a4c7a",
         tabBarInactiveTintColor: "#6b7aa6",
         tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
-        tabBarStyle: {
-          borderTopColor: "#e1e6f3",
-          borderTopWidth: 1,
-          backgroundColor: "#ffffff",
-        },
+        tabBarHideOnKeyboard: false,
+        tabBarStyle,
       }}
     >
       <Tabs.Screen

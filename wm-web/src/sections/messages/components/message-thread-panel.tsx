@@ -73,6 +73,7 @@ export default function MessageThreadPanel({ accountId, compact }: Props) {
       await MessagesApi.sendMessage(accountId, body);
       setMessage('');
       await mutateThread();
+      await mutateCache(endpoints.messages.root);
       await mutateCache(endpoints.notifications.summary);
     } finally {
       setSending(false);
@@ -85,6 +86,7 @@ export default function MessageThreadPanel({ accountId, compact }: Props) {
 
   useEffect(() => {
     if (!thread?.threadId) return;
+    mutateCache(endpoints.messages.root);
     mutateCache(endpoints.notifications.summary);
   }, [mutateCache, thread?.threadId, thread?.messages?.length]);
 
