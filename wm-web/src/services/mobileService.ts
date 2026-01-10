@@ -15,6 +15,7 @@ import { Prisma } from "@prisma/client";
 import { ReadingsService } from "src/services/readingsService";
 import { Reading, ReadingCreateInput } from "src/types/readings";
 import { AuthorizationService } from "src/services/authorizationService";
+import { PERMISSIONS } from "src/constants/permissions";
 import { SettingsService } from "src/services/settingsService";
 
 type ServiceResult<T> = { success: true; data: T } | { success: false; error: string; details?: Record<string, string[]> };
@@ -240,7 +241,10 @@ export const MobileService = {
     accountId: string,
     input: Omit<ReadingCreateInput, "readerAccountId">
   ): Promise<ServiceResult<{ reading: Reading }>> {
-    const result = await ReadingsService.create({ ...input, readerAccountId: accountId });
+    const result = await ReadingsService.create(
+      { ...input, readerAccountId: accountId },
+      { permissionSlug: PERMISSIONS.MOBILE_READINGS_CREATE }
+    );
     if (!result.success) {
       return { success: false, error: result.error ?? "SERVER_ERROR", details: result.details };
     }

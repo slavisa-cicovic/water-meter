@@ -50,7 +50,7 @@ const hasPermission = async (accountId: string, permission: string) => {
 };
 
 export const ReadingsService = {
-  async create(input: ReadingCreateInput) {
+  async create(input: ReadingCreateInput, options: { permissionSlug?: string } = {}) {
     const validation = validateReadingCreate(input);
     if (!validation.valid) {
       return { success: false, error: 'VALIDATION_FAILED', details: validation.errors };
@@ -58,7 +58,8 @@ export const ReadingsService = {
 
     const reader = await AccountRepository.findById(input.readerAccountId);
     if (!reader) return { success: false, error: 'ACCOUNT_NOT_FOUND' };
-    const canCreate = await hasPermission(reader.id, PERMISSIONS.READINGS_CREATE);
+    const permissionSlug = options.permissionSlug ?? PERMISSIONS.READINGS_CREATE;
+    const canCreate = await hasPermission(reader.id, permissionSlug);
     if (!canCreate) return { success: false, error: 'READER_FORBIDDEN' };
 
     try {
