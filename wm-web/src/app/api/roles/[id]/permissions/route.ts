@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from 'src/utils/prisma';
+import { Prisma } from '@prisma/client';
 import { PERMISSIONS } from 'src/constants/permissions';
 import { withPermission } from 'src/services/permissionGuard';
 
@@ -83,7 +84,7 @@ export const PATCH = withPermission(PERMISSIONS.ROLES_UPDATE, async (req: NextRe
           where: {
             roleId_permissionId: { roleId: role.id, permissionId: permission.id },
           },
-          update: { conditions: update.conditions ?? null },
+          update: { conditions: update.conditions ?? Prisma.JsonNull },
           create: {
             roleId: role.id,
             permissionId: permission.id,
