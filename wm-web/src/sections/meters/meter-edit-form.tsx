@@ -747,7 +747,10 @@ export function MeterEditForm({ currentMeter }: Props) {
                 setEditValue(event.target.value);
                 if (editError) setEditError('');
               }}
-              inputProps={{ step: '0.01' }}
+              slotProps={{
+                inputLabel: { shrink: true },
+                input: { inputProps: { step: '0.01' } },
+              }}
               error={Boolean(editError)}
               helperText={
                 editError ||
@@ -758,7 +761,6 @@ export function MeterEditForm({ currentMeter }: Props) {
                     })
                   : undefined)
               }
-              slotProps={{ inputLabel: { shrink: true } }}
             />
             <TextField
               label={t('meters.readings.edit.reasonLabel')}
