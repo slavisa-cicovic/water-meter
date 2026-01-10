@@ -10,7 +10,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AppBar from "@src/components/layout/app-bar";
 import { MobileMessage } from "@src/api/types/mobile";
 import { MobileService } from "@src/services/mobile.service";
@@ -64,6 +65,7 @@ export default function MessagesScreen() {
     loadMessages();
   }, [loadMessages]);
 
+
   useFocusEffect(
     useCallback(() => {
       let active = true;
@@ -102,6 +104,7 @@ export default function MessagesScreen() {
     }
     setSending(false);
   };
+
 
   const content = useMemo(() => {
     if (loading) {
@@ -154,8 +157,12 @@ export default function MessagesScreen() {
             placeholder={t("messages.inputPlaceholder")}
             multiline
           />
-          <TouchableOpacity style={styles.sendButton} onPress={handleSend} disabled={sending}>
-            <Text style={styles.sendButtonText}>{t("messages.send")}</Text>
+          <TouchableOpacity
+            style={[styles.sendButton, !input.trim() && styles.sendButtonDisabled]}
+            onPress={handleSend}
+            disabled={sending || !input.trim()}
+          >
+            <MaterialCommunityIcons name="send" size={18} color="#ffffff" />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -215,10 +222,12 @@ const styles = StyleSheet.create({
     alignSelf: "flex-end",
     backgroundColor: "#3a4c7a",
     borderRadius: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: 10,
     paddingVertical: 8,
   },
-  sendButtonText: { color: "#ffffff", fontWeight: "700" },
+  sendButtonDisabled: {
+    opacity: 0.5,
+  },
   emptyText: { color: "#6b7aa6" },
   errorBox: { paddingHorizontal: 16, paddingTop: 8 },
   errorText: { color: "#d21f3c", fontSize: 12 },
