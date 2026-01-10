@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import AppBar from "@src/components/layout/app-bar";
 import { MobileMessage } from "@src/api/types/mobile";
 import { MobileService } from "@src/services/mobile.service";
@@ -45,6 +45,8 @@ export default function MessagesScreen() {
   const setUnreadCount = useMessagesStore((state) => state.setUnreadCount);
   const listRef = useRef<FlatList<MobileMessage> | null>(null);
 
+  const reversedMessages = useMemo(() => messages.slice().reverse(), [messages]);
+
   const loadMessages = useCallback(async () => {
     setLoading(true);
     const result = await MobileService.getMessages();
@@ -77,6 +79,14 @@ export default function MessagesScreen() {
       };
     }, [loadMessages])
   );
+
+  useEffect(() => {
+    if (messages.length === 0) return;
+    const timer = setTimeout(() => {
+      listRef.current?.scrollToOffset({ offset: 0, animated: true });
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [messages.length]);
 
   const handleSend = async () => {
     const body = input.trim();
@@ -111,14 +121,15 @@ export default function MessagesScreen() {
     return (
       <FlatList
         ref={listRef}
-        data={messages}
+        data={reversedMessages}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
-        onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
+        inverted
+        onContentSizeChange={() => listRef.current?.scrollToOffset({ offset: 0, animated: true })}
         renderItem={({ item }) => <MessageRow item={item} />}
       />
     );
-  }, [loading, messages, t]);
+  }, [loading, reversedMessages, t]);
 
   return (
     <SafeAreaView style={styles.container}>
