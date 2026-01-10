@@ -757,6 +757,21 @@
       }
     }
   },
+  "notifications": {
+    "title": "Obavestenja",
+    "loading": "Ucitavanje obavestenja...",
+    "loadError": "Neuspesno ucitavanje obavestenja.",
+    "empty": "Nema obavestenja",
+    "ariaLabel": "obavestenja",
+    "items": {
+      "invalidReading": "Imate {{countLabel}} neispravnih ocitavanja",
+      "noReading": "Imate {{countLabel}} potrosaca bez trenutnog ocitavanja",
+      "noPreviousReading": "Imate {{countLabel}} potrosaca bez prethodnog ocitavanja",
+      "noHouseholdSize": "Imate {{countLabel}} potrosaca bez broja clanova",
+      "draftInvoices": "Imate {{countLabel}} nacrta faktura za potvrdu",
+      "unreadMessages": "Imate {{countLabel}} neprocitanih poruka"
+    }
+  },
   "validation": {
     "required": "Obavezno",
     "min": "Mora biti >= {{min}}"

@@ -757,6 +757,21 @@
       }
     }
   },
+  "notifications": {
+    "title": "Обавештења",
+    "loading": "Учитавање обавештења...",
+    "loadError": "Неуспешно учитавање обавештења.",
+    "empty": "Нема обавештења",
+    "ariaLabel": "обавештења",
+    "items": {
+      "invalidReading": "Имате {{countLabel}} неисправних очитавања",
+      "noReading": "Имате {{countLabel}} потрошача без тренутног очитавања",
+      "noPreviousReading": "Имате {{countLabel}} потрошача без претходног очитавања",
+      "noHouseholdSize": "Имате {{countLabel}} потрошача без броја чланова",
+      "draftInvoices": "Имате {{countLabel}} нацрта фактура за потврду",
+      "unreadMessages": "Имате {{countLabel}} непрочитаних порука"
+    }
+  },
   "validation": {
     "required": "Обавезно",
     "min": "Мора бити >= {{min}}"

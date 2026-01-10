@@ -13,8 +13,10 @@ import CustomPopover, { usePopover } from 'src/components/custom-popover';
 import Iconify from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import { paths } from 'src/routes/paths';
+import { useLocales } from 'src/locales';
 
 export function NotificationPopover() {
+  const { t } = useLocales();
   const popover = usePopover();
   const { summary, notificationsLoading, notificationsError } = useGetNotifications();
 
@@ -34,7 +36,9 @@ export function NotificationPopover() {
           {
             id: 'review-invalid-reading',
             count: reviewFlags.invalid_reading,
-            title: `You have ${formatCount(reviewFlags.invalid_reading)} invalid readings`,
+            title: t('notifications.items.invalidReading', {
+              countLabel: formatCount(reviewFlags.invalid_reading),
+            }),
             href: buildBillingHref({ review: 'invalid_reading' }),
           },
         ]
@@ -44,7 +48,9 @@ export function NotificationPopover() {
           {
             id: 'review-no-reading',
             count: reviewFlags.no_reading,
-            title: `You have ${formatCount(reviewFlags.no_reading)} consumers missing current readings`,
+            title: t('notifications.items.noReading', {
+              countLabel: formatCount(reviewFlags.no_reading),
+            }),
             href: buildBillingHref({ review: 'no_reading' }),
           },
         ]
@@ -54,7 +60,9 @@ export function NotificationPopover() {
           {
             id: 'review-no-previous-reading',
             count: reviewFlags.no_previous_reading,
-            title: `You have ${formatCount(reviewFlags.no_previous_reading)} consumers missing previous readings`,
+            title: t('notifications.items.noPreviousReading', {
+              countLabel: formatCount(reviewFlags.no_previous_reading),
+            }),
             href: buildBillingHref({ review: 'no_previous_reading' }),
           },
         ]
@@ -64,7 +72,9 @@ export function NotificationPopover() {
           {
             id: 'review-no-household-size',
             count: reviewFlags.no_household_size,
-            title: `You have ${formatCount(reviewFlags.no_household_size)} consumers missing household size`,
+            title: t('notifications.items.noHouseholdSize', {
+              countLabel: formatCount(reviewFlags.no_household_size),
+            }),
             href: buildBillingHref({ review: 'no_household_size' }),
           },
         ]
@@ -74,7 +84,9 @@ export function NotificationPopover() {
           {
             id: 'draft-invoices',
             count: summary.draftInvoices,
-            title: `You have ${formatCount(summary.draftInvoices)} draft invoices awaiting confirmation`,
+            title: t('notifications.items.draftInvoices', {
+              countLabel: formatCount(summary.draftInvoices),
+            }),
             href: buildBillingHref({ status: 'draft', review: 'no_flags' }),
           },
         ]
@@ -84,7 +96,9 @@ export function NotificationPopover() {
           {
             id: 'unread-messages',
             count: summary.unreadMessages,
-            title: `You have ${formatCount(summary.unreadMessages)} unread messages`,
+            title: t('notifications.items.unreadMessages', {
+              countLabel: formatCount(summary.unreadMessages),
+            }),
             href: paths.dashboard.messages.root,
           },
         ]
@@ -97,7 +111,11 @@ export function NotificationPopover() {
   return (
     <>
       <Badge badgeContent={badgeLabel} color="error" invisible={unreadCount === 0}>
-        <IconButton onClick={popover.onOpen} aria-label="notifications" sx={{ width: 40, height: 40 }}>
+        <IconButton
+          onClick={popover.onOpen}
+          aria-label={t('notifications.ariaLabel')}
+          sx={{ width: 40, height: 40 }}
+        >
           <Iconify icon="solar:bell-bing-bold-duotone" width={24} />
         </IconButton>
       </Badge>
@@ -105,30 +123,24 @@ export function NotificationPopover() {
       <CustomPopover open={popover.open} onClose={popover.onClose} arrow="top-right" sx={{ width: 320 }}>
         <MenuList sx={{ p: 0.5 }}>
           <MenuItem disabled sx={{ py: 1.25, typography: 'subtitle2' }}>
-            Notifications
+            {t('notifications.title')}
           </MenuItem>
 
           {notificationsLoading && (
             <MenuItem disabled>
-              <ListItemText
-                primary={<Typography variant="body2">Loading notifications...</Typography>}
-              />
+              <ListItemText primary={<Typography variant="body2">{t('notifications.loading')}</Typography>} />
             </MenuItem>
           )}
 
           {!notificationsLoading && notificationsError && (
             <MenuItem disabled>
-              <ListItemText
-                primary={<Typography variant="body2">Failed to load notifications.</Typography>}
-              />
+              <ListItemText primary={<Typography variant="body2">{t('notifications.loadError')}</Typography>} />
             </MenuItem>
           )}
 
           {!notificationsLoading && !notificationsError && notificationItems.length === 0 && (
             <MenuItem disabled>
-              <ListItemText
-                primary={<Typography variant="body2">No notifications</Typography>}
-              />
+              <ListItemText primary={<Typography variant="body2">{t('notifications.empty')}</Typography>} />
             </MenuItem>
           )}
 

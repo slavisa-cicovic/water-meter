@@ -757,6 +757,21 @@
       }
     }
   },
+  "notifications": {
+    "title": "Notifications",
+    "loading": "Loading notifications...",
+    "loadError": "Failed to load notifications.",
+    "empty": "No notifications",
+    "ariaLabel": "notifications",
+    "items": {
+      "invalidReading": "You have {{countLabel}} invalid readings",
+      "noReading": "You have {{countLabel}} consumers missing current readings",
+      "noPreviousReading": "You have {{countLabel}} consumers missing previous readings",
+      "noHouseholdSize": "You have {{countLabel}} consumers missing household size",
+      "draftInvoices": "You have {{countLabel}} draft invoices awaiting confirmation",
+      "unreadMessages": "You have {{countLabel}} unread messages"
+    }
+  },
   "validation": {
     "required": "Required",
     "min": "Must be >= {{min}}"
