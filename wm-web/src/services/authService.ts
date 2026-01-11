@@ -3,6 +3,7 @@ import prisma from "src/utils/prisma";
 import { TokenService } from "./tokenService";
 import { AuthorizationService } from "./authorizationService";
 import { VerificationStatus } from "src/types/accounts";
+import { PasswordService } from "./passwordService";
 
 type LoginInput = {
   identifier: string;
@@ -21,9 +22,16 @@ export const AuthService = {
       return NextResponse.json({ success: false, error: "ACCOUNT_NOT_FOUND" }, { status: 404 });
     }
 
-    // TODO: use password hash/compare
-    if (account.passwordHash !== password) {
+    const isValid = await PasswordService.verifyPassword(password, account.passwordHash);
+    if (!isValid) {
       return NextResponse.json({ success: false, error: "INVALID_CREDENTIALS" }, { status: 401 });
+    }
+    if (PasswordService.needsUpgrade(account.passwordHash)) {
+      const passwordHash = await PasswordService.hashPassword(password);
+      await prisma.account.update({
+        where: { id: account.id },
+        data: { passwordHash },
+      });
     }
 
     if (account.verificationStatus !== "verified") {

@@ -21,6 +21,7 @@ import { Prisma, StaffRole } from '@prisma/client';
 import prisma from 'src/utils/prisma';
 import { AuthorizationService } from './authorizationService';
 import { PERMISSIONS } from 'src/constants/permissions';
+import { PasswordService } from './passwordService';
 
 const toAccountRoleSlug = async (staffRole?: StaffRole) => {
   if (!staffRole) return 'staff_field';
@@ -115,13 +116,14 @@ export const AccountsService = {
       if (!roleId) {
         return { success: false, error: 'ROLE_NOT_FOUND' };
       }
+      const passwordHash = await PasswordService.hashPassword(input.password);
       const account = await AccountRepository.createConsumer({
         firstName: input.firstName,
         lastName: input.lastName,
         email: input.email,
         phone: input.phone,
         address: input.address,
-        password: input.password, // TODO: hash password
+        passwordHash,
         householdSize: input.householdSize,
         roleId,
       });
@@ -160,13 +162,14 @@ export const AccountsService = {
       if (!roleId) {
         return { success: false, error: 'ROLE_NOT_FOUND' };
       }
+      const passwordHash = await PasswordService.hashPassword(input.password);
       const account = await AccountRepository.createStaff({
         firstName: input.firstName,
         lastName: input.lastName,
         email: input.email,
         phone: input.phone,
         address: input.address,
-        password: input.password, // TODO: hash password
+        passwordHash,
         staffRole: input.staffRole,
         roleId,
       });

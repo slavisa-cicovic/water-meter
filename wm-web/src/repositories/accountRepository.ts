@@ -20,7 +20,7 @@ export const AccountRepository = {
     email: string;
     phone?: string;
     address: string;
-    password: string;
+    passwordHash: string;
     householdSize: number;
     roleId: string;
   }) {
@@ -31,7 +31,7 @@ export const AccountRepository = {
         email: data.email,
         phone: data.phone,
         address: data.address,
-        passwordHash: data.password,
+        passwordHash: data.passwordHash,
         accountRoleLinks: {
           create: { roleId: data.roleId },
         },
@@ -50,7 +50,7 @@ export const AccountRepository = {
     email: string;
     phone?: string;
     address: string;
-    password: string;
+    passwordHash: string;
     staffRole: StaffRole;
     roleId: string;
   }) {
@@ -61,7 +61,7 @@ export const AccountRepository = {
         email: data.email,
         phone: data.phone,
         address: data.address,
-        passwordHash: data.password,
+        passwordHash: data.passwordHash,
         accountRoleLinks: {
           create: { roleId: data.roleId },
         },

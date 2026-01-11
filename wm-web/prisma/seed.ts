@@ -1,4 +1,16 @@
 import { PrismaClient, StaffRole, VerificationStatus } from '@prisma/client';
+import { randomBytes, scrypt as scryptCallback } from 'crypto';
+import { promisify } from 'util';
+
+const scrypt = promisify(scryptCallback);
+const SALT_BYTES = 16;
+const KEY_LENGTH = 64;
+
+const hashPassword = async (password: string) => {
+  const salt = randomBytes(SALT_BYTES).toString('hex');
+  const derived = (await scrypt(password, salt, KEY_LENGTH)) as Buffer;
+  return `scrypt$${salt}$${derived.toString('hex')}`;
+};
 
 const prisma = new PrismaClient();
 let roleIdBySlug = new Map<string, string>();
@@ -174,6 +186,7 @@ async function clearData() {
 
 async function seedConsumers() {
   for (const c of consumers) {
+    const passwordHash = await hashPassword(c.password);
     const account = await prisma.account.create({
       data: {
         firstName: c.firstName,
@@ -181,7 +194,7 @@ async function seedConsumers() {
         email: c.email,
         phone: c.phone,
         address: c.address,
-        passwordHash: c.password, // intentionally plain text per current choice
+        passwordHash,
         verificationStatus: c.verificationStatus,
         accountRoleLinks: {
           create: { roleId: requireRoleId('consumer') },
@@ -210,12 +223,13 @@ async function seedConsumers() {
 async function seedAdmins() {
   for (const a of admins) {
     const roleSlug = a.email === 'super.admin@example.com' ? 'super_admin' : 'admin';
+    const passwordHash = await hashPassword(a.password);
     const account = await prisma.account.create({
       data: {
         firstName: a.firstName,
         lastName: a.lastName,
         email: a.email,
-        passwordHash: a.password,
+        passwordHash,
         address: 'HQ',
         verificationStatus: 'verified',
         accountRoleLinks: {
@@ -249,13 +263,14 @@ async function seedBulkConsumers() {
   }
 
   for (const c of bulk) {
+    const passwordHash = await hashPassword(c.password);
     await prisma.account.create({
       data: {
         firstName: c.firstName,
         lastName: c.lastName,
         email: c.email,
         address: c.address,
-        passwordHash: c.password,
+        passwordHash,
         verificationStatus: c.verificationStatus,
         accountRoleLinks: {
           create: { roleId: requireRoleId('consumer') },
@@ -296,13 +311,14 @@ async function seedExtraStaffField(count = 3) {
   }
 
   for (const s of extra) {
+    const passwordHash = await hashPassword(s.password);
     await prisma.account.create({
       data: {
         firstName: s.firstName,
         lastName: s.lastName,
         email: s.email,
         address: s.address,
-        passwordHash: s.password,
+        passwordHash,
         verificationStatus: s.verificationStatus,
         accountRoleLinks: {
           create: { roleId: requireRoleId('staff_field') },
@@ -331,6 +347,7 @@ async function seedExtraStaffField(count = 3) {
 async function seedStaff() {
   for (const s of staff) {
     const roleSlug = s.staffRole === 'backoffice' ? 'staff_backoffice' : 'staff_field';
+    const passwordHash = await hashPassword(s.password);
     const account = await prisma.account.create({
       data: {
         firstName: s.firstName,
@@ -338,7 +355,7 @@ async function seedStaff() {
         email: s.email,
         phone: s.phone,
         address: s.address,
-        passwordHash: s.password, // intentionally plain text per current choice
+        passwordHash,
         verificationStatus: s.verificationStatus,
         accountRoleLinks: {
           create: { roleId: requireRoleId(roleSlug) },
