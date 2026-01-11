@@ -22,6 +22,8 @@ import RoleBasedGuard from "src/auth/guard/role-based-guard";
 import { PERMISSIONS } from "src/constants/permissions";
 import RolePermissionsManager from "../role-permissions-manager";
 import TranslationManager from "../translation-manager";
+import AiPromptManager from "../ai-prompt-manager";
+import AiFaqManager from "../ai-faq-manager";
 import { useLocales } from "src/locales";
 
 const formatDateLabel = (value: string | null) => value ?? "-";
@@ -50,6 +52,16 @@ export function SettingsView() {
     if (dateMode === "auto") return t("settings.currentDate.autoDisplay");
     return dateValue ? formatDateLabel(dateValue) : t("settings.currentDate.empty");
   }, [dateMode, dateValue, t]);
+
+  const isDateDirty = useMemo(() => {
+    if (!data) return false;
+    return data.currentDateMode !== dateMode || data.currentDateValue !== dateValue;
+  }, [data, dateMode, dateValue]);
+
+  const isCurrencyDirty = useMemo(() => {
+    if (!data) return false;
+    return data.currency !== currency.trim();
+  }, [data, currency]);
 
   const handleSaveDate = useCallback(async () => {
     setMonthError(null);
@@ -166,7 +178,7 @@ export function SettingsView() {
                   <Button variant="outlined" onClick={handleCancelDate} disabled={savingMonth}>
                     {t("settings.actions.cancel")}
                   </Button>
-                  <Button variant="contained" onClick={handleSaveDate} disabled={savingMonth}>
+                  <Button variant="contained" onClick={handleSaveDate} disabled={savingMonth || !isDateDirty}>
                     {t("settings.actions.save")}
                   </Button>
                 </Stack>
@@ -191,7 +203,7 @@ export function SettingsView() {
                   <Button variant="outlined" onClick={handleCancelCurrency} disabled={savingCurrency}>
                     {t("settings.actions.cancel")}
                   </Button>
-                  <Button variant="contained" onClick={handleSaveCurrency} disabled={savingCurrency}>
+                  <Button variant="contained" onClick={handleSaveCurrency} disabled={savingCurrency || !isCurrencyDirty}>
                     {t("settings.actions.save")}
                   </Button>
                 </Stack>
@@ -207,6 +219,12 @@ export function SettingsView() {
         gridTemplateColumns={{ xs: "1fr", md: "repeat(2, 1fr)" }}
         sx={{ mt: 3 }}
       >
+        <RoleBasedGuard roles={["super_admin"]} hasContent>
+          <AiPromptManager />
+        </RoleBasedGuard>
+        <RoleBasedGuard roles={["super_admin"]} hasContent>
+          <AiFaqManager />
+        </RoleBasedGuard>
         <RoleBasedGuard permissions={[PERMISSIONS.ROLES_UPDATE]}>
           <RolePermissionsManager />
         </RoleBasedGuard>

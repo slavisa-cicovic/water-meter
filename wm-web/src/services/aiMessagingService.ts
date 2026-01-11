@@ -2,6 +2,7 @@ import { AiFaqRepository } from 'src/repositories/aiFaqRepository';
 import { MessageRepository } from 'src/repositories/messageRepository';
 import { MessageItem, MessageStatus } from 'src/types/messages';
 import { ChatMessage, getLlmProvider } from 'src/services/llmProvider';
+import { SettingsService } from 'src/services/settingsService';
 
 const CONTEXT_LIMIT = 8;
 const EMAIL_REDACT_REGEX = /[^\s@]+@[^\s@]+\.[^\s@]+/g;
@@ -21,13 +22,14 @@ const toPromptRole = (senderType: MessageItem['senderType']): ChatMessage['role'
 const shouldEscalateFromReply = (reply: string) =>
   /i\s+don'?t\s+know|not\s+sure|cannot\s+help|can't\s+help/i.test(reply) || containsPII(reply);
 
-const buildSystemPrompt = () =>
-  [
-    'You are a support assistant for a municipal water meter app.',
-    'Answer briefly and clearly.',
-    'If you are unsure, ask for clarification or escalate.',
-    'Never request or reveal sensitive personal data.',
-  ].join(' ');
+const defaultSystemPrompt = [
+  'You are a support assistant for a municipal water meter app.',
+  'Answer briefly and clearly.',
+  'If you are unsure, ask for clarification or escalate.',
+  'Never request or reveal sensitive personal data.',
+].join(' ');
+
+const buildSystemPrompt = (override?: string | null) => (override && override.trim() ? override.trim() : defaultSystemPrompt);
 
 const formatFaqEntries = (entries: Array<{ question: string; answer: string }>) =>
   entries.map((entry) => `Q: ${entry.question}\nA: ${entry.answer}`);
@@ -75,9 +77,11 @@ export const AiMessagingService = {
     const dbFaq = await AiFaqRepository.listActive();
     const faqSnippets = [...FAQ_SNIPPETS, ...formatFaqEntries(dbFaq)];
     const faqContext = buildFaqContext(faqSnippets);
+    const promptSetting = await SettingsService.getAiSystemPrompt();
+    const systemPrompt = buildSystemPrompt(promptSetting.success ? promptSetting.data : null);
     const faqMessages: ChatMessage[] = faqContext ? [{ role: 'system', content: faqContext }] : [];
     const promptMessages: ChatMessage[] = [
-      { role: 'system', content: buildSystemPrompt() },
+      { role: 'system', content: systemPrompt },
       ...faqMessages,
       ...ordered.map((item) => ({
         role: toPromptRole(item.senderType),

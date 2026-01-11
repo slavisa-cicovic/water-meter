@@ -15,9 +15,10 @@ const DEFAULTS: SettingsData = {
   currentDateMode: "auto",
   currentDateValue: null,
   currency: "RSD",
+  aiSystemPrompt: null,
 };
 
-const SETTINGS_KEYS: SettingsKey[] = ["currentDate.mode", "currentDate.value", "currency"];
+const SETTINGS_KEYS: SettingsKey[] = ["currentDate.mode", "currentDate.value", "currency", "ai.systemPrompt"];
 
 const resolveString = (value: Prisma.JsonValue, fallback: string) =>
   typeof value === "string" ? value : fallback;
@@ -39,6 +40,7 @@ export const SettingsService = {
           DEFAULTS.currentDateValue ?? ""
         ) || DEFAULTS.currentDateValue,
         currency: resolveString(map.get("currency") ?? DEFAULTS.currency, DEFAULTS.currency),
+        aiSystemPrompt: resolveString(map.get("ai.systemPrompt") ?? DEFAULTS.aiSystemPrompt ?? "", "") || null,
       },
     };
   },
@@ -80,5 +82,15 @@ export const SettingsService = {
 
     await SettingsRepository.upsert(input.key, input.value);
     return { success: true, data: { key: input.key, value: input.value } };
+  },
+
+  async getAiSystemPrompt(): Promise<ServiceResult<string | null>> {
+    const entries = await SettingsRepository.list(["ai.systemPrompt"]);
+    const entry = entries[0];
+    const value = entry?.value;
+    if (typeof value === "string" && value.trim()) {
+      return { success: true, data: value.trim() };
+    }
+    return { success: true, data: null };
   },
 };

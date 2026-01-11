@@ -76,6 +76,10 @@ export const endpoints = {
   messages: {
     root: '/api/messages',
   },
+  aiFaq: {
+    root: '/api/ai/faq',
+    entry: (id: string) => `/api/ai/faq/${id}`,
+  },
   settings: '/api/settings',
   translations: '/api/translations',
 };

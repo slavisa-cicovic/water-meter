@@ -35,6 +35,13 @@ export const validateSettingsUpdate = (input: SettingsUpdateInput): ValidationRe
     if (typeof input.value !== "string" || input.value.trim().length === 0) {
       pushError(errors, "value", "Required");
     }
+  } else if (input.key === "ai.systemPrompt") {
+    if (input.value === null) {
+      return { valid: true, errors };
+    }
+    if (typeof input.value !== "string") {
+      pushError(errors, "value", "Must be a string");
+    }
   }
 
   return { valid: Object.keys(errors).length === 0, errors };
