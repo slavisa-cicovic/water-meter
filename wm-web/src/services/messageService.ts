@@ -19,12 +19,14 @@ const toMessageItem = (row: {
   readAtMobile: Date | null;
   readAtWeb: Date | null;
   status: 'received' | 'processing' | 'ai_replied' | 'needs_human' | 'human_replied' | 'closed' | null;
+  aiError: string | null;
   senderAccount?: { id: string; firstName: string; lastName: string } | null;
 }) => ({
   id: row.id,
   body: row.body,
   senderType: row.senderType,
   status: row.status ?? null,
+  aiError: row.aiError ?? null,
   senderAccountId: row.senderAccountId ?? null,
   senderName: row.senderAccount
     ? `${row.senderAccount.firstName} ${row.senderAccount.lastName}`.trim()
@@ -111,6 +113,10 @@ export const MessageService = {
       });
     } catch (error) {
       await MessageRepository.updateMessageStatus(message.id, 'needs_human');
+      await MessageRepository.updateMessageAiError(
+        message.id,
+        error instanceof Error ? error.message : 'PROCESSING_FAILED'
+      );
       aiResult = { status: 'needs_human' };
       console.error('[AiMessaging] Failed to process message', error);
     }
@@ -176,11 +182,6 @@ export const MessageService = {
     const candidate = options?.before ? new Date(options.before) : undefined;
     const beforeDate = candidate && !Number.isNaN(candidate.getTime()) ? candidate : undefined;
     const messages = await MessageRepository.listMessages(thread.id, limit, beforeDate);
-    const visibleMessages = messages.filter((item) => {
-      if (item.senderType === 'ai') return false;
-      if (item.senderType !== 'mobile') return true;
-      return item.status !== 'processing' && item.status !== 'ai_replied';
-    });
     const unreadCount = await MessageRepository.countUnreadForWebThread(thread.id);
 
     if (!beforeDate) {
@@ -192,7 +193,7 @@ export const MessageService = {
       data: {
         threadId: thread.id,
         account,
-        messages: visibleMessages
+        messages: messages
           .slice()
           .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
           .map(toMessageItem),

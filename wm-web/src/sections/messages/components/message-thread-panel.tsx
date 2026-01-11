@@ -151,6 +151,11 @@ export default function MessageThreadPanel({ accountId, compact }: Props) {
                     <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
                       {item.body}
                     </Typography>
+                    {item.senderType === 'mobile' && item.status === 'needs_human' && item.aiError ? (
+                      <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                        AI error: {item.aiError}
+                      </Typography>
+                    ) : null}
                     <Typography variant="caption" color="text.secondary">
                       {new Date(item.createdAt).toLocaleString()}
                     </Typography>

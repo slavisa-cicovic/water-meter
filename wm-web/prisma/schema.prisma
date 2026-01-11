@@ -184,6 +184,7 @@ model Message {
   body            String            @db.Text
   senderType      MessageSenderType
   status          MessageStatus?
+  aiError         String?           @db.Text
   senderAccountId String?
   readAtMobile    DateTime?
   readAtWeb       DateTime?

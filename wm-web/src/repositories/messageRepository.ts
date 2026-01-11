@@ -12,6 +12,7 @@ type MessageRow = {
   body: string;
   senderType: 'mobile' | 'web' | 'ai';
   status: 'received' | 'processing' | 'ai_replied' | 'needs_human' | 'human_replied' | 'closed' | null;
+  aiError: string | null;
   senderAccountId: string | null;
   createdAt: Date;
   readAtMobile: Date | null;
@@ -138,6 +139,7 @@ export const MessageRepository = {
       body: string;
       senderType: 'mobile' | 'web' | 'ai';
       status?: MessageRow['status'];
+      aiError?: MessageRow['aiError'];
       senderAccountId?: string | null;
       readAtMobile?: Date | null;
       readAtWeb?: Date | null;
@@ -149,6 +151,7 @@ export const MessageRepository = {
         body: data.body,
         senderType: data.senderType,
         status: data.status ?? undefined,
+        aiError: data.aiError ?? undefined,
         senderAccountId: data.senderAccountId ?? undefined,
         readAtMobile: data.readAtMobile ?? undefined,
         readAtWeb: data.readAtWeb ?? undefined,
@@ -231,6 +234,13 @@ export const MessageRepository = {
     return prisma.message.update({
       where: { id: messageId },
       data: { status: status ?? undefined },
+    });
+  },
+
+  async updateMessageAiError(messageId: string, aiError: MessageRow['aiError']) {
+    return prisma.message.update({
+      where: { id: messageId },
+      data: { aiError: aiError ?? undefined },
     });
   },
 

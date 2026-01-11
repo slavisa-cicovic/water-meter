@@ -13,6 +13,7 @@ export type MessageItem = {
   body: string;
   senderType: MessageSenderType;
   status: MessageStatus | null;
+  aiError: string | null;
   senderAccountId: string | null;
   senderName: string | null;
   createdAt: string;

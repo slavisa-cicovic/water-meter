@@ -43,6 +43,13 @@ type ProcessingResult = {
   error?: string;
 };
 
+const truncateError = (value?: string | null) => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return trimmed.length > 500 ? `${trimmed.slice(0, 500)}...` : trimmed;
+};
+
 export const AiMessagingService = {
   async processMobileMessage({
     threadId,
@@ -94,11 +101,13 @@ export const AiMessagingService = {
     const result = await provider.generateReply({ messages: promptMessages, userId: accountId });
 
     if (!result.reply || shouldEscalateFromReply(result.reply)) {
+      const aiError = truncateError(result.error || (result.reply ? 'ESCALATED_BY_GUARD' : 'NO_REPLY'));
       await MessageRepository.updateMessageStatus(messageId, 'needs_human');
+      await MessageRepository.updateMessageAiError(messageId, aiError);
       console.info('[AiMessaging] escalation', {
         threadId,
         messageId,
-        reason: result.error || 'no_reply',
+        reason: aiError || 'no_reply',
       });
       return { status: 'needs_human', error: result.error };
     }
@@ -112,6 +121,7 @@ export const AiMessagingService = {
       readAtMobile: null,
     });
     await MessageRepository.updateMessageStatus(messageId, 'ai_replied');
+    await MessageRepository.updateMessageAiError(messageId, null);
     await MessageRepository.touchThread(threadId, now);
     console.info('[AiMessaging] reply sent', { threadId, messageId });
 
