@@ -155,7 +155,7 @@ export function DashboardView() {
       <Stack spacing={3}>
         <Grid container spacing={3}>
           {cards.map((card) => (
-            <Grid key={card.label} xs={12} sm={6} md={3}>
+            <Grid key={card.label} size={{ xs: 12, sm: 6, md: 3 }}>
               <Card>
                 <CardContent>
                   <Stack spacing={1}>
@@ -172,7 +172,7 @@ export function DashboardView() {
 
         {(role === 'admin' || role === 'staff_backoffice') && (
           <Grid container spacing={3}>
-            <Grid xs={12} md={7}>
+            <Grid size={{ xs: 12, md: 7 }}>
               <Card>
                 <CardHeader title="Readings volume" subheader="Last 6 months" />
                 <CardContent>
@@ -180,7 +180,7 @@ export function DashboardView() {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid xs={12} md={5}>
+            <Grid size={{ xs: 12, md: 5 }}>
               <Card>
                 <CardHeader title="Invoices by status" />
                 <CardContent>
@@ -188,7 +188,7 @@ export function DashboardView() {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid xs={12} md={5}>
+            <Grid size={{ xs: 12, md: 5 }}>
               <Card>
                 <CardHeader title="Meters by status" />
                 <CardContent>
@@ -201,7 +201,7 @@ export function DashboardView() {
 
         {role === 'manager' && (
           <Grid container spacing={3}>
-            <Grid xs={12} md={7}>
+            <Grid size={{ xs: 12, md: 7 }}>
               <Card>
                 <CardHeader title="Consumption trend" subheader="Last 6 months" />
                 <CardContent>
@@ -209,7 +209,7 @@ export function DashboardView() {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid xs={12} md={5}>
+            <Grid size={{ xs: 12, md: 5 }}>
               <Card>
                 <CardHeader title="Issues by group" subheader="Last 30 days" />
                 <CardContent>
@@ -217,7 +217,7 @@ export function DashboardView() {
                 </CardContent>
               </Card>
             </Grid>
-            <Grid xs={12} md={5}>
+            <Grid size={{ xs: 12, md: 5 }}>
               <Card>
                 <CardHeader title="Meters by status" />
                 <CardContent>
