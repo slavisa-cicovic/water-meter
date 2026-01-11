@@ -19,7 +19,7 @@ const toMessageItem = (row: {
   readAtMobile: Date | null;
   readAtWeb: Date | null;
   status: 'received' | 'processing' | 'ai_replied' | 'needs_human' | 'human_replied' | 'closed' | null;
-  aiError: string | null;
+  aiError?: string | null;
   senderAccount?: { id: string; firstName: string; lastName: string } | null;
 }) => ({
   id: row.id,
@@ -97,6 +97,7 @@ export const MessageService = {
             readAtMobile: message.readAtMobile ?? now,
             readAtWeb: message.readAtWeb ?? null,
             status: 'needs_human',
+            aiError: null,
           }),
         },
       };
@@ -130,6 +131,7 @@ export const MessageService = {
           readAtMobile: message.readAtMobile ?? now,
           readAtWeb: message.readAtWeb ?? null,
           status: aiResult.status,
+          aiError: null,
         }),
         aiMessage: aiResult.aiMessage,
       },
