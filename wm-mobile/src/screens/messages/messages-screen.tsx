@@ -19,8 +19,12 @@ import { useTranslation } from "@src/hooks/use-translation";
 import { useFocusEffect } from "@react-navigation/native";
 import { useMessagesStore } from "@src/state/messages-store";
 
-const sortMessages = (items: MobileMessage[]) =>
-  items.slice().sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+const sortMessages = (items: MobileMessage[]) => {
+  const map = new Map(items.map((item) => [item.id, item]));
+  return Array.from(map.values()).sort(
+    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
+};
 
 const MessageRow = memo(({ item }: { item: MobileMessage }) => {
   const isOutgoing = item.senderType === "mobile";
