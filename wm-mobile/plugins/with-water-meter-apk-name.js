@@ -1,13 +1,15 @@
 const { withAppBuildGradle } = require('expo/config-plugins');
 
-const APK_NAME_BLOCK = `    applicationVariants.all { variant ->
-        if (variant.buildType.name == "release") {
-            variant.outputs.all { output ->
-                outputFileName = "WaterMeter_v${variant.versionName}.apk"
-            }
-        }
-    }
-`;
+const APK_NAME_BLOCK = [
+  '    applicationVariants.all { variant ->',
+  '        if (variant.buildType.name == "release") {',
+  '            variant.outputs.all { output ->',
+  '                outputFileName = "WaterMeter_v\\${variant.versionName}.apk"',
+  '            }',
+  '        }',
+  '    }',
+  '',
+].join('\n');
 
 const withWaterMeterApkName = (config) =>
   withAppBuildGradle(config, (configResult) => {
