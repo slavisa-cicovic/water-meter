@@ -62,18 +62,9 @@ export const MessageRepository = {
     return this.createThread(accountId);
   },
 
-  async listThreadsNeedingHuman() {
+  async listThreads() {
     return prisma.messageThread.findMany({
-      where: {
-        archivedAt: null,
-        messages: {
-          some: {
-            senderType: 'mobile',
-            archivedAt: null,
-            OR: [{ status: null }, { status: 'needs_human' }],
-          },
-        },
-      },
+      where: { archivedAt: null },
       orderBy: [{ lastMessageAt: 'desc' }, { updatedAt: 'desc' }],
       include: {
         account: { select: selectAccount },

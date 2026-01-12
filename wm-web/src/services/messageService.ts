@@ -147,7 +147,7 @@ export const MessageService = {
       unreadCount: number;
     }>;
   }>> {
-    const threads = await MessageRepository.listThreadsNeedingHuman();
+    const threads = await MessageRepository.listThreads();
     const unreadByThread = await MessageRepository.groupUnreadForWebThreads(threads.map((thread) => thread.id));
 
     const mapped = threads.map((thread) => {
