@@ -784,6 +784,40 @@
       "unreadMessages": "Imate {{countLabel}} neprocitanih poruka"
     }
   },
+  "dashboard": {
+    "loading": "Ucitavanje dashboard-a...",
+    "error": "Podaci dashboard-a nisu dostupni.",
+    "kpis": {
+      "totalMeters": "Ukupno vodomera",
+      "activeMeters": "Aktivni vodomeri",
+      "inactiveMeters": "Neaktivni vodomeri",
+      "removedMeters": "Uklonjeni vodomeri",
+      "pendingVerifications": "Verifikacije na cekanju",
+      "pendingApprovals": "Odobrenja na cekanju",
+      "pendingReadings": "Ocitavanja na cekanju",
+      "rejectedReadings": "Odbijena ocitavanja",
+      "invoicesDraft": "Fakture u nacrtu",
+      "invoicesFlagged": "Fakture sa oznakama",
+      "invoicesIssued": "Izdane fakture",
+      "invoicesPaid": "Placene fakture",
+      "jobFailures30d": "Greske poslova (30d)",
+      "readings30d": "Ocitavanja (30d)",
+      "issues30d": "Problemi (30d)",
+      "consumptionMonth": "Potrosnja (mesec)"
+    },
+    "charts": {
+      "readings": "Ocitavanja",
+      "consumption": "Potrosnja",
+      "issues": "Problemi",
+      "readingsVolume": "Obim ocitavanja",
+      "last6Months": "Poslednjih 6 meseci",
+      "invoicesByStatus": "Fakture po statusu",
+      "metersByStatus": "Vodomeri po statusu",
+      "consumptionTrend": "Trend potrosnje",
+      "issuesByGroup": "Problemi po grupi",
+      "last30Days": "Poslednjih 30 dana"
+    }
+  },
   "validation": {
     "required": "Obavezno",
     "min": "Mora biti >= {{min}}"

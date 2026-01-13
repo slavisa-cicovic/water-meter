@@ -784,6 +784,40 @@
       "unreadMessages": "You have {{countLabel}} unread messages"
     }
   },
+  "dashboard": {
+    "loading": "Loading dashboard...",
+    "error": "Dashboard data is unavailable.",
+    "kpis": {
+      "totalMeters": "Total meters",
+      "activeMeters": "Active meters",
+      "inactiveMeters": "Inactive meters",
+      "removedMeters": "Removed meters",
+      "pendingVerifications": "Pending verifications",
+      "pendingApprovals": "Pending approvals",
+      "pendingReadings": "Pending readings",
+      "rejectedReadings": "Rejected readings",
+      "invoicesDraft": "Invoices draft",
+      "invoicesFlagged": "Invoices flagged",
+      "invoicesIssued": "Invoices issued",
+      "invoicesPaid": "Invoices paid",
+      "jobFailures30d": "Job failures (30d)",
+      "readings30d": "Readings (30d)",
+      "issues30d": "Issues (30d)",
+      "consumptionMonth": "Consumption (month)"
+    },
+    "charts": {
+      "readings": "Readings",
+      "consumption": "Consumption",
+      "issues": "Issues",
+      "readingsVolume": "Readings volume",
+      "last6Months": "Last 6 months",
+      "invoicesByStatus": "Invoices by status",
+      "metersByStatus": "Meters by status",
+      "consumptionTrend": "Consumption trend",
+      "issuesByGroup": "Issues by group",
+      "last30Days": "Last 30 days"
+    }
+  },
   "validation": {
     "required": "Required",
     "min": "Must be >= {{min}}"

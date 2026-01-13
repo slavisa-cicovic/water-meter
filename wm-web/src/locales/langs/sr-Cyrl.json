@@ -784,6 +784,40 @@
       "unreadMessages": "Имате {{countLabel}} непрочитаних порука"
     }
   },
+  "dashboard": {
+    "loading": "Учитавање dashboard-а...",
+    "error": "Подаци dashboard-а нису доступни.",
+    "kpis": {
+      "totalMeters": "Укупно водомера",
+      "activeMeters": "Активни водомери",
+      "inactiveMeters": "Неактивни водомери",
+      "removedMeters": "Уклоњени водомери",
+      "pendingVerifications": "Верификације на чекању",
+      "pendingApprovals": "Одобрења на чекању",
+      "pendingReadings": "Очитавања на чекању",
+      "rejectedReadings": "Одбијена очитавања",
+      "invoicesDraft": "Фактуре у нацрту",
+      "invoicesFlagged": "Фактуре са ознакама",
+      "invoicesIssued": "Издате фактуре",
+      "invoicesPaid": "Плаћене фактуре",
+      "jobFailures30d": "Грешке послова (30d)",
+      "readings30d": "Очитавања (30d)",
+      "issues30d": "Проблеми (30d)",
+      "consumptionMonth": "Потрошња (месец)"
+    },
+    "charts": {
+      "readings": "Очитавања",
+      "consumption": "Потрошња",
+      "issues": "Проблеми",
+      "readingsVolume": "Обим очитавања",
+      "last6Months": "Последњих 6 месеци",
+      "invoicesByStatus": "Фактуре по статусу",
+      "metersByStatus": "Водомери по статусу",
+      "consumptionTrend": "Тренд потрошње",
+      "issuesByGroup": "Проблеми по групи",
+      "last30Days": "Последњих 30 дана"
+    }
+  },
   "validation": {
     "required": "Обавезно",
     "min": "Мора бити >= {{min}}"

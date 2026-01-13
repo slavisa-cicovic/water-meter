@@ -14,49 +14,56 @@ import Grid from '@mui/material/Grid2';
 import { useGetDashboardData } from 'src/api/dashboard';
 import { ChartWrapper, useChart } from 'src/components/chart';
 import { DashboardRole } from 'src/types/dashboard';
+import { useLocales } from 'src/locales';
 
 const formatValue = (value: number) => new Intl.NumberFormat().format(value);
+const normalizeLabel = (value: string) => value.trim().toLowerCase().replace(/\s+/g, '_');
 
-const buildCards = (role: DashboardRole, kpis: Record<string, number>) => {
+const buildCards = (
+  role: DashboardRole,
+  kpis: Record<string, number>,
+  t: (key: string) => string
+) => {
   if (role === 'admin') {
     return [
-      { label: 'Total meters', value: kpis.metersTotal },
-      { label: 'Active meters', value: kpis.metersActive },
-      { label: 'Pending verifications', value: kpis.pendingVerifications },
-      { label: 'Pending readings', value: kpis.readingsPending },
-      { label: 'Invoices draft', value: kpis.invoicesDraft },
-      { label: 'Invoices flagged', value: kpis.invoicesWithFlags },
-      { label: 'Job failures (30d)', value: kpis.jobsFailed },
-      { label: 'Readings (30d)', value: kpis.readingsLast30Days },
+      { label: t('dashboard.kpis.totalMeters'), value: kpis.metersTotal },
+      { label: t('dashboard.kpis.activeMeters'), value: kpis.metersActive },
+      { label: t('dashboard.kpis.pendingVerifications'), value: kpis.pendingVerifications },
+      { label: t('dashboard.kpis.pendingReadings'), value: kpis.readingsPending },
+      { label: t('dashboard.kpis.invoicesDraft'), value: kpis.invoicesDraft },
+      { label: t('dashboard.kpis.invoicesFlagged'), value: kpis.invoicesWithFlags },
+      { label: t('dashboard.kpis.jobFailures30d'), value: kpis.jobsFailed },
+      { label: t('dashboard.kpis.readings30d'), value: kpis.readingsLast30Days },
     ];
   }
 
   if (role === 'staff_backoffice') {
     return [
-      { label: 'Pending approvals', value: kpis.pendingVerifications },
-      { label: 'Pending readings', value: kpis.readingsPending },
-      { label: 'Rejected readings', value: kpis.readingsRejected },
-      { label: 'Invoices draft', value: kpis.invoicesDraft },
-      { label: 'Invoices flagged', value: kpis.invoicesWithFlags },
-      { label: 'Readings (30d)', value: kpis.readingsLast30Days },
-      { label: 'Active meters', value: kpis.metersActive },
-      { label: 'Inactive meters', value: kpis.metersInactive },
+      { label: t('dashboard.kpis.pendingApprovals'), value: kpis.pendingVerifications },
+      { label: t('dashboard.kpis.pendingReadings'), value: kpis.readingsPending },
+      { label: t('dashboard.kpis.rejectedReadings'), value: kpis.readingsRejected },
+      { label: t('dashboard.kpis.invoicesDraft'), value: kpis.invoicesDraft },
+      { label: t('dashboard.kpis.invoicesFlagged'), value: kpis.invoicesWithFlags },
+      { label: t('dashboard.kpis.readings30d'), value: kpis.readingsLast30Days },
+      { label: t('dashboard.kpis.activeMeters'), value: kpis.metersActive },
+      { label: t('dashboard.kpis.inactiveMeters'), value: kpis.metersInactive },
     ];
   }
 
   return [
-    { label: 'Active meters', value: kpis.metersActive },
-    { label: 'Inactive meters', value: kpis.metersInactive },
-    { label: 'Removed meters', value: kpis.metersRemoved },
-    { label: 'Issues (30d)', value: kpis.issuesLast30Days },
-    { label: 'Consumption (month)', value: kpis.consumptionThisMonth },
-    { label: 'Invoices issued', value: kpis.invoicesIssued },
-    { label: 'Invoices paid', value: kpis.invoicesPaid },
-    { label: 'Job failures (30d)', value: kpis.jobsFailed },
+    { label: t('dashboard.kpis.activeMeters'), value: kpis.metersActive },
+    { label: t('dashboard.kpis.inactiveMeters'), value: kpis.metersInactive },
+    { label: t('dashboard.kpis.removedMeters'), value: kpis.metersRemoved },
+    { label: t('dashboard.kpis.issues30d'), value: kpis.issuesLast30Days },
+    { label: t('dashboard.kpis.consumptionMonth'), value: kpis.consumptionThisMonth },
+    { label: t('dashboard.kpis.invoicesIssued'), value: kpis.invoicesIssued },
+    { label: t('dashboard.kpis.invoicesPaid'), value: kpis.invoicesPaid },
+    { label: t('dashboard.kpis.jobFailures30d'), value: kpis.jobsFailed },
   ];
 };
 
 export function DashboardView() {
+  const { t } = useLocales();
   const { dashboard, dashboardLoading, dashboardError } = useGetDashboardData();
 
   const role = dashboard?.role;
@@ -74,29 +81,49 @@ export function DashboardView() {
   );
 
   const readingsSeries = useMemo(
-    () => [{ name: 'Readings', data: charts?.readingsByMonth.series || [] }],
-    [charts?.readingsByMonth.series]
+    () => [{ name: t('dashboard.charts.readings'), data: charts?.readingsByMonth.series || [] }],
+    [charts?.readingsByMonth.series, t]
   );
+
+  const invoiceLabels = useMemo(() => {
+    const map: Record<string, string> = {
+      draft: t('billing.status.draft'),
+      confirmed: t('billing.status.confirmed'),
+      issued: t('billing.status.issued'),
+      paid: t('billing.status.paid'),
+      void: t('billing.status.void'),
+    };
+    return (charts?.invoicesByStatus.labels || []).map((label) => map[normalizeLabel(label)] || label);
+  }, [charts?.invoicesByStatus.labels, t]);
 
   const invoiceChartOptions = useChart(
     useMemo(
       () => ({
-        labels: charts?.invoicesByStatus.labels || [],
+        labels: invoiceLabels,
         legend: { position: 'bottom' },
       }),
-      [charts?.invoicesByStatus.labels]
+      [invoiceLabels]
     )
   );
 
   const invoiceSeries = useMemo(() => charts?.invoicesByStatus.series || [], [charts?.invoicesByStatus.series]);
 
+  const metersLabels = useMemo(() => {
+    const map: Record<string, string> = {
+      active: t('meters.status.active'),
+      inactive: t('meters.status.inactive'),
+      removed: t('meters.status.removed'),
+    };
+    return (charts?.metersByStatus.labels || []).map((label) => map[normalizeLabel(label)] || label);
+  }, [charts?.metersByStatus.labels, t]);
+
   const metersChartOptions = useChart(
     useMemo(
       () => ({
-        labels: charts?.metersByStatus.labels || [],
+        labels: metersLabels,
         legend: { position: 'bottom' },
       }),
-      [charts?.metersByStatus.labels]
+      [metersLabels]
     )
   );
 
@@ -113,8 +140,8 @@ export function DashboardView() {
   );
 
   const consumptionSeries = useMemo(
-    () => [{ name: 'Consumption', data: charts?.consumptionByMonth.series || [] }],
-    [charts?.consumptionByMonth.series]
+    () => [{ name: t('dashboard.charts.consumption'), data: charts?.consumptionByMonth.series || [] }],
+    [charts?.consumptionByMonth.series, t]
   );
 
   const issuesChartOptions = useChart(
@@ -128,14 +155,14 @@ export function DashboardView() {
   );
 
   const issuesSeries = useMemo(
-    () => [{ name: 'Issues', data: charts?.issuesByGroup.series || [] }],
-    [charts?.issuesByGroup.series]
+    () => [{ name: t('dashboard.charts.issues'), data: charts?.issuesByGroup.series || [] }],
+    [charts?.issuesByGroup.series, t]
   );
 
   if (dashboardLoading) {
     return (
       <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Typography variant="body2">Loading dashboard...</Typography>
+        <Typography variant="body2">{t('dashboard.loading')}</Typography>
       </Container>
     );
   }
@@ -143,12 +170,12 @@ export function DashboardView() {
   if (dashboardError || !dashboard || !role || !kpis || !charts) {
     return (
       <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Alert severity="error">Dashboard data is unavailable.</Alert>
+        <Alert severity="error">{t('dashboard.error')}</Alert>
       </Container>
     );
   }
 
-  const cards = buildCards(role, kpis as Record<string, number>);
+  const cards = buildCards(role, kpis as Record<string, number>, t);
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -174,7 +201,7 @@ export function DashboardView() {
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, md: 7 }}>
               <Card>
-                <CardHeader title="Readings volume" subheader="Last 6 months" />
+                <CardHeader title={t('dashboard.charts.readingsVolume')} subheader={t('dashboard.charts.last6Months')} />
                 <CardContent>
                   <ChartWrapper type="line" series={readingsSeries} options={readingsChartOptions} height={320} />
                 </CardContent>
@@ -182,7 +209,7 @@ export function DashboardView() {
             </Grid>
             <Grid size={{ xs: 12, md: 5 }}>
               <Card>
-                <CardHeader title="Invoices by status" />
+                <CardHeader title={t('dashboard.charts.invoicesByStatus')} />
                 <CardContent>
                   <ChartWrapper type="donut" series={invoiceSeries} options={invoiceChartOptions} height={320} />
                 </CardContent>
@@ -190,7 +217,7 @@ export function DashboardView() {
             </Grid>
             <Grid size={{ xs: 12, md: 5 }}>
               <Card>
-                <CardHeader title="Meters by status" />
+                <CardHeader title={t('dashboard.charts.metersByStatus')} />
                 <CardContent>
                   <ChartWrapper type="donut" series={metersSeries} options={metersChartOptions} height={320} />
                 </CardContent>
@@ -203,7 +230,7 @@ export function DashboardView() {
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, md: 7 }}>
               <Card>
-                <CardHeader title="Consumption trend" subheader="Last 6 months" />
+                <CardHeader title={t('dashboard.charts.consumptionTrend')} subheader={t('dashboard.charts.last6Months')} />
                 <CardContent>
                   <ChartWrapper type="line" series={consumptionSeries} options={consumptionChartOptions} height={320} />
                 </CardContent>
@@ -211,7 +238,7 @@ export function DashboardView() {
             </Grid>
             <Grid size={{ xs: 12, md: 5 }}>
               <Card>
-                <CardHeader title="Issues by group" subheader="Last 30 days" />
+                <CardHeader title={t('dashboard.charts.issuesByGroup')} subheader={t('dashboard.charts.last30Days')} />
                 <CardContent>
                   <ChartWrapper type="bar" series={issuesSeries} options={issuesChartOptions} height={320} />
                 </CardContent>
@@ -219,7 +246,7 @@ export function DashboardView() {
             </Grid>
             <Grid size={{ xs: 12, md: 5 }}>
               <Card>
-                <CardHeader title="Meters by status" />
+                <CardHeader title={t('dashboard.charts.metersByStatus')} />
                 <CardContent>
                   <ChartWrapper type="donut" series={metersSeries} options={metersChartOptions} height={320} />
                 </CardContent>
