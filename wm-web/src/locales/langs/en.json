@@ -818,6 +818,13 @@
       "last30Days": "Last 30 days"
     }
   },
+  "accountPopover": {
+    "account": "Account",
+    "ariaLabel": "account",
+    "profile": "Profile",
+    "contactSupport": "Contact support",
+    "logout": "Logout"
+  },
   "validation": {
     "required": "Required",
     "min": "Must be >= {{min}}"

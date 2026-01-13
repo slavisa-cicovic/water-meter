@@ -15,6 +15,7 @@ import Iconify from 'src/components/iconify';
 // auth / routes
 import { useAuthContext } from 'src/auth/hooks';
 import { paths } from 'src/routes/paths';
+import { useLocales } from 'src/locales';
 
 function getInitials(value: unknown) {
   if (typeof value !== 'string') return '';
@@ -27,6 +28,7 @@ function getInitials(value: unknown) {
 }
 
 export function AccountPopover() {
+  const { t } = useLocales();
   const router = useRouter();
   const popover = usePopover();
   const { user, logout } = useAuthContext();
@@ -36,7 +38,7 @@ export function AccountPopover() {
       ? `${(user as any).firstName} ${(user as any).lastName}`
       : undefined) ||
     (typeof (user as any)?.email === 'string' ? (user as any).email : undefined) ||
-    'Account';
+    t('accountPopover.account');
 
   const handlePlaceholder = useCallback(
     (label: string) => {
@@ -54,7 +56,7 @@ export function AccountPopover() {
 
   return (
     <>
-      <IconButton onClick={popover.onOpen} aria-label="account" sx={{ p: 0 }}>
+      <IconButton onClick={popover.onOpen} aria-label={t('accountPopover.ariaLabel')} sx={{ p: 0 }}>
         <Avatar sx={{ width: 36, height: 36 }}>
           {getInitials(displayName)}
         </Avatar>
@@ -70,25 +72,24 @@ export function AccountPopover() {
 
           <Divider sx={{ borderStyle: 'dashed' }} />
 
-          <MenuItem onClick={() => handlePlaceholder('Profile')}>
+          <MenuItem onClick={() => handlePlaceholder(t('accountPopover.profile'))}>
             <Iconify icon="solar:user-circle-bold-duotone" width={20} />
-            Profile
+            {t('accountPopover.profile')}
           </MenuItem>
 
-          <MenuItem onClick={() => handlePlaceholder('Contact support')}>
+          <MenuItem onClick={() => handlePlaceholder(t('accountPopover.contactSupport'))}>
             <Iconify icon="solar:chat-round-dots-bold-duotone" width={20} />
-            Contact support
+            {t('accountPopover.contactSupport')}
           </MenuItem>
 
           <Divider sx={{ borderStyle: 'dashed', my: 0.5 }} />
 
           <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
             <Iconify icon="solar:logout-2-bold-duotone" width={20} />
-            Logout
+            {t('accountPopover.logout')}
           </MenuItem>
         </MenuList>
       </CustomPopover>
     </>
   );
 }
-

@@ -818,6 +818,13 @@
       "last30Days": "Poslednjih 30 dana"
     }
   },
+  "accountPopover": {
+    "account": "Nalog",
+    "ariaLabel": "nalog",
+    "profile": "Profil",
+    "contactSupport": "Kontakt podrska",
+    "logout": "Odjava"
+  },
   "validation": {
     "required": "Obavezno",
     "min": "Mora biti >= {{min}}"

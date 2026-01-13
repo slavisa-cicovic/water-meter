@@ -818,6 +818,13 @@
       "last30Days": "Последњих 30 дана"
     }
   },
+  "accountPopover": {
+    "account": "Налог",
+    "ariaLabel": "налог",
+    "profile": "Профил",
+    "contactSupport": "Контакт подршка",
+    "logout": "Одјава"
+  },
   "validation": {
     "required": "Обавезно",
     "min": "Мора бити >= {{min}}"
