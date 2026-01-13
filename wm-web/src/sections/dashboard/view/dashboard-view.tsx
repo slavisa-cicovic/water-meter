@@ -13,18 +13,29 @@ import {
 import Grid from '@mui/material/Grid2';
 import { useGetDashboardData } from 'src/api/dashboard';
 import { ChartWrapper, useChart } from 'src/components/chart';
-import { DashboardRole } from 'src/types/dashboard';
 import { useLocales } from 'src/locales';
+import { useAuthContext } from 'src/auth/hooks';
+import { PERMISSIONS } from 'src/constants/permissions';
 
 const formatValue = (value: number) => new Intl.NumberFormat().format(value);
 const normalizeLabel = (value: string) => value.trim().toLowerCase().replace(/\s+/g, '_');
 
+type DashboardKpiView = 'admin' | 'staff_backoffice' | 'manager';
+
+const resolveKpiView = (permissions?: string[]) => {
+  if (!permissions?.length) return null;
+  if (permissions.includes(PERMISSIONS.DASHBOARD_KPIS_ADMIN)) return 'admin';
+  if (permissions.includes(PERMISSIONS.DASHBOARD_KPIS_BACKOFFICE)) return 'staff_backoffice';
+  if (permissions.includes(PERMISSIONS.DASHBOARD_KPIS_MANAGER)) return 'manager';
+  return null;
+};
+
 const buildCards = (
-  role: DashboardRole,
+  view: DashboardKpiView,
   kpis: Record<string, number>,
   t: (key: string) => string
 ) => {
-  if (role === 'admin') {
+  if (view === 'admin') {
     return [
       { label: t('dashboard.kpis.totalMeters'), value: kpis.metersTotal },
       { label: t('dashboard.kpis.activeMeters'), value: kpis.metersActive },
@@ -37,7 +48,7 @@ const buildCards = (
     ];
   }
 
-  if (role === 'staff_backoffice') {
+  if (view === 'staff_backoffice') {
     return [
       { label: t('dashboard.kpis.pendingApprovals'), value: kpis.pendingVerifications },
       { label: t('dashboard.kpis.pendingReadings'), value: kpis.readingsPending },
@@ -64,11 +75,25 @@ const buildCards = (
 
 export function DashboardView() {
   const { t } = useLocales();
+  const { user } = useAuthContext();
   const { dashboard, dashboardLoading, dashboardError } = useGetDashboardData();
 
-  const role = dashboard?.role;
   const kpis = dashboard?.kpis;
   const charts = dashboard?.charts;
+  const currentPermissions = (user as any)?.permissions as string[] | undefined;
+  const hasPermission = (permission: string) => currentPermissions?.includes(permission) ?? false;
+  const kpiView = resolveKpiView(currentPermissions);
+  const showReadingsChart = hasPermission(PERMISSIONS.DASHBOARD_CHARTS_READINGS);
+  const showInvoicesChart = hasPermission(PERMISSIONS.DASHBOARD_CHARTS_INVOICES);
+  const showMetersChart = hasPermission(PERMISSIONS.DASHBOARD_CHARTS_METERS);
+  const showConsumptionChart = hasPermission(PERMISSIONS.DASHBOARD_CHARTS_CONSUMPTION);
+  const showIssuesChart = hasPermission(PERMISSIONS.DASHBOARD_CHARTS_ISSUES);
+  const showCharts =
+    showReadingsChart ||
+    showInvoicesChart ||
+    showMetersChart ||
+    showConsumptionChart ||
+    showIssuesChart;
 
   const readingsChartOptions = useChart(
     useMemo(
@@ -167,7 +192,7 @@ export function DashboardView() {
     );
   }
 
-  if (dashboardError || !dashboard || !role || !kpis || !charts) {
+  if (dashboardError || !dashboard || !kpis || !charts) {
     return (
       <Container maxWidth="xl" sx={{ py: 4 }}>
         <Alert severity="error">{t('dashboard.error')}</Alert>
@@ -175,83 +200,82 @@ export function DashboardView() {
     );
   }
 
-  const cards = buildCards(role, kpis as Record<string, number>, t);
+  const cards = kpiView ? buildCards(kpiView, kpis as Record<string, number>, t) : [];
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Stack spacing={3}>
-        <Grid container spacing={3}>
-          {cards.map((card) => (
-            <Grid key={card.label} size={{ xs: 12, sm: 6, md: 3 }}>
-              <Card>
-                <CardContent>
-                  <Stack spacing={1}>
-                    <Typography variant="body2" color="text.secondary">
-                      {card.label}
-                    </Typography>
-                    <Typography variant="h4">{formatValue(card.value)}</Typography>
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-
-        {(role === 'admin' || role === 'staff_backoffice') && (
+        {cards.length > 0 && (
           <Grid container spacing={3}>
-            <Grid size={{ xs: 12, md: 7 }}>
-              <Card>
-                <CardHeader title={t('dashboard.charts.readingsVolume')} subheader={t('dashboard.charts.last6Months')} />
-                <CardContent>
-                  <ChartWrapper type="line" series={readingsSeries} options={readingsChartOptions} height={320} />
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid size={{ xs: 12, md: 5 }}>
-              <Card>
-                <CardHeader title={t('dashboard.charts.invoicesByStatus')} />
-                <CardContent>
-                  <ChartWrapper type="donut" series={invoiceSeries} options={invoiceChartOptions} height={320} />
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid size={{ xs: 12, md: 5 }}>
-              <Card>
-                <CardHeader title={t('dashboard.charts.metersByStatus')} />
-                <CardContent>
-                  <ChartWrapper type="donut" series={metersSeries} options={metersChartOptions} height={320} />
-                </CardContent>
-              </Card>
-            </Grid>
+            {cards.map((card) => (
+              <Grid key={card.label} size={{ xs: 12, sm: 6, md: 3 }}>
+                <Card>
+                  <CardContent>
+                    <Stack spacing={1}>
+                      <Typography variant="body2" color="text.secondary">
+                        {card.label}
+                      </Typography>
+                      <Typography variant="h4">{formatValue(card.value)}</Typography>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
           </Grid>
         )}
 
-        {role === 'manager' && (
+        {showCharts && (
           <Grid container spacing={3}>
-            <Grid size={{ xs: 12, md: 7 }}>
-              <Card>
-                <CardHeader title={t('dashboard.charts.consumptionTrend')} subheader={t('dashboard.charts.last6Months')} />
-                <CardContent>
-                  <ChartWrapper type="line" series={consumptionSeries} options={consumptionChartOptions} height={320} />
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid size={{ xs: 12, md: 5 }}>
-              <Card>
-                <CardHeader title={t('dashboard.charts.issuesByGroup')} subheader={t('dashboard.charts.last30Days')} />
-                <CardContent>
-                  <ChartWrapper type="bar" series={issuesSeries} options={issuesChartOptions} height={320} />
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid size={{ xs: 12, md: 5 }}>
-              <Card>
-                <CardHeader title={t('dashboard.charts.metersByStatus')} />
-                <CardContent>
-                  <ChartWrapper type="donut" series={metersSeries} options={metersChartOptions} height={320} />
-                </CardContent>
-              </Card>
-            </Grid>
+            {showReadingsChart && (
+              <Grid size={{ xs: 12, md: 7 }}>
+                <Card>
+                  <CardHeader title={t('dashboard.charts.readingsVolume')} subheader={t('dashboard.charts.last6Months')} />
+                  <CardContent>
+                    <ChartWrapper type="line" series={readingsSeries} options={readingsChartOptions} height={320} />
+                  </CardContent>
+                </Card>
+              </Grid>
+            )}
+            {showConsumptionChart && (
+              <Grid size={{ xs: 12, md: 7 }}>
+                <Card>
+                  <CardHeader title={t('dashboard.charts.consumptionTrend')} subheader={t('dashboard.charts.last6Months')} />
+                  <CardContent>
+                    <ChartWrapper type="line" series={consumptionSeries} options={consumptionChartOptions} height={320} />
+                  </CardContent>
+                </Card>
+              </Grid>
+            )}
+            {showIssuesChart && (
+              <Grid size={{ xs: 12, md: 5 }}>
+                <Card>
+                  <CardHeader title={t('dashboard.charts.issuesByGroup')} subheader={t('dashboard.charts.last30Days')} />
+                  <CardContent>
+                    <ChartWrapper type="bar" series={issuesSeries} options={issuesChartOptions} height={320} />
+                  </CardContent>
+                </Card>
+              </Grid>
+            )}
+            {showInvoicesChart && (
+              <Grid size={{ xs: 12, md: 5 }}>
+                <Card>
+                  <CardHeader title={t('dashboard.charts.invoicesByStatus')} />
+                  <CardContent>
+                    <ChartWrapper type="donut" series={invoiceSeries} options={invoiceChartOptions} height={320} />
+                  </CardContent>
+                </Card>
+              </Grid>
+            )}
+            {showMetersChart && (
+              <Grid size={{ xs: 12, md: 5 }}>
+                <Card>
+                  <CardHeader title={t('dashboard.charts.metersByStatus')} />
+                  <CardContent>
+                    <ChartWrapper type="donut" series={metersSeries} options={metersChartOptions} height={320} />
+                  </CardContent>
+                </Card>
+              </Grid>
+            )}
           </Grid>
         )}
       </Stack>

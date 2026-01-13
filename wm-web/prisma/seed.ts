@@ -392,6 +392,35 @@ type PermissionSeed = {
 const permissions: PermissionSeed[] = [
   { slug: 'settings:read', name: 'Read settings', resource: 'settings', action: 'read' },
   { slug: 'settings:update', name: 'Update settings', resource: 'settings', action: 'update' },
+  { slug: 'dashboard:read', name: 'Read dashboard', resource: 'dashboard', action: 'read' },
+  { slug: 'dashboard:kpis_admin', name: 'View admin dashboard KPIs', resource: 'dashboard', action: 'kpis_admin' },
+  {
+    slug: 'dashboard:kpis_backoffice',
+    name: 'View backoffice dashboard KPIs',
+    resource: 'dashboard',
+    action: 'kpis_backoffice',
+  },
+  { slug: 'dashboard:kpis_manager', name: 'View manager dashboard KPIs', resource: 'dashboard', action: 'kpis_manager' },
+  {
+    slug: 'dashboard:charts_readings',
+    name: 'View dashboard readings charts',
+    resource: 'dashboard',
+    action: 'charts_readings',
+  },
+  {
+    slug: 'dashboard:charts_invoices',
+    name: 'View dashboard invoice charts',
+    resource: 'dashboard',
+    action: 'charts_invoices',
+  },
+  { slug: 'dashboard:charts_meters', name: 'View dashboard meter charts', resource: 'dashboard', action: 'charts_meters' },
+  {
+    slug: 'dashboard:charts_consumption',
+    name: 'View dashboard consumption charts',
+    resource: 'dashboard',
+    action: 'charts_consumption',
+  },
+  { slug: 'dashboard:charts_issues', name: 'View dashboard issue charts', resource: 'dashboard', action: 'charts_issues' },
   { slug: 'accounts:list', name: 'List accounts', resource: 'accounts', action: 'list' },
   { slug: 'accounts:read', name: 'Read account', resource: 'accounts', action: 'read' },
   { slug: 'accounts:update', name: 'Update account', resource: 'accounts', action: 'update' },
@@ -473,10 +502,27 @@ async function seedRbac() {
 
   const adminPermissions = permissions
     .map((permission) => permission.slug)
-    .filter((slug) => !['roles:create', 'roles:update', 'messages:read', 'messages:reply'].includes(slug));
+    .filter(
+      (slug) =>
+        ![
+          'roles:create',
+          'roles:update',
+          'messages:read',
+          'messages:reply',
+          'dashboard:kpis_backoffice',
+          'dashboard:kpis_manager',
+          'dashboard:charts_consumption',
+          'dashboard:charts_issues',
+        ].includes(slug)
+    );
   const superAdminPermissions = permissions.map((permission) => permission.slug);
   const backofficePermissions = [
     'settings:read',
+    'dashboard:read',
+    'dashboard:kpis_backoffice',
+    'dashboard:charts_readings',
+    'dashboard:charts_invoices',
+    'dashboard:charts_meters',
     'accounts:list',
     'accounts:read',
     'accounts:update',

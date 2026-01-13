@@ -1,5 +1,3 @@
-export type DashboardRole = 'admin' | 'staff_backoffice' | 'manager';
-
 export type DashboardSeries = {
   categories: string[];
   series: number[];
@@ -38,7 +36,6 @@ export type DashboardCharts = {
 };
 
 export type DashboardResponse = {
-  role: DashboardRole;
   kpis: DashboardKpis;
   charts: DashboardCharts;
 };

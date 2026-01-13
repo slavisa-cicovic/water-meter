@@ -1,7 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { addMonths, format, startOfMonth, subDays, subMonths } from 'date-fns';
 import prisma from 'src/utils/prisma';
-import { DashboardCharts, DashboardKpis, DashboardResponse, DashboardRole } from 'src/types/dashboard';
+import { DashboardCharts, DashboardKpis, DashboardResponse } from 'src/types/dashboard';
 
 const METER_STATUSES = ['active', 'inactive', 'removed'] as const;
 const INVOICE_STATUSES = ['draft', 'confirmed', 'issued', 'paid', 'void'] as const;
@@ -54,8 +54,7 @@ const buildSumSeriesFromBuckets = (
 };
 
 export const DashboardService = {
-  async getDashboardData(params: { role: DashboardRole }) : Promise<DashboardResponse> {
-    const { role } = params;
+  async getDashboardData() : Promise<DashboardResponse> {
     const now = new Date();
     const last30Days = subDays(now, 30);
     const monthBuckets = buildMonthBuckets(6);
@@ -188,6 +187,6 @@ export const DashboardService = {
       issuesByGroup,
     };
 
-    return { role, kpis, charts };
+    return { kpis, charts };
   },
 };
