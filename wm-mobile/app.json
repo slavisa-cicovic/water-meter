@@ -19,7 +19,8 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Allow access to the camera to capture meter photos.",
         "NSPhotoLibraryUsageDescription": "Allow access to your photo library to select meter photos.",
-        "NSPhotoLibraryAddUsageDescription": "Allow saving annotated meter photos."
+        "NSPhotoLibraryAddUsageDescription": "Allow saving annotated meter photos.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
