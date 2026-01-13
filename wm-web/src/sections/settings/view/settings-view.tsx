@@ -140,76 +140,80 @@ export function SettingsView() {
         gridTemplateColumns={{ xs: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }}
         sx={{ mt: 1 }}
       >
-          <Card>
-            <CardContent sx={{ height: "100%" }}>
-              <Stack spacing={2} sx={{ height: "100%" }}>
-                <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-              <Typography variant="h6">{t("settings.currentDate.title")}</Typography>
-              <Typography variant="body2" color="text.secondary">
-                {t("settings.currentDate.modeLabel")}: {dateDisplay}
-              </Typography>
+          <RoleBasedGuard permissions={[PERMISSIONS.SETTINGS_UPDATE]} hasContent={false}>
+            <Card>
+              <CardContent sx={{ height: "100%" }}>
+                <Stack spacing={2} sx={{ height: "100%" }}>
+                  <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column", gap: 2 }}>
+                    <Typography variant="h6">{t("settings.currentDate.title")}</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {t("settings.currentDate.modeLabel")}: {dateDisplay}
+                    </Typography>
 
-                <TextField
-                  select
-                  label={t("settings.currentDate.modeField")}
-                  value={dateMode}
-                  onChange={(event) => setDateMode(event.target.value as CurrentDateMode)}
-                  size="small"
-                >
-                  <MenuItem value="auto">{t("settings.currentDate.modes.auto")}</MenuItem>
-                  <MenuItem value="manual">{t("settings.currentDate.modes.manual")}</MenuItem>
-                </TextField>
+                    <TextField
+                      select
+                      label={t("settings.currentDate.modeField")}
+                      value={dateMode}
+                      onChange={(event) => setDateMode(event.target.value as CurrentDateMode)}
+                      size="small"
+                    >
+                      <MenuItem value="auto">{t("settings.currentDate.modes.auto")}</MenuItem>
+                      <MenuItem value="manual">{t("settings.currentDate.modes.manual")}</MenuItem>
+                    </TextField>
 
-                <TextField
-                  label={t("settings.currentDate.dateField")}
-                  type="date"
-                  value={dateValue ?? ""}
-                  onChange={(event) => setDateValue(event.target.value || null)}
-                  size="small"
-                  disabled={dateMode === "auto"}
-                  InputLabelProps={{ shrink: true }}
-                >
-                </TextField>
+                    <TextField
+                      label={t("settings.currentDate.dateField")}
+                      type="date"
+                      value={dateValue ?? ""}
+                      onChange={(event) => setDateValue(event.target.value || null)}
+                      size="small"
+                      disabled={dateMode === "auto"}
+                      InputLabelProps={{ shrink: true }}
+                    >
+                    </TextField>
 
-                  {monthError ? <Alert severity="error">{monthError}</Alert> : null}
-                </Box>
+                    {monthError ? <Alert severity="error">{monthError}</Alert> : null}
+                  </Box>
 
-                <Stack direction="row" spacing={1} justifyContent="flex-end">
-                  <Button variant="outlined" onClick={handleCancelDate} disabled={savingMonth}>
-                    {t("settings.actions.cancel")}
-                  </Button>
-                  <Button variant="contained" onClick={handleSaveDate} disabled={savingMonth || !isDateDirty}>
-                    {t("settings.actions.save")}
-                  </Button>
+                  <Stack direction="row" spacing={1} justifyContent="flex-end">
+                    <Button variant="outlined" onClick={handleCancelDate} disabled={savingMonth}>
+                      {t("settings.actions.cancel")}
+                    </Button>
+                    <Button variant="contained" onClick={handleSaveDate} disabled={savingMonth || !isDateDirty}>
+                      {t("settings.actions.save")}
+                    </Button>
+                  </Stack>
                 </Stack>
-              </Stack>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </RoleBasedGuard>
 
-          <Card>
-            <CardContent sx={{ height: "100%" }}>
-              <Stack spacing={2} sx={{ height: "100%" }}>
-                <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-                  <Typography variant="h6">{t("settings.currency.title")}</Typography>
-                  <TextField
-                    label={t("settings.currency.field")}
-                    value={currency}
-                    onChange={(event) => setCurrency(event.target.value)}
-                    size="small"
-                  />
-                  {currencyError ? <Alert severity="error">{currencyError}</Alert> : null}
-                </Box>
-                <Stack direction="row" spacing={1} justifyContent="flex-end">
-                  <Button variant="outlined" onClick={handleCancelCurrency} disabled={savingCurrency}>
-                    {t("settings.actions.cancel")}
-                  </Button>
-                  <Button variant="contained" onClick={handleSaveCurrency} disabled={savingCurrency || !isCurrencyDirty}>
-                    {t("settings.actions.save")}
-                  </Button>
+          <RoleBasedGuard permissions={[PERMISSIONS.SETTINGS_UPDATE]} hasContent={false}>
+            <Card>
+              <CardContent sx={{ height: "100%" }}>
+                <Stack spacing={2} sx={{ height: "100%" }}>
+                  <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column", gap: 2 }}>
+                    <Typography variant="h6">{t("settings.currency.title")}</Typography>
+                    <TextField
+                      label={t("settings.currency.field")}
+                      value={currency}
+                      onChange={(event) => setCurrency(event.target.value)}
+                      size="small"
+                    />
+                    {currencyError ? <Alert severity="error">{currencyError}</Alert> : null}
+                  </Box>
+                  <Stack direction="row" spacing={1} justifyContent="flex-end">
+                    <Button variant="outlined" onClick={handleCancelCurrency} disabled={savingCurrency}>
+                      {t("settings.actions.cancel")}
+                    </Button>
+                    <Button variant="contained" onClick={handleSaveCurrency} disabled={savingCurrency || !isCurrencyDirty}>
+                      {t("settings.actions.save")}
+                    </Button>
+                  </Stack>
                 </Stack>
-              </Stack>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </RoleBasedGuard>
       </Box>
 
       <Box
