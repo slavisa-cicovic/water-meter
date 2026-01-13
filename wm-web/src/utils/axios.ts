@@ -1,14 +1,71 @@
 import axios, { AxiosRequestConfig } from 'axios';
 // config
 import { HOST_API } from 'src/config-global';
+import { getStoredAccessToken, setStoredAccessToken } from 'src/auth/context/jwt/token-storage';
+import { setSession } from 'src/auth/context/jwt/utils';
 
 // ----------------------------------------------------------------------
 
 const axiosInstance = axios.create({ baseURL: HOST_API });
 
+const refreshClient = axios.create({ baseURL: HOST_API });
+let refreshPromise: Promise<{ accessToken?: string; user?: any } | null> | null = null;
+
 axiosInstance.interceptors.response.use(
   (res) => res,
-  (error) => Promise.reject((error.response && error.response.data) || 'Something went wrong')
+  async (error) => {
+    const status = error?.response?.status;
+    const data = error?.response?.data;
+    const originalRequest = error?.config as (AxiosRequestConfig & { _retry?: boolean }) | undefined;
+
+    if (status === 401 && data?.error === 'STALE_TOKEN' && originalRequest && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        if (!refreshPromise) {
+          refreshPromise = refreshClient
+            .post(endpoints.auth.refresh, null, {
+              headers: { Authorization: axiosInstance.defaults.headers.common.Authorization },
+            })
+            .then((res) => res.data)
+            .catch(() => null);
+        }
+
+        const refreshed = await refreshPromise;
+        refreshPromise = null;
+
+        const accessToken = refreshed?.data?.accessToken || refreshed?.accessToken;
+        const user = refreshed?.data?.user || refreshed?.user;
+
+        if (!accessToken) {
+          setSession(null);
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('auth:logout'));
+          }
+          return Promise.reject(data || 'Something went wrong');
+        }
+
+        const stored = getStoredAccessToken();
+        setStoredAccessToken(accessToken, stored.remember);
+        setSession(accessToken);
+        if (typeof window !== 'undefined' && user) {
+          window.dispatchEvent(new CustomEvent('auth:refresh', { detail: { user } }));
+        }
+
+        originalRequest.headers = {
+          ...(originalRequest.headers || {}),
+          Authorization: `Bearer ${accessToken}`,
+        };
+
+        return axiosInstance(originalRequest);
+      } catch {
+        refreshPromise = null;
+        return Promise.reject(data || 'Something went wrong');
+      }
+    }
+
+    return Promise.reject((error.response && error.response.data) || 'Something went wrong');
+  }
 );
 
 export default axiosInstance;
@@ -31,6 +88,7 @@ export const endpoints = {
     login: '/api/auth/login',
     register: '/api/auth/register',
     forgotPassword: '/api/auth/forgot-password',
+    refresh: '/api/auth/refresh',
   },
   accounts: {
     list: '/api/accounts',

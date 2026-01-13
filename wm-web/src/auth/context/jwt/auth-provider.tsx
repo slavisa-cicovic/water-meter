@@ -123,6 +123,35 @@ export function AuthProvider({ children }: Props) {
     initialize();
   }, [initialize]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const handleRefresh = (event: Event) => {
+      const detail = (event as CustomEvent<{ user?: AuthUserType }>).detail;
+      if (!detail?.user) return;
+      dispatch({
+        type: Types.LOGIN,
+        payload: {
+          user: detail.user,
+        },
+      });
+    };
+
+    const handleLogout = () => {
+      dispatch({
+        type: Types.LOGOUT,
+      });
+    };
+
+    window.addEventListener('auth:refresh', handleRefresh as EventListener);
+    window.addEventListener('auth:logout', handleLogout);
+
+    return () => {
+      window.removeEventListener('auth:refresh', handleRefresh as EventListener);
+      window.removeEventListener('auth:logout', handleLogout);
+    };
+  }, []);
+
   // LOGIN
   const login = useCallback(async (identifier: string, password: string, remember = false) => {
     const data = {
