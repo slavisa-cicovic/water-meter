@@ -16,11 +16,12 @@ const icon = (name: string) => (
 const ICONS = {
   accounts: icon('ic_user'),
   dashboard: icon('ic_dashboard'),
-  meters: icon('ic_dashboard'),
-  billing: icon('ic_dashboard'),
-  messages: icon('ic_dashboard'),
-  jobs: icon('ic_dashboard'),
-  settings: icon('ic_dashboard'),
+  meters: icon('ic_meters'),
+  billing: icon('ic_billing'),
+  tariffs: icon('ic_tariffs'),
+  messages: icon('ic_messages'),
+  jobs: icon('ic_jobs'),
+  settings: icon('ic_settings'),
 };
 
 // ----------------------------------------------------------------------
@@ -71,7 +72,7 @@ export function useNavData() {
             title: 'Tariffs',
             titleKey: 'sidebar.tariffs',
             path: paths.dashboard.billing.tariffs.root,
-            icon: ICONS.billing,
+            icon: ICONS.tariffs,
             permissions: [PERMISSIONS.TARIFFS_LIST],
           },
           {

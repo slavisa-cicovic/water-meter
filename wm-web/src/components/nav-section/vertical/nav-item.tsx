@@ -64,6 +64,7 @@ export default function NavItem({
             typography: 'body2',
             textTransform: 'capitalize',
             fontWeight: active ? 'fontWeightSemiBold' : 'fontWeightMedium',
+            color: 'inherit',
           }}
           secondaryTypographyProps={{
             noWrap: true,

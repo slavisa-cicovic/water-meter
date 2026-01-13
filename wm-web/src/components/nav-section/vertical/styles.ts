@@ -44,10 +44,22 @@ export const StyledItem = styled(ListItemButton, {
     borderRadius: config.itemRadius,
     minHeight: config.itemRootHeight,
     color: theme.palette.text.secondary,
+    position: 'relative',
 
     // Active root item
     ...(active && {
       ...activeStyles.root,
+      '&::before': {
+        content: '""',
+        position: 'absolute',
+        left: 0,
+        top: 6,
+        bottom: 6,
+        width: 3,
+        borderRadius: 2,
+        backgroundColor:
+          theme.palette.mode === 'light' ? theme.palette.primary.main : theme.palette.primary.light,
+      },
     }),
 
     // Sub item
@@ -77,6 +89,7 @@ export const StyledIcon = styled(ListItemIcon)<StyledIconProps>(({ size }) => ({
   height: size,
   alignItems: 'center',
   justifyContent: 'center',
+  color: 'inherit',
 }));
 
 type StyledDotIconProps = {

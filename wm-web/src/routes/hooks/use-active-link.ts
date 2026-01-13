@@ -9,11 +9,17 @@ export function useActiveLink(path: string, deep = true): ReturnType {
 
   const checkPath = path.startsWith('#');
 
-  const currentPath = path === '/' ? '/' : `${path}/`;
+  const normalize = (value: string) => (value === '/' ? '/' : value.replace(/\/+$/, ''));
+  const normalizedPathname = normalize(pathname || '/');
+  const currentPath = normalize(path);
+  const currentPathWithSlash = currentPath === '/' ? '/' : `${currentPath}/`;
 
-  const normalActive = !checkPath && pathname === currentPath;
+  const normalActive = !checkPath && normalizedPathname === currentPath;
 
-  const deepActive = !checkPath && pathname.includes(currentPath);
+  const deepActive =
+    !checkPath &&
+    (normalizedPathname === currentPath ||
+      (currentPath !== '/' && normalizedPathname.startsWith(currentPathWithSlash)));
 
   return deep ? deepActive : normalActive;
 }
