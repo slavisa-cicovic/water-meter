@@ -25,13 +25,17 @@ import TranslationManager from "../translation-manager";
 import AiPromptManager from "../ai-prompt-manager";
 import AiFaqManager from "../ai-faq-manager";
 import { useLocales } from "src/locales";
+import { useAuthContext } from "src/auth/hooks";
 
 const formatDateLabel = (value: string | null) => value ?? "-";
 
 export function SettingsView() {
   const { t } = useLocales();
   const settings = useSettingsContext();
+  const { user } = useAuthContext();
   const { settings: data, settingsLoading, settingsError, mutate } = useGetSettings();
+  const userPermissions = (user?.permissions as string[]) || [];
+  const canUpdateSettings = userPermissions.includes(PERMISSIONS.SETTINGS_UPDATE);
 
   const [dateMode, setDateMode] = useState<CurrentDateMode>("auto");
   const [dateValue, setDateValue] = useState<string | null>(null);
@@ -140,80 +144,90 @@ export function SettingsView() {
         gridTemplateColumns={{ xs: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }}
         sx={{ mt: 1 }}
       >
-          <RoleBasedGuard permissions={[PERMISSIONS.SETTINGS_UPDATE]} hasContent={false}>
-            <Card>
-              <CardContent sx={{ height: "100%" }}>
-                <Stack spacing={2} sx={{ height: "100%" }}>
-                  <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-                    <Typography variant="h6">{t("settings.currentDate.title")}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {t("settings.currentDate.modeLabel")}: {dateDisplay}
-                    </Typography>
+          <Card>
+            <CardContent sx={{ height: "100%" }}>
+              <Stack spacing={2} sx={{ height: "100%" }}>
+                <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column", gap: 2 }}>
+                  <Typography variant="h6">{t("settings.currentDate.title")}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("settings.currentDate.modeLabel")}: {dateDisplay}
+                  </Typography>
 
-                    <TextField
-                      select
-                      label={t("settings.currentDate.modeField")}
-                      value={dateMode}
-                      onChange={(event) => setDateMode(event.target.value as CurrentDateMode)}
-                      size="small"
-                    >
-                      <MenuItem value="auto">{t("settings.currentDate.modes.auto")}</MenuItem>
-                      <MenuItem value="manual">{t("settings.currentDate.modes.manual")}</MenuItem>
-                    </TextField>
+                  <TextField
+                    select
+                    label={t("settings.currentDate.modeField")}
+                    value={dateMode}
+                    onChange={(event) => setDateMode(event.target.value as CurrentDateMode)}
+                    size="small"
+                    disabled={!canUpdateSettings}
+                  >
+                    <MenuItem value="auto">{t("settings.currentDate.modes.auto")}</MenuItem>
+                    <MenuItem value="manual">{t("settings.currentDate.modes.manual")}</MenuItem>
+                  </TextField>
 
-                    <TextField
-                      label={t("settings.currentDate.dateField")}
-                      type="date"
-                      value={dateValue ?? ""}
-                      onChange={(event) => setDateValue(event.target.value || null)}
-                      size="small"
-                      disabled={dateMode === "auto"}
-                      InputLabelProps={{ shrink: true }}
-                    >
-                    </TextField>
+                  <TextField
+                    label={t("settings.currentDate.dateField")}
+                    type="date"
+                    value={dateValue ?? ""}
+                    onChange={(event) => setDateValue(event.target.value || null)}
+                    size="small"
+                    disabled={!canUpdateSettings || dateMode === "auto"}
+                    InputLabelProps={{ shrink: true }}
+                  >
+                  </TextField>
 
-                    {monthError ? <Alert severity="error">{monthError}</Alert> : null}
-                  </Box>
+                  {monthError ? <Alert severity="error">{monthError}</Alert> : null}
+                </Box>
 
-                  <Stack direction="row" spacing={1} justifyContent="flex-end">
-                    <Button variant="outlined" onClick={handleCancelDate} disabled={savingMonth}>
-                      {t("settings.actions.cancel")}
-                    </Button>
-                    <Button variant="contained" onClick={handleSaveDate} disabled={savingMonth || !isDateDirty}>
-                      {t("settings.actions.save")}
-                    </Button>
-                  </Stack>
+                <Stack direction="row" spacing={1} justifyContent="flex-end">
+                  <Button variant="outlined" onClick={handleCancelDate} disabled={savingMonth || !canUpdateSettings}>
+                    {t("settings.actions.cancel")}
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={handleSaveDate}
+                    disabled={savingMonth || !isDateDirty || !canUpdateSettings}
+                  >
+                    {t("settings.actions.save")}
+                  </Button>
                 </Stack>
-              </CardContent>
-            </Card>
-          </RoleBasedGuard>
+              </Stack>
+            </CardContent>
+          </Card>
 
-          <RoleBasedGuard permissions={[PERMISSIONS.SETTINGS_UPDATE]} hasContent={false}>
-            <Card>
-              <CardContent sx={{ height: "100%" }}>
-                <Stack spacing={2} sx={{ height: "100%" }}>
-                  <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-                    <Typography variant="h6">{t("settings.currency.title")}</Typography>
-                    <TextField
-                      label={t("settings.currency.field")}
-                      value={currency}
-                      onChange={(event) => setCurrency(event.target.value)}
-                      size="small"
-                    />
-                    {currencyError ? <Alert severity="error">{currencyError}</Alert> : null}
-                  </Box>
-                  <Stack direction="row" spacing={1} justifyContent="flex-end">
-                    <Button variant="outlined" onClick={handleCancelCurrency} disabled={savingCurrency}>
-                      {t("settings.actions.cancel")}
-                    </Button>
-                    <Button variant="contained" onClick={handleSaveCurrency} disabled={savingCurrency || !isCurrencyDirty}>
-                      {t("settings.actions.save")}
-                    </Button>
-                  </Stack>
+          <Card>
+            <CardContent sx={{ height: "100%" }}>
+              <Stack spacing={2} sx={{ height: "100%" }}>
+                <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column", gap: 2 }}>
+                  <Typography variant="h6">{t("settings.currency.title")}</Typography>
+                  <TextField
+                    label={t("settings.currency.field")}
+                    value={currency}
+                    onChange={(event) => setCurrency(event.target.value)}
+                    size="small"
+                    disabled={!canUpdateSettings}
+                  />
+                  {currencyError ? <Alert severity="error">{currencyError}</Alert> : null}
+                </Box>
+                <Stack direction="row" spacing={1} justifyContent="flex-end">
+                  <Button
+                    variant="outlined"
+                    onClick={handleCancelCurrency}
+                    disabled={savingCurrency || !canUpdateSettings}
+                  >
+                    {t("settings.actions.cancel")}
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={handleSaveCurrency}
+                    disabled={savingCurrency || !isCurrencyDirty || !canUpdateSettings}
+                  >
+                    {t("settings.actions.save")}
+                  </Button>
                 </Stack>
-              </CardContent>
-            </Card>
-          </RoleBasedGuard>
+              </Stack>
+            </CardContent>
+          </Card>
       </Box>
 
       <Box
