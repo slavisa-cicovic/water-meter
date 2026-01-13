@@ -219,16 +219,16 @@ export function SettingsView() {
         gridTemplateColumns={{ xs: "1fr", md: "repeat(2, 1fr)" }}
         sx={{ mt: 3 }}
       >
-        <RoleBasedGuard roles={["super_admin"]} hasContent>
+        <RoleBasedGuard roles={["super_admin"]} hasContent={false}>
           <AiPromptManager />
         </RoleBasedGuard>
-        <RoleBasedGuard roles={["super_admin"]} hasContent>
+        <RoleBasedGuard roles={["super_admin"]} hasContent={false}>
           <AiFaqManager />
         </RoleBasedGuard>
-        <RoleBasedGuard permissions={[PERMISSIONS.ROLES_UPDATE]}>
+        <RoleBasedGuard permissions={[PERMISSIONS.ROLES_UPDATE]} hasContent={false}>
           <RolePermissionsManager />
         </RoleBasedGuard>
-        <RoleBasedGuard permissions={[PERMISSIONS.TRANSLATIONS_READ]}>
+        <RoleBasedGuard permissions={[PERMISSIONS.TRANSLATIONS_READ]} hasContent={false}>
           <TranslationManager />
         </RoleBasedGuard>
       </Box>
