@@ -7,6 +7,7 @@ import Badge, { badgeClasses } from '@mui/material/Badge';
 // components
 import Iconify from 'src/components/iconify';
 import { useSettingsContext } from 'src/components/settings';
+import { useLocales } from 'src/locales';
 
 // ----------------------------------------------------------------------
 
@@ -16,6 +17,7 @@ type Props = {
 
 export default function SettingsButton({ sx }: Props) {
   const settings = useSettingsContext();
+  const { t } = useLocales();
 
   return (
     <Badge
@@ -45,7 +47,7 @@ export default function SettingsButton({ sx }: Props) {
           component={m.button}
           whileTap="tap"
           whileHover="hover"
-          aria-label="settings"
+          aria-label={t('settingsButton.ariaLabel')}
           onClick={settings.onToggle}
           sx={{
             width: 40,

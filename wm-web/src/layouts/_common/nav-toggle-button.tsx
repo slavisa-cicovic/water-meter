@@ -8,6 +8,7 @@ import { bgBlur } from 'src/theme/css';
 // components
 import Iconify from 'src/components/iconify';
 import { useSettingsContext } from 'src/components/settings';
+import { useLocales } from 'src/locales';
 //
 import { NAV } from '../config-layout';
 
@@ -17,6 +18,7 @@ export default function NavToggleButton({ sx, ...other }: IconButtonProps) {
   const theme = useTheme();
 
   const settings = useSettingsContext();
+  const { t } = useLocales();
 
   const lgUp = useResponsive('up', 'lg');
 
@@ -27,6 +29,7 @@ export default function NavToggleButton({ sx, ...other }: IconButtonProps) {
   return (
     <IconButton
       size="small"
+      aria-label={t('navigation.toggleLayout')}
       onClick={() =>
         settings.onUpdate('themeLayout', settings.themeLayout === 'vertical' ? 'mini' : 'vertical')
       }

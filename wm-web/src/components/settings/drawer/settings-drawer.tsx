@@ -21,6 +21,7 @@ import LayoutOptions from './layout-options';
 import PresetsOptions from './presets-options';
 import StretchOptions from './stretch-options';
 import FullScreenOption from './fullscreen-option';
+import { useLocales } from 'src/locales';
 
 // ----------------------------------------------------------------------
 
@@ -28,6 +29,7 @@ export default function SettingsDrawer() {
   const theme = useTheme();
 
   const settings = useSettingsContext();
+  const { t } = useLocales();
 
   const labelStyles = {
     mb: 1.5,
@@ -43,10 +45,10 @@ export default function SettingsDrawer() {
       sx={{ py: 2, pr: 1, pl: 2.5 }}
     >
       <Typography variant="h6" sx={{ flexGrow: 1 }}>
-        Settings
+        {t('settingsDrawer.title')}
       </Typography>
 
-      <Tooltip title="Reset">
+      <Tooltip title={t('settingsDrawer.reset')}>
         <IconButton onClick={settings.onReset}>
           <Badge color="error" variant="dot" invisible={!settings.canReset}>
             <Iconify icon="solar:restart-bold" />
@@ -63,7 +65,7 @@ export default function SettingsDrawer() {
   const renderMode = (
     <div>
       <Typography variant="caption" component="div" sx={{ ...labelStyles }}>
-        Mode
+        {t('settingsDrawer.mode')}
       </Typography>
 
       <BaseOptions
@@ -78,7 +80,7 @@ export default function SettingsDrawer() {
   const renderLayout = (
     <div>
       <Typography variant="caption" component="div" sx={{ ...labelStyles }}>
-        Layout
+        {t('settingsDrawer.layout')}
       </Typography>
 
       <LayoutOptions
@@ -100,8 +102,8 @@ export default function SettingsDrawer() {
           alignItems: 'center',
         }}
       >
-        Stretch
-        <Tooltip title="Only available at large resolutions > 1600px (xl)">
+        {t('settingsDrawer.stretch')}
+        <Tooltip title={t('settingsDrawer.stretchHint')}>
           <Iconify icon="eva:info-outline" width={16} sx={{ ml: 0.5 }} />
         </Tooltip>
       </Typography>
@@ -116,7 +118,7 @@ export default function SettingsDrawer() {
   const renderPresets = (
     <div>
       <Typography variant="caption" component="div" sx={{ ...labelStyles }}>
-        Presets
+        {t('settingsDrawer.presets')}
       </Typography>
 
       <PresetsOptions

@@ -825,6 +825,23 @@
     "contactSupport": "Kontakt podrska",
     "logout": "Odjava"
   },
+  "settingsDrawer": {
+    "title": "Podesavanja",
+    "reset": "Reset",
+    "mode": "Rezim",
+    "layout": "Raspored",
+    "stretch": "Razvuci",
+    "stretchHint": "Dostupno samo za velike rezolucije > 1600px (xl)",
+    "presets": "Preset-i",
+    "fullscreen": "Puni ekran",
+    "exitFullscreen": "Izlaz iz punog ekrana"
+  },
+  "settingsButton": {
+    "ariaLabel": "podesavanja"
+  },
+  "navigation": {
+    "toggleLayout": "Promeni raspored navigacije"
+  },
   "validation": {
     "required": "Obavezno",
     "min": "Mora biti >= {{min}}"

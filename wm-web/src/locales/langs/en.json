@@ -825,6 +825,23 @@
     "contactSupport": "Contact support",
     "logout": "Logout"
   },
+  "settingsDrawer": {
+    "title": "Settings",
+    "reset": "Reset",
+    "mode": "Mode",
+    "layout": "Layout",
+    "stretch": "Stretch",
+    "stretchHint": "Only available at large resolutions > 1600px (xl)",
+    "presets": "Presets",
+    "fullscreen": "Fullscreen",
+    "exitFullscreen": "Exit Fullscreen"
+  },
+  "settingsButton": {
+    "ariaLabel": "settings"
+  },
+  "navigation": {
+    "toggleLayout": "Toggle navigation layout"
+  },
   "validation": {
     "required": "Required",
     "min": "Must be >= {{min}}"

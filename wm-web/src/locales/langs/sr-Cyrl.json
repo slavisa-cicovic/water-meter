@@ -825,6 +825,23 @@
     "contactSupport": "Контакт подршка",
     "logout": "Одјава"
   },
+  "settingsDrawer": {
+    "title": "Подешавања",
+    "reset": "Ресет",
+    "mode": "Режим",
+    "layout": "Распоред",
+    "stretch": "Развуци",
+    "stretchHint": "Доступно само за велике резолуције > 1600px (xl)",
+    "presets": "Пресет-и",
+    "fullscreen": "Пуни екран",
+    "exitFullscreen": "Излаз из пуног екрана"
+  },
+  "settingsButton": {
+    "ariaLabel": "подешавања"
+  },
+  "navigation": {
+    "toggleLayout": "Промени распоред навигације"
+  },
   "validation": {
     "required": "Обавезно",
     "min": "Мора бити >= {{min}}"
