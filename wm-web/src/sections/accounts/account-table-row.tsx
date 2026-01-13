@@ -26,6 +26,8 @@ export default function AccountTableRow({
     const { t } = useLocales();
     const currentPermissions = (user as any)?.permissions as string[] | undefined;
     const canViewDetails = currentPermissions?.includes(PERMISSIONS.ACCOUNTS_READ) ?? false;
+    const canVerify = currentPermissions?.includes(PERMISSIONS.ACCOUNTS_VERIFY) ?? false;
+    const canReject = currentPermissions?.includes(PERMISSIONS.ACCOUNTS_REJECT) ?? false;
 
     const {
         id,
@@ -77,24 +79,28 @@ export default function AccountTableRow({
             <TableCell>{createdAt ? new Date(createdAt).toLocaleDateString() : '-'}</TableCell>
             <TableCell align="right">
                 <Stack direction="row" spacing={1} justifyContent="flex-end">
-                    <Button
-                        size="small"
-                        variant="outlined"
-                        color="success"
-                        disabled={row.verificationStatus === 'verified'}
-                        onClick={() => onVerify('verified')}
-                    >
-                        {t('accounts.actions.verify')}
-                    </Button>
-                    <Button
-                        size="small"
-                        variant="outlined"
-                        color="error"
-                        disabled={row.verificationStatus === 'rejected'}
-                        onClick={() => onVerify('rejected')}
-                    >
-                        {t('accounts.actions.reject')}
-                    </Button>
+                    {canVerify && (
+                        <Button
+                            size="small"
+                            variant="outlined"
+                            color="success"
+                            disabled={row.verificationStatus === 'verified'}
+                            onClick={() => onVerify('verified')}
+                        >
+                            {t('accounts.actions.verify')}
+                        </Button>
+                    )}
+                    {canReject && (
+                        <Button
+                            size="small"
+                            variant="outlined"
+                            color="error"
+                            disabled={row.verificationStatus === 'rejected'}
+                            onClick={() => onVerify('rejected')}
+                        >
+                            {t('accounts.actions.reject')}
+                        </Button>
+                    )}
                     {canViewDetails ? (
                         <Tooltip title={t('accounts.actions.details')}>
                             <IconButton
