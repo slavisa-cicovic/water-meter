@@ -43,6 +43,7 @@ import { useResponsive } from 'src/hooks/use-responsive';
 import { BillingApi, useGetInvoices, useGetTariffs } from 'src/api/billing';
 import { ReadingsApi, useGetReadings } from 'src/api/readings';
 import { AccountsApi } from 'src/api/accounts';
+import { useGetRoles } from 'src/api/roles';
 import { useGetSettings } from 'src/api/settings';
 // auth
 import { useAuthContext } from 'src/auth/hooks';
@@ -70,6 +71,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
   const mdUp = useResponsive('up', 'md');
   const { user } = useAuthContext();
   const { tariffs, tariffsLoading } = useGetTariffs();
+  const { roles, rolesLoading } = useGetRoles();
   const { settings: appSettings } = useGetSettings();
 
   const AccountSchema = Yup.object().shape({
@@ -87,6 +89,7 @@ export default function AccountEditForm({ currentAccount }: Props) {
       address: currentAccount?.data.address || '',
       email: currentAccount?.data.email || '',
       tariffId: currentAccount?.data.tariffId || '',
+      roleSlug: currentAccount?.type || '',
     }),
     [currentAccount]
   );
@@ -112,9 +115,34 @@ export default function AccountEditForm({ currentAccount }: Props) {
   const viewerRole = (user as any)?.role as string | undefined;
   const viewerId = (user as any)?.accountId || (user as any)?.id;
   const currentPermissions = (user as any)?.permissions as string[] | undefined;
+  const allowedAccountRoles = Array.isArray((user as any)?.allowedAccountRoles)
+    ? ((user as any).allowedAccountRoles as string[])
+    : null;
   const hasPermission = (permission: string) => currentPermissions?.includes(permission) ?? false;
   const canEditReadings = hasPermission(PERMISSIONS.READINGS_UPDATE);
   const canEdit = hasPermission(PERMISSIONS.ACCOUNTS_UPDATE);
+  const canAssignRole = hasPermission(PERMISSIONS.ACCOUNTS_ASSIGN_ROLE);
+
+  const roleLabels = useMemo<Record<string, string>>(
+    () => ({
+      consumer: t('accounts.type.consumer'),
+      staff_field: t('accounts.type.staffField'),
+      staff_backoffice: t('accounts.type.staffBackoffice'),
+    }),
+    [t]
+  );
+
+  const roleOptions = useMemo(() => {
+    if (!roles.length) return [];
+    const allowed =
+      allowedAccountRoles && allowedAccountRoles.length
+        ? roles.filter((role) => allowedAccountRoles.includes(role.slug))
+        : roles;
+    return allowed.map((role) => ({
+      value: role.slug,
+      label: roleLabels[role.slug] ?? role.name ?? role.slug,
+    }));
+  }, [roles, allowedAccountRoles, roleLabels]);
 
   useEffect(() => {
     if (currentAccount) {
@@ -125,12 +153,17 @@ export default function AccountEditForm({ currentAccount }: Props) {
   const applySubmit = async (data: any, updateMeterAddress: boolean) => {
     try {
       if (!currentAccount?.id) return;
+      const nextRoleSlug =
+        canAssignRole && typeof data.roleSlug === 'string' && data.roleSlug.trim()
+          ? data.roleSlug.trim()
+          : undefined;
       const payload = {
         firstName: data.firstName?.trim?.() ?? data.firstName,
         lastName: data.lastName?.trim?.() ?? data.lastName,
         address: data.address?.trim?.() ?? data.address,
         tariffId: currentAccount?.type === 'consumer' ? (data.tariffId ? data.tariffId : null) : undefined,
         updateMeterAddress,
+        ...(nextRoleSlug && nextRoleSlug !== currentAccount?.type ? { roleSlug: nextRoleSlug } : {}),
       };
 
       await AccountsApi.updateAccount(currentAccount.id, payload);
@@ -541,6 +574,20 @@ export default function AccountEditForm({ currentAccount }: Props) {
             <RHFTextField name="lastName" label={t('accounts.fields.lastName')} disabled={!canEdit} />
             <RHFTextField name="address" label={t('accounts.fields.address')} disabled={!canEdit} />
             <RHFTextField name="email" label={t('accounts.fields.email')} disabled />
+            {canAssignRole && (
+              <RHFTextField
+                name="roleSlug"
+                label={t('accounts.fields.role')}
+                select
+                disabled={!canEdit || rolesLoading}
+              >
+                {roleOptions.map((role) => (
+                  <MenuItem key={role.value} value={role.value}>
+                    {role.label}
+                  </MenuItem>
+                ))}
+              </RHFTextField>
+            )}
             {isConsumer && (
               <RHFTextField
                 name="tariffId"

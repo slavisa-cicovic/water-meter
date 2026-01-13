@@ -13,6 +13,7 @@ export const PERMISSIONS = {
   ACCOUNTS_LIST: 'accounts:list',
   ACCOUNTS_READ: 'accounts:read',
   ACCOUNTS_UPDATE: 'accounts:update',
+  ACCOUNTS_ASSIGN_ROLE: 'accounts:assign_role',
   ACCOUNTS_VERIFY: 'accounts:verify',
   ACCOUNTS_REJECT: 'accounts:reject',
   METERS_LIST: 'meters:list',

@@ -136,6 +136,9 @@ export const validateAccountUpdate = (input: AccountUpdateInput): ValidationResu
   validateName(input.firstName, 'firstName', errors);
   validateName(input.lastName, 'lastName', errors);
   validateAddress(input.address, errors);
+  if (input.roleSlug !== undefined && input.roleSlug !== null && isBlank(input.roleSlug)) {
+    pushError(errors, 'roleSlug', 'Invalid role');
+  }
 
   return { valid: Object.keys(errors).length === 0, errors };
 };

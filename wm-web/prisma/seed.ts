@@ -424,6 +424,7 @@ const permissions: PermissionSeed[] = [
   { slug: 'accounts:list', name: 'List accounts', resource: 'accounts', action: 'list' },
   { slug: 'accounts:read', name: 'Read account', resource: 'accounts', action: 'read' },
   { slug: 'accounts:update', name: 'Update account', resource: 'accounts', action: 'update' },
+  { slug: 'accounts:assign_role', name: 'Assign account role', resource: 'accounts', action: 'assign_role' },
   { slug: 'accounts:verify', name: 'Verify account', resource: 'accounts', action: 'verify' },
   { slug: 'accounts:reject', name: 'Reject account', resource: 'accounts', action: 'reject' },
   { slug: 'meters:list', name: 'List meters', resource: 'meters', action: 'list' },
@@ -555,7 +556,14 @@ async function seedRbac() {
     'roles:list',
   ];
 
-  const accountPermissions = ['accounts:list', 'accounts:read', 'accounts:update', 'accounts:verify', 'accounts:reject'];
+  const accountPermissions = [
+    'accounts:list',
+    'accounts:read',
+    'accounts:update',
+    'accounts:assign_role',
+    'accounts:verify',
+    'accounts:reject',
+  ];
   const rolePermissionConditions: Record<
     string,
     Record<string, { accounts: { visibility: { allowedRoles: string[] } } }>

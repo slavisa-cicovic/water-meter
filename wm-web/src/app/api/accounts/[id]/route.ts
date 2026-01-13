@@ -37,6 +37,8 @@ export const PUT = withPermission(
       const status =
         result.error === 'NOT_FOUND'
           ? 404
+          : result.error === 'ROLE_NOT_FOUND'
+          ? 404
           : result.error === 'TARIFF_NOT_FOUND'
           ? 404
           : result.error === 'FORBIDDEN'

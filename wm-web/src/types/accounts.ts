@@ -85,6 +85,7 @@ export type AccountUpdateInput = {
   address: string;
   tariffId?: string | null;
   updateMeterAddress?: boolean;
+  roleSlug?: string | null;
 };
 
 export type AccountTokenPayload = {

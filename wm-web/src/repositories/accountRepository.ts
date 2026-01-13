@@ -152,6 +152,30 @@ export const AccountRepository = {
     });
   },
 
+  async updateStaffProfile(
+    accountId: string,
+    data: { staffRole: StaffRole }
+  ) {
+    return prisma.staffProfile.upsert({
+      where: { accountId },
+      update: {
+        staffRole: data.staffRole,
+      },
+      create: {
+        accountId,
+        staffRole: data.staffRole,
+      },
+    });
+  },
+
+  async replaceAccountRole(accountId: string, roleId: string) {
+    await prisma.$transaction([
+      prisma.accountRoleLink.deleteMany({ where: { accountId } }),
+      prisma.accountRoleLink.create({ data: { accountId, roleId } }),
+      prisma.account.update({ where: { id: accountId }, data: { permissionsVersion: { increment: 1 } } }),
+    ]);
+  },
+
   async list(params: ListParams) {
     const {
       search,

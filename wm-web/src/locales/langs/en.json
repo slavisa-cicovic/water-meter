@@ -97,6 +97,7 @@
       "lastName": "Last name",
       "address": "Address",
       "email": "Email",
+      "role": "Role",
       "tariff": "Tariff",
       "tariffLoading": "Loading tariffs...",
       "tariffHelper": "Override billing tariff (optional).",

@@ -391,6 +391,8 @@ export const AccountsService = {
 
     const normalizedTariffId =
       typeof input.tariffId === 'string' ? (input.tariffId.trim() ? input.tariffId.trim() : null) : input.tariffId;
+    const normalizedRoleSlug =
+      typeof input.roleSlug === 'string' ? input.roleSlug.trim() : input.roleSlug;
 
     const accountRoles = getAccountRoleSlugs(account);
     if (normalizedTariffId !== undefined && !accountRoles.includes('consumer')) {
@@ -401,6 +403,45 @@ export const AccountsService = {
       const tariff = await BillingRepository.findTariffById(normalizedTariffId);
       if (!tariff || tariff.deletedAt) {
         return { success: false, error: 'TARIFF_NOT_FOUND' };
+      }
+    }
+
+    if (normalizedRoleSlug) {
+      if (!options.viewerAccountId) {
+        return { success: false, error: 'FORBIDDEN' };
+      }
+
+      const viewerPermissions = await AuthorizationService.resolveAccountPermissions(options.viewerAccountId);
+      if (!viewerPermissions.includes(PERMISSIONS.ACCOUNTS_ASSIGN_ROLE)) {
+        return { success: false, error: 'FORBIDDEN' };
+      }
+
+      const allowedRoles = await AuthorizationService.resolveAllowedAccountRoles(
+        options.viewerAccountId,
+        PERMISSIONS.ACCOUNTS_ASSIGN_ROLE
+      );
+      if (allowedRoles && !allowedRoles.includes(normalizedRoleSlug)) {
+        return { success: false, error: 'FORBIDDEN' };
+      }
+
+      if (!accountRoles.includes(normalizedRoleSlug)) {
+        const role = await prisma.role.findUnique({
+          where: { slug: normalizedRoleSlug },
+          select: { id: true, slug: true, staffRole: true },
+        });
+        if (!role) {
+          return { success: false, error: 'ROLE_NOT_FOUND' };
+        }
+
+        if (role.slug === 'consumer' && !account.consumerProfile) {
+          await AccountRepository.updateConsumerProfile(id, { householdSize: 1 });
+        }
+
+        if (role.staffRole && !account.staffProfile) {
+          await AccountRepository.updateStaffProfile(id, { staffRole: role.staffRole as StaffRole });
+        }
+
+        await AccountRepository.replaceAccountRole(id, role.id);
       }
     }
 

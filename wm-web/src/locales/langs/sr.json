@@ -97,6 +97,7 @@
       "lastName": "Prezime",
       "address": "Adresa",
       "email": "Email",
+      "role": "Uloga",
       "tariff": "Tarifa",
       "tariffLoading": "Ucitavanje tarifa...",
       "tariffHelper": "Izmena tarife naplate (opciono).",
