@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Box, Button, Card, CardContent, Stack, TextField, Typography } from "@mui/material";
 import { SettingsApi, useGetSettings } from "src/api/settings";
+import { useLocales } from "src/locales";
 
 export default function AiPromptManager() {
+  const { t } = useLocales();
   const { settings, mutate } = useGetSettings();
   const [value, setValue] = useState("");
   const [saving, setSaving] = useState(false);
@@ -23,11 +25,11 @@ export default function AiPromptManager() {
       await SettingsApi.updateSetting({ key: "ai.systemPrompt", value: value.trim() || null });
       await mutate();
     } catch (err) {
-      setError("Failed to save prompt.");
+      setError(t("settings.aiPrompt.errors.saveFailed"));
     } finally {
       setSaving(false);
     }
-  }, [mutate, value]);
+  }, [mutate, t, value]);
 
   const handleCancel = useCallback(() => {
     setValue(settings?.aiSystemPrompt ?? "");
@@ -39,9 +41,9 @@ export default function AiPromptManager() {
       <CardContent>
         <Stack spacing={2}>
           <Box>
-            <Typography variant="h6">AI System Prompt</Typography>
+            <Typography variant="h6">{t("settings.aiPrompt.title")}</Typography>
             <Typography variant="body2" color="text.secondary">
-              Controls the assistant behavior for AI replies.
+              {t("settings.aiPrompt.subtitle")}
             </Typography>
           </Box>
           <TextField
@@ -49,16 +51,16 @@ export default function AiPromptManager() {
             onChange={(event) => setValue(event.target.value)}
             minRows={6}
             multiline
-            placeholder="Enter system prompt..."
+            placeholder={t("settings.aiPrompt.placeholder")}
             size="small"
           />
           {error ? <Alert severity="error">{error}</Alert> : null}
           <Stack direction="row" spacing={1} justifyContent="flex-end">
             <Button variant="outlined" onClick={handleCancel} disabled={saving}>
-              Cancel
+              {t("settings.actions.cancel")}
             </Button>
             <Button variant="contained" onClick={handleSave} disabled={saving || !isDirty}>
-              Save
+              {t("settings.actions.save")}
             </Button>
           </Stack>
         </Stack>

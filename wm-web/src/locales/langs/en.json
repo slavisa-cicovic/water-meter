@@ -767,6 +767,36 @@
         "loadFailed": "Unable to load translations.",
         "updateFailed": "Unable to update translations."
       }
+    },
+    "aiPrompt": {
+      "title": "AI System Prompt",
+      "subtitle": "Controls the assistant behavior for AI replies.",
+      "placeholder": "Enter system prompt...",
+      "errors": {
+        "saveFailed": "Failed to save prompt."
+      }
+    },
+    "aiFaq": {
+      "title": "AI FAQ Snippets",
+      "subtitle": "These entries are injected into the AI prompt.",
+      "loading": "Loading FAQ entries...",
+      "loadError": "Failed to load FAQ entries.",
+      "empty": "No FAQ entries yet.",
+      "newTitle": "Add new entry",
+      "fields": {
+        "question": "Question",
+        "answer": "Answer",
+        "active": "Active"
+      },
+      "actions": {
+        "save": "Save",
+        "add": "Add"
+      },
+      "errors": {
+        "required": "Question and answer are required.",
+        "saveFailed": "Failed to save FAQ entry.",
+        "createFailed": "Failed to create FAQ entry."
+      }
     }
   },
   "notifications": {

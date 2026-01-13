@@ -767,6 +767,36 @@
         "loadFailed": "Nije moguce ucitati prevode.",
         "updateFailed": "Nije moguce azurirati prevode."
       }
+    },
+    "aiPrompt": {
+      "title": "AI sistemski prompt",
+      "subtitle": "Kontrolise ponasanje asistenta za AI odgovore.",
+      "placeholder": "Unesite sistemski prompt...",
+      "errors": {
+        "saveFailed": "Neuspesno cuvanje prompta."
+      }
+    },
+    "aiFaq": {
+      "title": "AI FAQ snipeti",
+      "subtitle": "Ovi unosi se dodaju u AI prompt.",
+      "loading": "Ucitavanje FAQ unosa...",
+      "loadError": "Neuspesno ucitavanje FAQ unosa.",
+      "empty": "Jos nema FAQ unosa.",
+      "newTitle": "Dodaj novi unos",
+      "fields": {
+        "question": "Pitanje",
+        "answer": "Odgovor",
+        "active": "Aktivno"
+      },
+      "actions": {
+        "save": "Sacuvaj",
+        "add": "Dodaj"
+      },
+      "errors": {
+        "required": "Pitanje i odgovor su obavezni.",
+        "saveFailed": "Neuspesno cuvanje FAQ unosa.",
+        "createFailed": "Neuspesno kreiranje FAQ unosa."
+      }
     }
   },
   "notifications": {

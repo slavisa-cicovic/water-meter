@@ -14,6 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import { AiFaqApi, useGetAiFaqEntries } from "src/api/ai-faq";
+import { useLocales } from "src/locales";
 
 type DraftEntry = {
   id: string;
@@ -23,6 +24,7 @@ type DraftEntry = {
 };
 
 export default function AiFaqManager() {
+  const { t } = useLocales();
   const { entries, entriesLoading, entriesError, mutate } = useGetAiFaqEntries();
   const [savingId, setSavingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -73,7 +75,7 @@ export default function AiFaqManager() {
       await AiFaqApi.update(entry);
       await mutate();
     } catch (err) {
-      setError("Failed to save FAQ entry.");
+      setError(t("settings.aiFaq.errors.saveFailed"));
     } finally {
       setSavingId(null);
     }
@@ -82,7 +84,7 @@ export default function AiFaqManager() {
   const handleCreate = async () => {
     setError(null);
     if (!newQuestion.trim() || !newAnswer.trim()) {
-      setError("Question and answer are required.");
+      setError(t("settings.aiFaq.errors.required"));
       return;
     }
     setSavingId("new");
@@ -97,7 +99,7 @@ export default function AiFaqManager() {
       setNewActive(true);
       await mutate();
     } catch (err) {
-      setError("Failed to create FAQ entry.");
+      setError(t("settings.aiFaq.errors.createFailed"));
     } finally {
       setSavingId(null);
     }
@@ -108,26 +110,26 @@ export default function AiFaqManager() {
       <CardContent>
         <Stack spacing={2}>
           <Box>
-            <Typography variant="h6">AI FAQ Snippets</Typography>
+            <Typography variant="h6">{t("settings.aiFaq.title")}</Typography>
             <Typography variant="body2" color="text.secondary">
-              These entries are injected into the AI prompt.
+              {t("settings.aiFaq.subtitle")}
             </Typography>
           </Box>
 
-          {entriesError ? <Alert severity="error">Failed to load FAQ entries.</Alert> : null}
-          {entriesLoading ? <Alert severity="info">Loading FAQ entries...</Alert> : null}
+          {entriesError ? <Alert severity="error">{t("settings.aiFaq.loadError")}</Alert> : null}
+          {entriesLoading ? <Alert severity="info">{t("settings.aiFaq.loading")}</Alert> : null}
 
           <Stack spacing={1.5} divider={<Divider flexItem />}>
             {localDrafts.map((entry) => (
               <Stack key={entry.id} spacing={1.5}>
                 <TextField
-                  label="Question"
+                  label={t("settings.aiFaq.fields.question")}
                   value={entry.question}
                   onChange={(event) => handleFieldChange(entry.id, "question", event.target.value)}
                   size="small"
                 />
                 <TextField
-                  label="Answer"
+                  label={t("settings.aiFaq.fields.answer")}
                   value={entry.answer}
                   onChange={(event) => handleFieldChange(entry.id, "answer", event.target.value)}
                   size="small"
@@ -141,7 +143,7 @@ export default function AiFaqManager() {
                       onChange={(event) => handleFieldChange(entry.id, "isActive", event.target.checked)}
                     />
                     <Typography variant="body2" color="text.secondary">
-                      Active
+                      {t("settings.aiFaq.fields.active")}
                     </Typography>
                   </Stack>
                   <Button
@@ -150,14 +152,14 @@ export default function AiFaqManager() {
                     onClick={() => handleSave(entry)}
                     disabled={savingId === entry.id || !isEntryDirty(entry)}
                   >
-                    Save
+                    {t("settings.aiFaq.actions.save")}
                   </Button>
                 </Stack>
               </Stack>
             ))}
             {localDrafts.length === 0 && !entriesLoading ? (
               <Typography variant="body2" color="text.secondary">
-                No FAQ entries yet.
+                {t("settings.aiFaq.empty")}
               </Typography>
             ) : null}
           </Stack>
@@ -165,15 +167,15 @@ export default function AiFaqManager() {
           <Divider flexItem />
 
           <Stack spacing={1.5}>
-            <Typography variant="subtitle2">Add new entry</Typography>
+            <Typography variant="subtitle2">{t("settings.aiFaq.newTitle")}</Typography>
             <TextField
-              label="Question"
+              label={t("settings.aiFaq.fields.question")}
               value={newQuestion}
               onChange={(event) => setNewQuestion(event.target.value)}
               size="small"
             />
             <TextField
-              label="Answer"
+              label={t("settings.aiFaq.fields.answer")}
               value={newAnswer}
               onChange={(event) => setNewAnswer(event.target.value)}
               size="small"
@@ -184,7 +186,7 @@ export default function AiFaqManager() {
               <Stack direction="row" spacing={1} alignItems="center">
                 <Switch checked={newActive} onChange={(event) => setNewActive(event.target.checked)} />
                 <Typography variant="body2" color="text.secondary">
-                  Active
+                  {t("settings.aiFaq.fields.active")}
                 </Typography>
               </Stack>
               <Button
@@ -193,7 +195,7 @@ export default function AiFaqManager() {
                 onClick={handleCreate}
                 disabled={savingId === "new" || !newQuestion.trim() || !newAnswer.trim()}
               >
-                Add
+                {t("settings.aiFaq.actions.add")}
               </Button>
             </Stack>
           </Stack>
