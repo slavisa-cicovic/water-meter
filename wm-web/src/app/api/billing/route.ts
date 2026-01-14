@@ -9,6 +9,8 @@ export const GET = withPermission(PERMISSIONS.BILLING_LIST, async (req: NextRequ
   const search = searchParams.get('search') || undefined;
   const createdStart = searchParams.get('createdStart') || undefined;
   const createdEnd = searchParams.get('createdEnd') || undefined;
+  const periodEndStart = searchParams.get('periodEndStart') || undefined;
+  const periodEndEnd = searchParams.get('periodEndEnd') || undefined;
   const status = (searchParams.get('status') || undefined) as any;
   const reviewFlags = searchParams.get('reviewFlags') || undefined;
   const orderBy = searchParams.get('orderBy') || undefined;
@@ -33,6 +35,8 @@ export const GET = withPermission(PERMISSIONS.BILLING_LIST, async (req: NextRequ
     search,
     createdStart,
     createdEnd,
+    periodEndStart,
+    periodEndEnd,
     status,
     reviewFlags: mappedReviewFlags,
     orderBy,
@@ -62,11 +66,12 @@ export const PATCH = withPermission(PERMISSIONS.BILLING_CONFIRM, async (req: Nex
     return NextResponse.json({ success: false, error: 'VALIDATION_FAILED' }, { status: 400 });
   }
 
-  if (body.status !== 'confirmed') {
+  if (body.status !== 'confirmed' && body.status !== 'void') {
     return NextResponse.json({ success: false, error: 'UNSUPPORTED_STATUS' }, { status: 400 });
   }
 
-  const result = await BillingService.confirmInvoices(body.ids);
+  const result =
+    body.status === 'confirmed' ? await BillingService.confirmInvoices(body.ids) : await BillingService.voidInvoices(body.ids);
   if (!result.success) {
     return NextResponse.json({ success: false, error: result.error }, { status: 400 });
   }

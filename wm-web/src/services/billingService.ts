@@ -954,6 +954,26 @@ export const BillingService = {
     });
   },
 
+  async voidInvoices(ids: string[]) {
+    if (!ids.length) return { success: false, error: 'NO_IDS' };
+    return prisma.$transaction(async (tx) => {
+      const invoices = await BillingRepository.findInvoicesByIds(ids, tx);
+      if (invoices.length !== ids.length) return { success: false, error: 'NOT_FOUND' };
+
+      const invalid = invoices.filter((invoice) => !['draft', 'issued'].includes(invoice.status));
+      if (invalid.length) return { success: false, error: 'INVALID_STATUS' };
+
+      const updated = await BillingRepository.bulkUpdateStatus(
+        {
+          ids,
+          status: 'void',
+        },
+        tx
+      );
+      return { success: true, data: { updated } };
+    });
+  },
+
   async issueConfirmedInvoices() {
     return prisma.$transaction(async (tx) => {
       const eligible = await BillingRepository.countIssueEligible(tx);

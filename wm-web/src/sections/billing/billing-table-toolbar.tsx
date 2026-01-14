@@ -12,6 +12,8 @@ export type IBillingTableFilters = {
   review: string;
   createdStart: string;
   createdEnd: string;
+  periodEndStart: string;
+  periodEndEnd: string;
 };
 
 type Props = {
@@ -85,6 +87,22 @@ export function BillingTableToolbar({ filters, onFilters }: Props) {
           onChange={handleChange('createdEnd')}
           InputLabelProps={{ shrink: true }}
           sx={{ minWidth: 160 }}
+        />
+        <TextField
+          label={t('billing.filters.periodEndFrom')}
+          type="date"
+          value={filters.periodEndStart}
+          onChange={handleChange('periodEndStart')}
+          InputLabelProps={{ shrink: true }}
+          sx={{ minWidth: 170 }}
+        />
+        <TextField
+          label={t('billing.filters.periodEndTo')}
+          type="date"
+          value={filters.periodEndEnd}
+          onChange={handleChange('periodEndEnd')}
+          InputLabelProps={{ shrink: true }}
+          sx={{ minWidth: 170 }}
         />
       </Stack>
     </Stack>

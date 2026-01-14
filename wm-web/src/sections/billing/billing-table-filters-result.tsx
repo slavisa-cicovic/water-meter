@@ -65,6 +65,20 @@ export function BillingTableFiltersResult({
       onDelete: () => onFilters('createdEnd', ''),
     });
   }
+  if (filters.periodEndStart) {
+    chips.push({
+      key: 'periodEndStart',
+      label: t('billing.filters.periodEndFromTag', { value: filters.periodEndStart }),
+      onDelete: () => onFilters('periodEndStart', ''),
+    });
+  }
+  if (filters.periodEndEnd) {
+    chips.push({
+      key: 'periodEndEnd',
+      label: t('billing.filters.periodEndToTag', { value: filters.periodEndEnd }),
+      onDelete: () => onFilters('periodEndEnd', ''),
+    });
+  }
 
   return (
     <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={sx}>

@@ -60,6 +60,29 @@ export function useNavData() {
             path: paths.dashboard.billing.root,
             icon: ICONS.billing,
             permissions: [PERMISSIONS.BILLING_LIST],
+            children: [
+              {
+                title: 'Billing Overview',
+                titleKey: 'billing.overview.title',
+                path: paths.dashboard.billing.root,
+                icon: ICONS.billing,
+                permissions: [PERMISSIONS.BILLING_LIST],
+              },
+              {
+                title: 'Tariffs',
+                titleKey: 'sidebar.tariffs',
+                path: paths.dashboard.billing.tariffs.root,
+                icon: ICONS.tariffs,
+                permissions: [PERMISSIONS.TARIFFS_LIST],
+              },
+              {
+                title: 'Invoice Line Items',
+                titleKey: 'sidebar.invoiceLineItems',
+                path: paths.dashboard.billing.lineItems.root,
+                icon: ICONS.billing,
+                permissions: [PERMISSIONS.BILLING_LIST],
+              },
+            ],
           },
           {
             title: 'Messages',
@@ -67,13 +90,6 @@ export function useNavData() {
             path: paths.dashboard.messages.root,
             icon: ICONS.messages,
             permissions: [PERMISSIONS.MESSAGES_READ],
-          },
-          {
-            title: 'Tariffs',
-            titleKey: 'sidebar.tariffs',
-            path: paths.dashboard.billing.tariffs.root,
-            icon: ICONS.tariffs,
-            permissions: [PERMISSIONS.TARIFFS_LIST],
           },
           {
             title: 'Jobs',

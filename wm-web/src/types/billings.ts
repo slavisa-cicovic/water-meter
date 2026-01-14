@@ -106,6 +106,8 @@ export type InvoiceListParams = {
   search?: string;
   createdStart?: string;
   createdEnd?: string;
+  periodEndStart?: string;
+  periodEndEnd?: string;
   status?: InvoiceStatus;
   reviewFlags?: string[];
   orderBy?: string;

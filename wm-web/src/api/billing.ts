@@ -8,6 +8,8 @@ type BillingQuery = {
   search?: string;
   createdStart?: string;
   createdEnd?: string;
+  periodEndStart?: string;
+  periodEndEnd?: string;
   status?: string;
   reviewFlags?: string[];
   orderBy?: string;
@@ -22,6 +24,8 @@ export function useGetInvoices(params?: BillingQuery) {
   if (params?.search) query.set('search', params.search);
   if (params?.createdStart) query.set('createdStart', params.createdStart);
   if (params?.createdEnd) query.set('createdEnd', params.createdEnd);
+  if (params?.periodEndStart) query.set('periodEndStart', params.periodEndStart);
+  if (params?.periodEndEnd) query.set('periodEndEnd', params.periodEndEnd);
   if (params?.status) query.set('status', params.status);
   if (params?.reviewFlags?.length) query.set('reviewFlags', params.reviewFlags.join(','));
   if (params?.orderBy) query.set('orderBy', params.orderBy);
@@ -51,6 +55,13 @@ export const BillingApi = {
     const res = await axiosInstance.patch(endpoints.billing.list, {
       ids,
       status: 'confirmed',
+    });
+    return res.data;
+  },
+  async cancelInvoices(ids: string[]) {
+    const res = await axiosInstance.patch(endpoints.billing.list, {
+      ids,
+      status: 'void',
     });
     return res.data;
   },

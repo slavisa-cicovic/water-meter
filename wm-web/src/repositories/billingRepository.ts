@@ -101,6 +101,8 @@ export const BillingRepository = {
       search,
       createdStart,
       createdEnd,
+      periodEndStart,
+      periodEndEnd,
       status,
       reviewFlags,
       orderBy,
@@ -148,6 +150,11 @@ export const BillingRepository = {
     if (createdEndDate) {
       createdEndDate.setHours(23, 59, 59, 999);
     }
+    const periodEndStartDate = periodEndStart ? new Date(periodEndStart) : undefined;
+    const periodEndEndDate = periodEndEnd ? new Date(periodEndEnd) : undefined;
+    if (periodEndEndDate) {
+      periodEndEndDate.setHours(23, 59, 59, 999);
+    }
 
     const where: any = {
       ...searchWhere,
@@ -162,6 +169,14 @@ export const BillingRepository = {
             },
           }
         : {}),
+      ...(periodEndStart || periodEndEnd
+        ? {
+            periodEnd: {
+              ...(periodEndStartDate ? { gte: periodEndStartDate } : {}),
+              ...(periodEndEndDate ? { lte: periodEndEndDate } : {}),
+            },
+          }
+        : {}),
     };
 
     const orderByClause: Prisma.InvoiceOrderByWithRelationInput | Prisma.InvoiceOrderByWithRelationInput[] =
@@ -169,6 +184,10 @@ export const BillingRepository = {
         ? [{ account: { lastName: order } }, { account: { firstName: order } }]
         : orderBy === 'meter'
         ? { meter: { serialNumber: order } }
+        : orderBy === 'period'
+        ? { periodEnd: order }
+        : orderBy === 'periodEnd'
+        ? { periodEnd: order }
         : orderBy === 'consumption'
         ? { consumption: order }
         : orderBy === 'totalAmount'
@@ -179,7 +198,7 @@ export const BillingRepository = {
         ? { createdAt: order }
         : orderBy === 'updatedAt'
         ? { updatedAt: order }
-        : { createdAt: 'desc' as Prisma.SortOrder };
+        : { periodEnd: 'desc' as Prisma.SortOrder };
 
     const [total, invoices] = await Promise.all([
       prisma.invoice.count({ where }),

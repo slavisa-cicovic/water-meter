@@ -20,6 +20,7 @@
     "billing": "Naplata",
     "messages": "Poruke",
     "tariffs": "Tarife",
+    "invoiceLineItems": "Stavke fakture",
     "jobs": "Zadaci",
     "settings": "Podesavanja"
   },
@@ -381,12 +382,16 @@
       "reviewLabel": "Provera",
       "createdFrom": "Kreiran od",
       "createdTo": "Kreiran do",
+      "periodEndFrom": "Kraj perioda od",
+      "periodEndTo": "Kraj perioda do",
       "all": "Svi",
       "searchTag": "Pretraga: {{value}}",
       "statusTag": "Status: {{value}}",
       "reviewTag": "Provera: {{value}}",
       "createdFromTag": "Kreiran od: {{value}}",
       "createdToTag": "Kreiran do: {{value}}",
+      "periodEndFromTag": "Kraj perioda od: {{value}}",
+      "periodEndToTag": "Kraj perioda do: {{value}}",
       "results": "Rezultati: {{count}}",
       "reset": "Reset"
     },
@@ -407,11 +412,17 @@
     "actions": {
       "confirmInvoices": "Potvrdi fakture",
       "confirm": "Potvrdi",
+      "cancelInvoices": "Storniraj fakture",
+      "cancel": "Storniraj",
       "invoiceDetail": "Detalji fakture"
     },
     "confirm": {
       "title": "Potvrdi fakture",
       "body": "Upravo cete potvrditi {{count}} faktura. Ova akcija se ne moze opozvati."
+    },
+    "cancel": {
+      "title": "Storniraj fakture",
+      "body": "Upravo cete stornirati {{count}} faktura. Ova akcija se ne moze opozvati."
     },
     "reviewDialog": {
       "title": "Izmena ocitavanja",

@@ -20,6 +20,7 @@
     "billing": "Billing",
     "messages": "Messages",
     "tariffs": "Tariffs",
+    "invoiceLineItems": "Invoice Line Items",
     "jobs": "Jobs",
     "settings": "Settings"
   },
@@ -381,12 +382,16 @@
       "reviewLabel": "Review",
       "createdFrom": "Created from",
       "createdTo": "Created to",
+      "periodEndFrom": "Period end from",
+      "periodEndTo": "Period end to",
       "all": "All",
       "searchTag": "Search: {{value}}",
       "statusTag": "Status: {{value}}",
       "reviewTag": "Review: {{value}}",
       "createdFromTag": "Created from: {{value}}",
       "createdToTag": "Created to: {{value}}",
+      "periodEndFromTag": "Period end from: {{value}}",
+      "periodEndToTag": "Period end to: {{value}}",
       "results": "Results: {{count}}",
       "reset": "Reset"
     },
@@ -407,11 +412,17 @@
     "actions": {
       "confirmInvoices": "Confirm invoices",
       "confirm": "Confirm",
+      "cancelInvoices": "Cancel invoices",
+      "cancel": "Cancel",
       "invoiceDetail": "Invoice detail"
     },
     "confirm": {
       "title": "Confirm invoices",
       "body": "You are about to confirm {{count}} invoice(s). This action cannot be undone."
+    },
+    "cancel": {
+      "title": "Cancel invoices",
+      "body": "You are about to cancel {{count}} invoice(s). This action cannot be undone."
     },
     "reviewDialog": {
       "title": "Edit readings",

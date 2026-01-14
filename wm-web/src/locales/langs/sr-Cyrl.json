@@ -20,6 +20,7 @@
     "billing": "Наплата",
     "messages": "Поруке",
     "tariffs": "Тарифе",
+    "invoiceLineItems": "Ставке фактуре",
     "jobs": "Задаци",
     "settings": "Подешавања"
   },
@@ -381,12 +382,16 @@
       "reviewLabel": "Провера",
       "createdFrom": "Креиран од",
       "createdTo": "Креиран до",
+      "periodEndFrom": "Крај периода од",
+      "periodEndTo": "Крај периода до",
       "all": "Сви",
       "searchTag": "Претрага: {{value}}",
       "statusTag": "Статус: {{value}}",
       "reviewTag": "Провера: {{value}}",
       "createdFromTag": "Креиран од: {{value}}",
       "createdToTag": "Креиран до: {{value}}",
+      "periodEndFromTag": "Крај периода од: {{value}}",
+      "periodEndToTag": "Крај периода до: {{value}}",
       "results": "Резултати: {{count}}",
       "reset": "Ресет"
     },
@@ -407,11 +412,17 @@
     "actions": {
       "confirmInvoices": "Потврди фактуре",
       "confirm": "Потврди",
+      "cancelInvoices": "Сторнирај фактуре",
+      "cancel": "Сторнирај",
       "invoiceDetail": "Детаљи фактуре"
     },
     "confirm": {
       "title": "Потврди фактуре",
       "body": "Управо ћете потврдити {{count}} фактура. Ова акција се не може опозвати."
+    },
+    "cancel": {
+      "title": "Сторнирај фактуре",
+      "body": "Управо ћете сторнирати {{count}} фактура. Ова акција се не може опозвати."
     },
     "reviewDialog": {
       "title": "Измена очитавања",

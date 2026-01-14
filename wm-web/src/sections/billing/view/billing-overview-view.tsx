@@ -52,6 +52,8 @@ const defaultFilters: IBillingTableFilters = {
   review: '',
   createdStart: defaultCreatedStart,
   createdEnd: defaultCreatedEnd,
+  periodEndStart: '',
+  periodEndEnd: '',
 };
 
 export function BillingOverviewView() {
@@ -67,12 +69,13 @@ export function BillingOverviewView() {
     review: reviewParam,
   }));
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const table = useTable({ defaultRowsPerPage: 25, defaultDense: true, defaultOrderBy: 'createdAt', defaultOrder: 'desc' });
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const table = useTable({ defaultRowsPerPage: 25, defaultDense: true, defaultOrderBy: 'period', defaultOrder: 'desc' });
   const TABLE_HEAD = useMemo(
     () => [
       { id: 'account', label: t('billing.table.account'), minWidth: 200 },
       { id: 'meter', label: t('billing.table.meter'), minWidth: 200 },
-      { id: 'period', label: t('billing.table.period'), minWidth: 200, disableSort: true },
+      { id: 'period', label: t('billing.table.period'), minWidth: 200 },
       { id: 'createdAt', label: t('billing.table.created'), width: 120 },
       { id: 'updatedAt', label: t('billing.table.updated'), width: 120 },
       { id: 'consumption', label: t('billing.table.consumption'), width: 120, align: 'right' },
@@ -98,6 +101,8 @@ export function BillingOverviewView() {
     reviewFlags: filters.review ? [filters.review] : undefined,
     createdStart: filters.createdStart || undefined,
     createdEnd: filters.createdEnd || undefined,
+    periodEndStart: filters.periodEndStart || undefined,
+    periodEndEnd: filters.periodEndEnd || undefined,
     orderBy: table.orderBy,
     order: table.order,
     page: table.page,
@@ -107,9 +112,15 @@ export function BillingOverviewView() {
   const denseHeight = table.dense ? 60 : 80;
   const canReset = !isEqual(defaultFilters, filters);
   const notFound = (!invoices.length && canReset) || invoicesEmpty;
-  const selectableIds = invoices
+  const confirmableIds = invoices
     .filter((row) => row.status === 'draft' && (!row.reviewFlags || row.reviewFlags.length === 0))
     .map((row) => row.id);
+  const cancellableIds = invoices.filter((row) => row.status === 'draft' || row.status === 'issued').map((row) => row.id);
+  const selectedIds = table.selected.map((selectedId) => String(selectedId));
+  const canConfirmSelection =
+    selectedIds.length > 0 && selectedIds.every((selectedId) => confirmableIds.includes(selectedId));
+  const canCancelSelection =
+    selectedIds.length > 0 && selectedIds.every((selectedId) => cancellableIds.includes(selectedId));
   const sharedByMeterPeriod = useMemo(() => {
     const counts = new Map<string, number>();
     invoices.forEach((invoice) => {
@@ -120,10 +131,22 @@ export function BillingOverviewView() {
   }, [invoices]);
 
   const handleConfirmSelected = async () => {
-    if (!table.selected.length) return;
+    if (!canConfirmSelection) return;
     try {
       await BillingApi.confirmInvoices(table.selected as string[]);
       setConfirmOpen(false);
+      table.setSelected([]);
+      await mutate();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleCancelSelected = async () => {
+    if (!canCancelSelection) return;
+    try {
+      await BillingApi.cancelInvoices(table.selected as string[]);
+      setCancelOpen(false);
       table.setSelected([]);
       await mutate();
     } catch (error) {
@@ -144,12 +167,21 @@ export function BillingOverviewView() {
   }, []);
 
   const handleOpenConfirm = () => {
-    if (!table.selected.length) return;
+    if (!canConfirmSelection) return;
     setConfirmOpen(true);
+  };
+
+  const handleOpenCancel = () => {
+    if (!canCancelSelection) return;
+    setCancelOpen(true);
   };
 
   const handleCloseConfirm = () => {
     setConfirmOpen(false);
+  };
+
+  const handleCloseCancel = () => {
+    setCancelOpen(false);
   };
 
   return (
@@ -203,9 +235,9 @@ export function BillingOverviewView() {
             <TableContainer sx={{ position: 'relative' }}>
               <TableSelectedAction
                 dense={table.dense}
-                rowCount={selectableIds.length}
+                rowCount={cancellableIds.length}
                 numSelected={table.selected.length}
-                onSelectAllRows={(checked) => table.onSelectAllRows(checked, selectableIds)}
+                onSelectAllRows={(checked) => table.onSelectAllRows(checked, cancellableIds)}
                 actions={[
                   {
                     key: 'confirm',
@@ -214,9 +246,23 @@ export function BillingOverviewView() {
                         <IconButton
                           color="primary"
                           onClick={handleOpenConfirm}
-                          disabled={!table.selected.length}
+                          disabled={!canConfirmSelection}
                         >
                           <Iconify icon="eva:checkmark-circle-2-fill" />
+                        </IconButton>
+                      </Tooltip>
+                    ),
+                  },
+                  {
+                    key: 'cancel',
+                    node: (
+                      <Tooltip title={t('billing.actions.cancelInvoices')} arrow>
+                        <IconButton
+                          color="error"
+                          onClick={handleOpenCancel}
+                          disabled={!canCancelSelection}
+                        >
+                          <Iconify icon="eva:close-circle-fill" />
                         </IconButton>
                       </Tooltip>
                     ),
@@ -228,9 +274,9 @@ export function BillingOverviewView() {
                   order={table.order}
                   orderBy={table.orderBy}
                   headLabel={TABLE_HEAD}
-                  rowCount={selectableIds.length}
+                  rowCount={cancellableIds.length}
                   numSelected={table.selected.length}
-                  onSelectAllRows={(checked) => table.onSelectAllRows(checked, selectableIds)}
+                  onSelectAllRows={(checked) => table.onSelectAllRows(checked, cancellableIds)}
                   onSort={table.onSort}
                 />
                 <TableBody>
@@ -248,7 +294,7 @@ export function BillingOverviewView() {
                         row={row}
                         selected={table.selected.includes(row.id)}
                         onSelectRow={() => table.onSelectRow(row.id)}
-                        selectable={row.status === 'draft' && (!row.reviewFlags || row.reviewFlags.length === 0)}
+                        selectable={row.status === 'draft' || row.status === 'issued'}
                         onReviewed={mutate}
                         isShared={
                           (sharedByMeterPeriod.get(`${row.meterId || ''}|${row.periodStart || ''}|${row.periodEnd || ''}`) || 0) > 1
@@ -282,6 +328,17 @@ export function BillingOverviewView() {
         action={
           <Button variant="contained" color="primary" onClick={handleConfirmSelected}>
             {t('billing.actions.confirm')}
+          </Button>
+        }
+      />
+      <ConfirmDialog
+        open={cancelOpen}
+        onClose={handleCloseCancel}
+        title={t('billing.cancel.title')}
+        content={t('billing.cancel.body', { count: table.selected.length })}
+        action={
+          <Button variant="contained" color="error" onClick={handleCancelSelected}>
+            {t('billing.actions.cancel')}
           </Button>
         }
       />
