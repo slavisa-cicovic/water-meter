@@ -26,10 +26,10 @@ import { useGetSettings } from 'src/api/settings';
 import { RouterLink } from 'src/routes/components';
 import { paths } from 'src/routes/paths';
 import { useLocales } from 'src/locales';
-import { BillingTableFiltersResult } from '../billing-table-filters-result';
-import { BillingTableRow } from '../billing-table-row';
-import { BillingTableSkeleton } from '../billing-skeleton';
-import { BillingTableToolbar, IBillingTableFilters, IBillingTableFilterValue } from '../billing-table-toolbar';
+import { InvoiceTableFiltersResult } from '../invoice-table-filters-result';
+import { InvoiceTableRow } from '../invoice-table-row';
+import { InvoiceTableSkeleton } from '../invoice-skeleton';
+import { InvoiceTableToolbar, IInvoiceTableFilters, IInvoiceTableFilterValue } from '../invoice-table-toolbar';
 
 const getMonthBounds = () => {
   const now = new Date();
@@ -46,7 +46,7 @@ const getMonthBounds = () => {
 
 const { start: defaultCreatedStart, end: defaultCreatedEnd } = getMonthBounds();
 
-const defaultFilters: IBillingTableFilters = {
+const defaultFilters: IInvoiceTableFilters = {
   search: '',
   status: '',
   review: '',
@@ -56,14 +56,14 @@ const defaultFilters: IBillingTableFilters = {
   periodEndEnd: defaultCreatedEnd,
 };
 
-export function BillingOverviewView() {
+export function InvoiceOverviewView() {
   const { t } = useLocales();
   const settings = useSettingsContext();
   const { settings: appSettings } = useGetSettings();
   const searchParams = useSearchParams();
   const statusParam = searchParams.get('status') ?? '';
   const reviewParam = searchParams.get('review') ?? '';
-  const [filters, setFilters] = useState<IBillingTableFilters>(() => ({
+  const [filters, setFilters] = useState<IInvoiceTableFilters>(() => ({
     ...defaultFilters,
     status: statusParam,
     review: reviewParam,
@@ -155,7 +155,7 @@ export function BillingOverviewView() {
   };
 
   const handleFilters = useCallback(
-    (name: string, value: IBillingTableFilterValue) => {
+    (name: string, value: IInvoiceTableFilterValue) => {
       table.onResetPage();
       setFilters((prevState) => ({ ...prevState, [name]: value }));
     },
@@ -197,10 +197,10 @@ export function BillingOverviewView() {
       />
 
       <Card>
-        <BillingTableToolbar filters={filters} onFilters={handleFilters} />
+        <InvoiceTableToolbar filters={filters} onFilters={handleFilters} />
 
         {canReset && (
-          <BillingTableFiltersResult
+          <InvoiceTableFiltersResult
             filters={filters}
             defaultFilters={defaultFilters}
             onFilters={handleFilters}
@@ -282,14 +282,14 @@ export function BillingOverviewView() {
                 <TableBody>
                   {invoicesLoading
                     ? [...Array(table.rowsPerPage)].map((_i, index) => (
-                      <BillingTableSkeleton
+                      <InvoiceTableSkeleton
                         key={index}
                         columns={TABLE_HEAD.map((el) => el.width || el.minWidth || 100)}
                         sx={{ height: denseHeight }}
                       />
                     ))
                     : invoices.map((row) => (
-                      <BillingTableRow
+                      <InvoiceTableRow
                         key={row.id}
                         row={row}
                         selected={table.selected.includes(row.id)}

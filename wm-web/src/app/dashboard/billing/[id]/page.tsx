@@ -1,4 +1,4 @@
-import { InvoiceDetailView } from 'src/sections/billing/view';
+import { InvoiceDetailView } from 'src/sections/invoices/view';
 
 type Props = {
   params: Promise<{ id: string }>;

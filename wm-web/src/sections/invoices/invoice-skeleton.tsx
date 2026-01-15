@@ -5,7 +5,7 @@ type Props = {
   sx?: any;
 };
 
-export function BillingTableSkeleton({ columns, sx }: Props) {
+export function InvoiceTableSkeleton({ columns, sx }: Props) {
   return (
     <TableRow sx={sx}>
       {columns.map((width, idx) => (
@@ -16,4 +16,3 @@ export function BillingTableSkeleton({ columns, sx }: Props) {
     </TableRow>
   );
 }
-

@@ -27,7 +27,7 @@ type Props = {
   currency?: string | null;
 };
 
-export function BillingTableRow({
+export function InvoiceTableRow({
   row,
   selected,
   onSelectRow,

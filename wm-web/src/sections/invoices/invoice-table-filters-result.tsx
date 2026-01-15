@@ -1,17 +1,17 @@
 import { Chip, Stack } from '@mui/material';
-import { IBillingTableFilters, IBillingTableFilterValue } from './billing-table-toolbar';
+import { IInvoiceTableFilters, IInvoiceTableFilterValue } from './invoice-table-toolbar';
 import { useLocales } from 'src/locales';
 
 type Props = {
-  filters: IBillingTableFilters;
-  defaultFilters?: IBillingTableFilters;
-  onFilters: (name: string, value: IBillingTableFilterValue) => void;
+  filters: IInvoiceTableFilters;
+  defaultFilters?: IInvoiceTableFilters;
+  onFilters: (name: string, value: IInvoiceTableFilterValue) => void;
   onResetFilters: VoidFunction;
   results: number;
   sx?: any;
 };
 
-export function BillingTableFiltersResult({
+export function InvoiceTableFiltersResult({
   filters,
   defaultFilters,
   onFilters,

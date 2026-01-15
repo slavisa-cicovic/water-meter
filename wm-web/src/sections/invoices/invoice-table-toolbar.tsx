@@ -4,9 +4,9 @@ import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import { useLocales } from 'src/locales';
 
-export type IBillingTableFilterValue = string;
+export type IInvoiceTableFilterValue = string;
 
-export type IBillingTableFilters = {
+export type IInvoiceTableFilters = {
   search: string;
   status: string;
   review: string;
@@ -17,14 +17,14 @@ export type IBillingTableFilters = {
 };
 
 type Props = {
-  filters: IBillingTableFilters;
-  onFilters: (name: string, value: IBillingTableFilterValue) => void;
+  filters: IInvoiceTableFilters;
+  onFilters: (name: string, value: IInvoiceTableFilterValue) => void;
 };
 
-export function BillingTableToolbar({ filters, onFilters }: Props) {
+export function InvoiceTableToolbar({ filters, onFilters }: Props) {
   const { t } = useLocales();
   const handleChange = useCallback(
-    (name: keyof IBillingTableFilters) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    (name: keyof IInvoiceTableFilters) => (event: React.ChangeEvent<HTMLInputElement>) => {
       onFilters(name, event.target.value);
     },
     [onFilters]
