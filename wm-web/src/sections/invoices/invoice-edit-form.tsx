@@ -11,6 +11,7 @@ import {
   TableBody,
   TableCell,
   TableContainer,
+  TableFooter,
   TableRow,
   Typography,
 } from '@mui/material';
@@ -42,6 +43,13 @@ export function InvoiceEditForm({ invoice, currency, onUpdated }: Props) {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const canEdit = ['draft', 'issued'].includes(invoice.status);
+  const tableColumnWidths = {
+    checkbox: 40,
+    label: '35%',
+    detail: 120,
+    unit: 90,
+    amount: 220,
+  } as const;
 
   const lineItemIds = useMemo(
     () => lineItems.slice().sort((a, b) => a.sortOrder - b.sortOrder).map((item) => item.id),
@@ -106,152 +114,225 @@ export function InvoiceEditForm({ invoice, currency, onUpdated }: Props) {
 
   return (
     <Stack spacing={3}>
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Card>
-              <CardHeader title={t('billing.invoice.summary')} />
-              <CardContent>
-                <Stack spacing={1} sx={{ display: 'grid', gridTemplateColumns: '1fr auto', columnGap: 2, rowGap: 1 }}>
-                  <Typography variant="body2">{t('billing.invoice.account')}</Typography>
-                  <Typography variant="body2" textAlign="right">
+      <Grid container spacing={3}>
+        <Grid size={{ xs: 12, md: 6 }}>
+          {!canEdit && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              {t('billing.invoice.readOnly')}
+            </Alert>
+          )}
+          <TableContainer>
+            <Table size="small" sx={{ tableLayout: 'fixed' }}>
+              <TableBody
+                sx={{
+                  border: '1px solid',
+                  borderColor: 'divider',
+                }}
+              >
+                <TableRow>
+                  <TableCell padding="checkbox" sx={{ width: tableColumnWidths.checkbox }} />
+                  <TableCell sx={{ width: tableColumnWidths.label }}>
+                    {t('billing.invoice.account')}
+                  </TableCell>
+                  <TableCell sx={{ width: tableColumnWidths.detail }} />
+                  <TableCell sx={{ width: tableColumnWidths.unit }} />
+                  <TableCell
+                    sx={{ width: tableColumnWidths.amount, whiteSpace: 'nowrap' }}
+                    align="right"
+                  >
                     {invoice.account ? `${invoice.account.firstName} ${invoice.account.lastName}` : invoice.accountId}
-                  </Typography>
-                  <Typography variant="body2">{t('billing.invoice.status')}</Typography>
-                  <Typography variant="body2" textAlign="right">
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell padding="checkbox" sx={{ width: tableColumnWidths.checkbox }} />
+                  <TableCell sx={{ width: tableColumnWidths.label }}>
+                    {t('billing.invoice.address')}
+                  </TableCell>
+                  <TableCell sx={{ width: tableColumnWidths.detail }} />
+                  <TableCell sx={{ width: tableColumnWidths.unit }} />
+                  <TableCell
+                    sx={{ width: tableColumnWidths.amount, whiteSpace: 'nowrap' }}
+                    align="right"
+                  >
+                    {invoice.account?.address || '-'}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell padding="checkbox" sx={{ width: tableColumnWidths.checkbox }} />
+                  <TableCell sx={{ width: tableColumnWidths.label }}>
+                    {t('billing.invoice.status')}
+                  </TableCell>
+                  <TableCell sx={{ width: tableColumnWidths.detail }} />
+                  <TableCell sx={{ width: tableColumnWidths.unit }} />
+                  <TableCell
+                    sx={{ width: tableColumnWidths.amount, whiteSpace: 'nowrap' }}
+                    align="right"
+                  >
                     {statusLabel}
-                  </Typography>
-                  <Typography variant="body2">{t('billing.invoice.meter')}</Typography>
-                  <Typography variant="body2" textAlign="right">
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell padding="checkbox" sx={{ width: tableColumnWidths.checkbox }} />
+                  <TableCell sx={{ width: tableColumnWidths.label }}>
+                    {t('billing.invoice.meter')}
+                  </TableCell>
+                  <TableCell sx={{ width: tableColumnWidths.detail }} />
+                  <TableCell sx={{ width: tableColumnWidths.unit }} />
+                  <TableCell
+                    sx={{ width: tableColumnWidths.amount, whiteSpace: 'nowrap' }}
+                    align="right"
+                  >
                     {invoice.meter?.serialNumber || invoice.meterId || '-'}
-                  </Typography>
-                  <Typography variant="body2">
-                    {t('billing.invoice.previousReading')}{' '}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell padding="checkbox" sx={{ width: tableColumnWidths.checkbox }} />
+                  <TableCell sx={{ width: tableColumnWidths.label }}>
+                    {t('billing.invoice.previousReading')}
+                  </TableCell>
+                  <TableCell sx={{ width: tableColumnWidths.detail }}>
                     {invoice.periodStart?.slice(0, 10) || ''}
-                  </Typography>
-                  <Typography variant="body2" textAlign="right">
+                  </TableCell>
+                  <TableCell sx={{ width: tableColumnWidths.unit }} />
+                  <TableCell
+                    sx={{ width: tableColumnWidths.amount, whiteSpace: 'nowrap' }}
+                    align="right"
+                  >
                     {readings[0]?.role === 'start' ? readings[0]?.value : '-'}
-                  </Typography>
-                  <Typography variant="body2">
-                    {t('billing.invoice.currentReading')}{' '}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell padding="checkbox" sx={{ width: tableColumnWidths.checkbox }} />
+                  <TableCell sx={{ width: tableColumnWidths.label }}>
+                    {t('billing.invoice.currentReading')}
+                  </TableCell>
+                  <TableCell sx={{ width: tableColumnWidths.detail }}>
                     {invoice.periodEnd?.slice(0, 10) || ''}
-                  </Typography>
-                  <Typography variant="body2" textAlign="right">
+                  </TableCell>
+                  <TableCell sx={{ width: tableColumnWidths.unit }} />
+                  <TableCell
+                    sx={{ width: tableColumnWidths.amount, whiteSpace: 'nowrap' }}
+                    align="right"
+                  >
                     {readings[0]?.role === 'end'
                       ? readings[0]?.value
                       : readings.find((reading: any) => reading.role === 'end')?.value || '-'}
-                  </Typography>
-                  <Typography variant="body2">{t('billing.invoice.consumption')}</Typography>
-                  <Typography variant="body2" textAlign="right">
+                  </TableCell>
+                </TableRow>
+                <TableRow hover>
+                  <TableCell padding="checkbox" sx={{ width: tableColumnWidths.checkbox }}>
+                    <Checkbox checked disabled />
+                  </TableCell>
+                  <TableCell sx={{ width: tableColumnWidths.label }}>
+                    {t('billing.invoice.consumption')}
+                  </TableCell>
+                  <TableCell sx={{ width: tableColumnWidths.detail, whiteSpace: 'nowrap' }}>
                     {invoice.consumption}
-                  </Typography>
-                  <Typography variant="body2">{t('billing.invoice.subtotal')}</Typography>
-                  <Typography variant="body2" textAlign="right">
+                  </TableCell>
+                  <TableCell sx={{ width: tableColumnWidths.unit, whiteSpace: 'nowrap' }}>
+                    {formatCurrencyValue(invoice.unitPrice, currency)}
+                  </TableCell>
+                  <TableCell
+                    sx={{ width: tableColumnWidths.amount, whiteSpace: 'nowrap' }}
+                    align="right"
+                  >
                     {formatCurrencyValue(invoice.subtotal, currency)}
-                  </Typography>
-                  <Typography variant="body2">{t('billing.invoice.vat')}</Typography>
-                  <Typography variant="body2" textAlign="right">
-                    {formatCurrencyValue(invoice.vatAmount, currency)}
-                  </Typography>
-                  <Typography variant="body2">{t('billing.invoice.total')}</Typography>
-                  <Typography variant="body2" textAlign="right">
-                    {formatCurrencyValue(invoice.totalAmount, currency)}
-                  </Typography>
-                </Stack>
-                <Stack direction="row" justifyContent="flex-end" sx={{ mt: 3 }}>
-                  <Button variant="outlined" color="error" onClick={() => setCancelOpen(true)} disabled={!canEdit}>
-                    {t('billing.actions.cancel')}
-                  </Button>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Card>
-              <CardHeader title={t('billing.invoice.lineItems')} />
-              <CardContent>
-                {!canEdit && (
-                  <Alert severity="info" sx={{ mb: 2 }}>
-                    {t('billing.invoice.readOnly')}
-                  </Alert>
-                )}
-                <TableContainer>
-                  <Table size="small">
-                    <TableHeadCustom
-                      order="asc"
-                      orderBy="label"
-                      headLabel={[
-                        { id: 'selected', label: '', width: 48, disableSort: true },
-                        { id: 'label', label: t('billing.lineItems.table.name'), minWidth: 200, disableSort: true },
-                        { id: 'quantity', label: t('billing.invoice.consumption'), width: 140, disableSort: true },
-                        { id: 'unit', label: t('billing.invoice.unitPrice'), width: 160, disableSort: true },
-                        { id: 'amount', label: t('billing.invoice.total'), width: 160, disableSort: true },
-                      ]}
-                    />
-                    <TableBody>
-                      <TableRow hover>
-                        <TableCell padding="checkbox">
-                          <Checkbox checked disabled />
+                  </TableCell>
+                </TableRow>
+                {lineItems
+                  .slice()
+                  .sort((a, b) => a.sortOrder - b.sortOrder)
+                  .map((item) => {
+                    const isChecked = selectedLineItemIds?.includes(item.id);
+                    const valueLabel = item.isPercentage
+                      ? `${item.value}%`
+                      : formatCurrencyValue(item.value, currency);
+                    const lineAmount = item.isPercentage
+                      ? formatCurrencyValue(
+                        Number(invoice.subtotal) * (Number(item.value) / 100),
+                        currency
+                      )
+                      : formatCurrencyValue(item.value, currency);
+                    return (
+                      <TableRow key={item.id} hover>
+                        <TableCell padding="checkbox" sx={{ width: tableColumnWidths.checkbox }}>
+                          <Checkbox
+                            checked={!!isChecked}
+                            onChange={() => handleToggleLineItem(item.id)}
+                            disabled={!canEdit || saving}
+                          />
                         </TableCell>
-                        <TableCell sx={{ minWidth: 200 }}>{t('billing.invoice.consumption')}</TableCell>
-                        <TableCell sx={{ width: 140 }}>{invoice.consumption}</TableCell>
-                        <TableCell sx={{ width: 160 }}>
-                          {formatCurrencyValue(invoice.unitPrice, currency)}
+                        <TableCell sx={{ width: tableColumnWidths.label }}>
+                          {item.description || item.name}
                         </TableCell>
-                        <TableCell sx={{ width: 160 }}>
-                          {formatCurrencyValue(invoice.subtotal, currency)}
+                        <TableCell sx={{ width: tableColumnWidths.detail }}>-</TableCell>
+                        <TableCell sx={{ width: tableColumnWidths.unit, whiteSpace: 'nowrap' }}>
+                          {valueLabel}
+                        </TableCell>
+                        <TableCell
+                          sx={{ width: tableColumnWidths.amount, whiteSpace: 'nowrap' }}
+                          align="right"
+                        >
+                          {lineAmount}
                         </TableCell>
                       </TableRow>
-                      {lineItems
-                        .slice()
-                        .sort((a, b) => a.sortOrder - b.sortOrder)
-                        .map((item) => {
-                          const isChecked = selectedLineItemIds?.includes(item.id);
-                          const valueLabel = item.isPercentage
-                            ? `${item.value}%`
-                            : formatCurrencyValue(item.value, currency);
-                          const lineAmount = item.isPercentage
-                            ? formatCurrencyValue(
-                                Number(invoice.subtotal) * (Number(item.value) / 100),
-                                currency
-                              )
-                            : formatCurrencyValue(item.value, currency);
-                          return (
-                            <TableRow key={item.id} hover>
-                              <TableCell padding="checkbox">
-                                <Checkbox
-                                  checked={!!isChecked}
-                                  onChange={() => handleToggleLineItem(item.id)}
-                                  disabled={!canEdit || saving}
-                                />
-                              </TableCell>
-                              <TableCell sx={{ minWidth: 200 }}>{item.description || item.name}</TableCell>
-                              <TableCell sx={{ width: 140 }}>-</TableCell>
-                              <TableCell sx={{ width: 160 }}>{valueLabel}</TableCell>
-                              <TableCell sx={{ width: 160 }}>{lineAmount}</TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      <TableNoData notFound={!lineItems.length} />
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          </Grid>
+                    );
+                  })}
+              </TableBody>
+              <TableFooter
+                sx={{
+                  border: '1px solid',
+                  borderColor: 'divider',
+                }}
+              >
+                <TableRow>
+                  <TableCell padding="checkbox" sx={{ width: tableColumnWidths.checkbox }} />
+                  <TableCell sx={{ width: tableColumnWidths.label, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+                    <Typography variant="body2" fontWeight={700}>
+                      {t('billing.invoice.total')}
+                    </Typography>
+                  </TableCell>
+                  <TableCell sx={{ width: tableColumnWidths.detail, pt: 2, borderTop: '1px solid', borderColor: 'divider' }} />
+                  <TableCell sx={{ width: tableColumnWidths.unit, pt: 2, borderTop: '1px solid', borderColor: 'divider' }} />
+                  <TableCell
+                    sx={{
+                      width: tableColumnWidths.amount,
+                      whiteSpace: 'nowrap',
+                      pt: 2,
+                      borderTop: '1px solid',
+                      borderColor: 'divider',
+                    }}
+                    align="right"
+                  >
+                    <Typography variant="body2" fontWeight={700}>
+                      {formatCurrencyValue(invoice.totalAmount, currency)}
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              </TableFooter>
+            </Table>
+          </TableContainer>
+          {canEdit && (
+            <Stack direction="row" justifyContent="flex-end" sx={{ mt: 3 }}>
+              <Button variant="outlined" color="error" onClick={() => setCancelOpen(true)}>
+                {t('billing.actions.cancel')}
+              </Button>
+            </Stack>
+          )}
         </Grid>
+      </Grid>
 
-        <ConfirmDialog
-          open={cancelOpen}
-          onClose={() => setCancelOpen(false)}
-          title={t('billing.cancel.title')}
-          content={t('billing.cancel.body', { count: 1 })}
-          action={
-            <Button variant="contained" color="error" onClick={handleCancelInvoice}>
-              {t('billing.actions.cancel')}
-            </Button>
-          }
-        />
+      <ConfirmDialog
+        open={cancelOpen}
+        onClose={() => setCancelOpen(false)}
+        title={t('billing.cancel.title')}
+        content={t('billing.cancel.body', { count: 1 })}
+        action={
+          <Button variant="contained" color="error" onClick={handleCancelInvoice}>
+            {t('billing.actions.cancel')}
+          </Button>
+        }
+      />
     </Stack>
   );
 }

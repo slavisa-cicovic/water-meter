@@ -602,6 +602,7 @@
       "loading": "Loading invoice...",
       "summary": "Summary",
       "account": "Account",
+      "address": "Address",
       "meter": "Meter",
       "period": "Period",
       "consumption": "Consumption",
