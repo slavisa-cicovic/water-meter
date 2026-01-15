@@ -1,6 +1,13 @@
 import { Prisma, PrismaClient } from '@prisma/client';
 import prisma from 'src/utils/prisma';
-import { InvoiceListParams, InvoiceStatus, TariffCreateInput, TariffUpdateInput } from 'src/types/billings';
+import {
+  InvoiceLineItemCreateInput,
+  InvoiceLineItemUpdateInput,
+  InvoiceListParams,
+  InvoiceStatus,
+  TariffCreateInput,
+  TariffUpdateInput,
+} from 'src/types/billings';
 
 const toDate = (value: string) => new Date(value);
 
@@ -77,6 +84,39 @@ export const BillingRepository = {
 
   async findTariffById(id: string, client: Prisma.TransactionClient | PrismaClient = prisma) {
     return client.tariff.findUnique({ where: { id } });
+  },
+
+  async listInvoiceLineItems() {
+    return prisma.invoiceLineItem.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+  },
+
+  async findInvoiceLineItemById(id: string, client: Prisma.TransactionClient | PrismaClient = prisma) {
+    return client.invoiceLineItem.findUnique({ where: { id } });
+  },
+
+  async createInvoiceLineItem(input: InvoiceLineItemCreateInput) {
+    return prisma.invoiceLineItem.create({
+      data: {
+        name: input.name,
+        description: input.description ?? null,
+        isPercentage: input.isPercentage,
+        value: input.value,
+      },
+    });
+  },
+
+  async updateInvoiceLineItem(input: InvoiceLineItemUpdateInput) {
+    return prisma.invoiceLineItem.update({
+      where: { id: input.id },
+      data: {
+        ...(input.name !== undefined ? { name: input.name } : {}),
+        ...(input.description !== undefined ? { description: input.description ?? null } : {}),
+        ...(input.isPercentage !== undefined ? { isPercentage: input.isPercentage } : {}),
+        ...(input.value !== undefined ? { value: input.value } : {}),
+      },
+    });
   },
 
   async bulkUpdateTariffs(ids: string[], action: 'delete' | 'activate' | 'deactivate') {

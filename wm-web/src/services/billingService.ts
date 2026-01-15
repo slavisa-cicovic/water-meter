@@ -3,8 +3,20 @@ import { AccountRepository } from 'src/repositories/accountRepository';
 import { BillingRepository } from 'src/repositories/billingRepository';
 import { MeterRepository } from 'src/repositories/meterRepository';
 import { ReadingRepository } from 'src/repositories/readingRepository';
-import { InvoiceCreateInput, TariffCreateInput, TariffUpdateInput } from 'src/types/billings';
-import { validateInvoiceCreate, validateTariffCreate, validateTariffUpdate } from 'src/validation/billings';
+import {
+  InvoiceCreateInput,
+  InvoiceLineItemCreateInput,
+  InvoiceLineItemUpdateInput,
+  TariffCreateInput,
+  TariffUpdateInput,
+} from 'src/types/billings';
+import {
+  validateInvoiceCreate,
+  validateInvoiceLineItemCreate,
+  validateInvoiceLineItemUpdate,
+  validateTariffCreate,
+  validateTariffUpdate,
+} from 'src/validation/billings';
 import prisma from 'src/utils/prisma';
 
 const toNumber = (value: any) => Number(value);
@@ -89,6 +101,39 @@ export const BillingService = {
       if (!existing || existing.deletedAt) return { success: false, error: 'NOT_FOUND' };
       const tariff = await BillingRepository.updateTariff(input);
       return { success: true, data: { tariff } };
+    } catch (error: any) {
+      if (error.code === 'P2025') return { success: false, error: 'NOT_FOUND' };
+      return { success: false, error: 'SERVER_ERROR' };
+    }
+  },
+
+  async listInvoiceLineItems() {
+    const lineItems = await BillingRepository.listInvoiceLineItems();
+    return { success: true, data: { lineItems } };
+  },
+
+  async findInvoiceLineItemById(id: string) {
+    if (!id) return { success: false, error: 'VALIDATION_FAILED', details: { id: ['Required'] } };
+    const lineItem = await BillingRepository.findInvoiceLineItemById(id);
+    if (!lineItem) return { success: false, error: 'NOT_FOUND' };
+    return { success: true, data: { lineItem } };
+  },
+
+  async createInvoiceLineItem(input: InvoiceLineItemCreateInput) {
+    const validation = validateInvoiceLineItemCreate(input);
+    if (!validation.valid) return { success: false, error: 'VALIDATION_FAILED', details: validation.errors };
+    const lineItem = await BillingRepository.createInvoiceLineItem(input);
+    return { success: true, data: { lineItem } };
+  },
+
+  async updateInvoiceLineItem(input: InvoiceLineItemUpdateInput) {
+    const validation = validateInvoiceLineItemUpdate(input);
+    if (!validation.valid) return { success: false, error: 'VALIDATION_FAILED', details: validation.errors };
+    try {
+      const existing = await BillingRepository.findInvoiceLineItemById(input.id);
+      if (!existing) return { success: false, error: 'NOT_FOUND' };
+      const lineItem = await BillingRepository.updateInvoiceLineItem(input);
+      return { success: true, data: { lineItem } };
     } catch (error: any) {
       if (error.code === 'P2025') return { success: false, error: 'NOT_FOUND' };
       return { success: false, error: 'SERVER_ERROR' };

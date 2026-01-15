@@ -40,6 +40,8 @@ export const paths = {
       },
       lineItems: {
         root: `${ROOTS.DASHBOARD}/billing/line-items`,
+        new: `${ROOTS.DASHBOARD}/billing/line-items/new`,
+        details: (id: string) => `${ROOTS.DASHBOARD}/billing/line-items/${id}`,
       },
     },
     messages: {

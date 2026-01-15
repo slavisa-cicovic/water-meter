@@ -111,6 +111,8 @@ export const endpoints = {
     details: (id: string) => `/api/billing/${id}`,
     tariffs: '/api/billing/tariffs',
     tariffDetails: (id: string) => `/api/billing/tariffs/${id}`,
+    lineItems: '/api/billing/line-items',
+    lineItemDetails: (id: string) => `/api/billing/line-items/${id}`,
   },
   jobs: {
     list: '/api/jobs',

@@ -533,6 +533,65 @@
         "detail": "Detail"
       }
     },
+    "lineItems": {
+      "title": "Invoice line items",
+      "description": "Manage invoice line items such as fees and VAT.",
+      "loadError": "Failed to load line items.",
+      "backToDashboard": "Back to dashboard",
+      "empty": "No line items found.",
+      "table": {
+        "name": "Name",
+        "type": "Type",
+        "value": "Value",
+        "created": "Created",
+        "updated": "Updated",
+        "actions": "Actions"
+      },
+      "filters": {
+        "searchLabel": "Search",
+        "typeLabel": "Type",
+        "all": "All",
+        "searchTag": "Search: {{value}}",
+        "typeTag": "Type: {{value}}",
+        "results": "Results: {{count}}",
+        "reset": "Reset"
+      },
+      "type": {
+        "percentage": "Percentage",
+        "fixed": "Fixed"
+      },
+      "actions": {
+        "new": "New line item",
+        "detail": "Line item detail"
+      },
+      "form": {
+        "createTitle": "Create line item",
+        "detailTitle": "Line item details",
+        "fields": {
+          "name": "Name",
+          "description": "Description",
+          "type": "Type",
+          "value": "Value"
+        },
+        "cancel": "Cancel",
+        "create": "Create line item",
+        "saveChanges": "Save changes"
+      },
+      "create": {
+        "title": "New line item",
+        "description": "Create a new invoice line item."
+      },
+      "detail": {
+        "title": "Line item details",
+        "description": "Review and update line item settings.",
+        "loadError": "Failed to load line item.",
+        "backToLineItems": "Back to line items"
+      },
+      "breadcrumbs": {
+        "new": "New",
+        "detail": "Detail"
+      }
+    },
     "invoice": {
       "title": "Invoice Detail",
       "description": "Detailed invoice with readings, tariff snapshot, and line items.",

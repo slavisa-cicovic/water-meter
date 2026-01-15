@@ -533,6 +533,65 @@
         "detail": "Детаљи"
       }
     },
+    "lineItems": {
+      "title": "Ставке фактуре",
+      "description": "Управљајте ставкама фактуре као што су накнаде и ПДВ.",
+      "loadError": "Неуспешно учитавање ставки фактуре.",
+      "backToDashboard": "Назад на dashboard",
+      "empty": "Нема ставки фактуре.",
+      "table": {
+        "name": "Назив",
+        "type": "Тип",
+        "value": "Вредност",
+        "created": "Креиран",
+        "updated": "Ажуриран",
+        "actions": "Акције"
+      },
+      "filters": {
+        "searchLabel": "Претрага",
+        "typeLabel": "Тип",
+        "all": "Сви",
+        "searchTag": "Претрага: {{value}}",
+        "typeTag": "Тип: {{value}}",
+        "results": "Резултати: {{count}}",
+        "reset": "Ресет"
+      },
+      "type": {
+        "percentage": "Проценат",
+        "fixed": "Фиксно"
+      },
+      "actions": {
+        "new": "Нова ставка",
+        "detail": "Детаљи ставке"
+      },
+      "form": {
+        "createTitle": "Креирај ставку",
+        "detailTitle": "Детаљи ставке",
+        "fields": {
+          "name": "Назив",
+          "description": "Опис",
+          "type": "Тип",
+          "value": "Вредност"
+        },
+        "cancel": "Откажи",
+        "create": "Креирај ставку",
+        "saveChanges": "Сачувај измене"
+      },
+      "create": {
+        "title": "Нова ставка",
+        "description": "Креирајте нову ставку фактуре."
+      },
+      "detail": {
+        "title": "Детаљи ставке",
+        "description": "Преглед и измена ставки фактуре.",
+        "loadError": "Неуспешно учитавање ставке.",
+        "backToLineItems": "Назад на ставке"
+      },
+      "breadcrumbs": {
+        "new": "Ново",
+        "detail": "Детаљи"
+      }
+    },
     "invoice": {
       "title": "Детаљи фактуре",
       "description": "Детаљна фактура са очитавањима, снимком тарифе и ставкама.",

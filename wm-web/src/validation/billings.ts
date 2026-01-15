@@ -1,6 +1,8 @@
 import {
   InvoiceCreateInput,
   InvoiceStatus,
+  InvoiceLineItemCreateInput,
+  InvoiceLineItemUpdateInput,
   TariffCreateInput,
   TariffUpdateInput,
   TariffStatus,
@@ -84,6 +86,24 @@ export const validateInvoiceCreate = (input: InvoiceCreateInput): ValidationResu
   validateDate(input.periodStart, 'periodStart', errors);
   validateDate(input.periodEnd, 'periodEnd', errors);
   if (input.vatRate !== undefined) validateNonNegative(input.vatRate, 'vatRate', errors);
+
+  return { valid: Object.keys(errors).length === 0, errors };
+};
+
+export const validateInvoiceLineItemCreate = (input: InvoiceLineItemCreateInput): ValidationResult => {
+  const errors: Record<string, string[]> = {};
+
+  if (isBlank(input.name)) pushError(errors, 'name', 'Required');
+  validateNonNegative(input.value, 'value', errors);
+
+  return { valid: Object.keys(errors).length === 0, errors };
+};
+
+export const validateInvoiceLineItemUpdate = (input: InvoiceLineItemUpdateInput): ValidationResult => {
+  const errors: Record<string, string[]> = {};
+
+  if (isBlank(input.id)) pushError(errors, 'id', 'Required');
+  if (input.value !== undefined) validateNonNegative(input.value, 'value', errors);
 
   return { valid: Object.keys(errors).length === 0, errors };
 };

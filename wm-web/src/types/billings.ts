@@ -4,6 +4,16 @@ export type InvoiceReadingRole = 'start' | 'end';
 
 export type TariffStatus = 'active' | 'inactive';
 
+export type InvoiceLineItem = {
+  id: string;
+  name: string;
+  description?: string | null;
+  isPercentage: boolean;
+  value: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export type Tariff = {
   id: string;
   name: string;
@@ -90,6 +100,21 @@ export type TariffUpdateInput = {
   validTo?: string | null;
   groupCode?: string | null;
   status?: TariffStatus;
+};
+
+export type InvoiceLineItemCreateInput = {
+  name: string;
+  description?: string | null;
+  isPercentage: boolean;
+  value: number;
+};
+
+export type InvoiceLineItemUpdateInput = {
+  id: string;
+  name?: string;
+  description?: string | null;
+  isPercentage?: boolean;
+  value?: number;
 };
 
 export type InvoiceCreateInput = {

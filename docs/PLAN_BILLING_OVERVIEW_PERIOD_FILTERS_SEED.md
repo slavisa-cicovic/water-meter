@@ -26,6 +26,7 @@
 - Default sort: `periodEnd` desc.
 - Keep createdAt filters alongside periodEnd filters.
 - Seed target: Petra Milosavljevic with 12 invoices (10 paid, 1 issued, 1 draft).
+- InvoiceLineItem fields: name, description, isPercentage, value, createdAt, updatedAt.
 #
 #
 ## Tasks

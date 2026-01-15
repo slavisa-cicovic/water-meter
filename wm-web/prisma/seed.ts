@@ -444,6 +444,30 @@ const permissions: PermissionSeed[] = [
   { slug: 'billing:confirm', name: 'Confirm invoices', resource: 'billing', action: 'confirm' },
   { slug: 'billing:read', name: 'Read invoice', resource: 'billing', action: 'read' },
   { slug: 'billing:review', name: 'Review invoice', resource: 'billing', action: 'review' },
+  {
+    slug: 'invoice_line_items:list',
+    name: 'List invoice line items',
+    resource: 'invoice_line_items',
+    action: 'list',
+  },
+  {
+    slug: 'invoice_line_items:read',
+    name: 'Read invoice line item',
+    resource: 'invoice_line_items',
+    action: 'read',
+  },
+  {
+    slug: 'invoice_line_items:create',
+    name: 'Create invoice line item',
+    resource: 'invoice_line_items',
+    action: 'create',
+  },
+  {
+    slug: 'invoice_line_items:update',
+    name: 'Update invoice line item',
+    resource: 'invoice_line_items',
+    action: 'update',
+  },
   { slug: 'tariffs:list', name: 'List tariffs', resource: 'tariffs', action: 'list' },
   { slug: 'tariffs:read', name: 'Read tariff', resource: 'tariffs', action: 'read' },
   { slug: 'tariffs:create', name: 'Create tariff', resource: 'tariffs', action: 'create' },
@@ -545,6 +569,10 @@ async function seedRbac() {
     'billing:confirm',
     'billing:read',
     'billing:review',
+    'invoice_line_items:list',
+    'invoice_line_items:read',
+    'invoice_line_items:create',
+    'invoice_line_items:update',
     'jobs:list',
     'jobs:read',
     'jobs:run',
@@ -847,6 +875,25 @@ async function seedTariffs() {
   console.log('Seeded default tariff');
 }
 
+async function seedInvoiceLineItems() {
+  const existing = await prisma.invoiceLineItem.count();
+  if (existing > 0) {
+    console.log('Invoice line items already seeded');
+    return;
+  }
+
+  await prisma.invoiceLineItem.create({
+    data: {
+      name: 'PDV',
+      description: 'Standardni porez',
+      isPercentage: true,
+      value: 19,
+    },
+  });
+
+  console.log('Seeded default invoice line item (PDV)');
+}
+
 async function seedInvoices() {
   const tariff = await prisma.tariff.findFirst({ orderBy: { validFrom: 'desc' } });
   if (!tariff) {
@@ -984,6 +1031,7 @@ async function main() {
   await seedMeters();
   await seedReadings();
   await seedTariffs();
+  await seedInvoiceLineItems();
   await seedInvoices();
 }
 

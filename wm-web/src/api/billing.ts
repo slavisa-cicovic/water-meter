@@ -1,7 +1,15 @@
 import { useMemo } from 'react';
 import useSWR from 'swr';
 import axiosInstance, { endpoints, fetcher } from 'src/utils/axios';
-import { Invoice, Tariff, TariffCreateInput, TariffUpdateInput } from 'src/types/billings';
+import {
+  Invoice,
+  InvoiceLineItem,
+  InvoiceLineItemCreateInput,
+  InvoiceLineItemUpdateInput,
+  Tariff,
+  TariffCreateInput,
+  TariffUpdateInput,
+} from 'src/types/billings';
 
 type BillingQuery = {
   accountId?: string;
@@ -126,6 +134,49 @@ export function useGetTariff(id?: string) {
     [data?.tariff, error, isLoading, isValidating, mutate]
   );
 }
+
+export function useGetInvoiceLineItems() {
+  const { data, isLoading, error, isValidating, mutate } = useSWR(endpoints.billing.lineItems, fetcher);
+
+  return useMemo(
+    () => ({
+      lineItems: (data?.lineItems as InvoiceLineItem[]) || [],
+      lineItemsLoading: isLoading,
+      lineItemsError: error,
+      lineItemsValidating: isValidating,
+      lineItemsEmpty: !isLoading && !data?.lineItems?.length,
+      mutate,
+    }),
+    [data?.lineItems, error, isLoading, isValidating, mutate]
+  );
+}
+
+export function useGetInvoiceLineItem(id?: string) {
+  const URL = id ? endpoints.billing.lineItemDetails(id) : null;
+  const { data, isLoading, error, isValidating, mutate } = useSWR(URL, fetcher);
+
+  return useMemo(
+    () => ({
+      lineItem: data?.lineItem as InvoiceLineItem | undefined,
+      lineItemLoading: isLoading,
+      lineItemError: error,
+      lineItemValidating: isValidating,
+      mutate,
+    }),
+    [data?.lineItem, error, isLoading, isValidating, mutate]
+  );
+}
+
+export const InvoiceLineItemsApi = {
+  async createLineItem(payload: InvoiceLineItemCreateInput) {
+    const res = await axiosInstance.post(endpoints.billing.lineItems, payload);
+    return res.data;
+  },
+  async updateLineItem(payload: InvoiceLineItemUpdateInput) {
+    const res = await axiosInstance.put(endpoints.billing.lineItemDetails(payload.id), payload);
+    return res.data;
+  },
+};
 
 export const TariffsApi = {
   async createTariff(payload: TariffCreateInput) {

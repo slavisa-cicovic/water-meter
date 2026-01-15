@@ -533,6 +533,65 @@
         "detail": "Detalji"
       }
     },
+    "lineItems": {
+      "title": "Stavke fakture",
+      "description": "Upravljajte stavkama fakture kao sto su naknade i PDV.",
+      "loadError": "Neuspesno ucitavanje stavki fakture.",
+      "backToDashboard": "Nazad na dashboard",
+      "empty": "Nema stavki fakture.",
+      "table": {
+        "name": "Naziv",
+        "type": "Tip",
+        "value": "Vrednost",
+        "created": "Kreiran",
+        "updated": "Azuriran",
+        "actions": "Akcije"
+      },
+      "filters": {
+        "searchLabel": "Pretraga",
+        "typeLabel": "Tip",
+        "all": "Svi",
+        "searchTag": "Pretraga: {{value}}",
+        "typeTag": "Tip: {{value}}",
+        "results": "Rezultati: {{count}}",
+        "reset": "Reset"
+      },
+      "type": {
+        "percentage": "Procenat",
+        "fixed": "Fiksno"
+      },
+      "actions": {
+        "new": "Nova stavka",
+        "detail": "Detalji stavke"
+      },
+      "form": {
+        "createTitle": "Kreiraj stavku",
+        "detailTitle": "Detalji stavke",
+        "fields": {
+          "name": "Naziv",
+          "description": "Opis",
+          "type": "Tip",
+          "value": "Vrednost"
+        },
+        "cancel": "Otkazi",
+        "create": "Kreiraj stavku",
+        "saveChanges": "Sacuvaj izmene"
+      },
+      "create": {
+        "title": "Nova stavka",
+        "description": "Kreirajte novu stavku fakture."
+      },
+      "detail": {
+        "title": "Detalji stavke",
+        "description": "Pregled i izmena stavki fakture.",
+        "loadError": "Neuspesno ucitavanje stavke.",
+        "backToLineItems": "Nazad na stavke"
+      },
+      "breadcrumbs": {
+        "new": "Novo",
+        "detail": "Detalji"
+      }
+    },
     "invoice": {
       "title": "Detalji fakture",
       "description": "Detaljna faktura sa ocitanjima, snimkom tarife i stavkama.",

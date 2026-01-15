@@ -80,7 +80,7 @@ export function useNavData() {
                 titleKey: 'sidebar.invoiceLineItems',
                 path: paths.dashboard.billing.lineItems.root,
                 icon: ICONS.billing,
-                permissions: [PERMISSIONS.BILLING_LIST],
+                permissions: [PERMISSIONS.INVOICE_LINE_ITEMS_LIST],
               },
             ],
           },
