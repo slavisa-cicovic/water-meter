@@ -1,4 +1,4 @@
-import { TariffDetailView } from 'src/sections/billing/view/tariff-detail-view';
+import { TariffDetailView } from 'src/sections/tariffs/view/tariff-detail-view';
 
 type Props = {
   params: Promise<{ id: string }>;

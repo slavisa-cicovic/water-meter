@@ -1,4 +1,4 @@
-import { TariffListView } from 'src/sections/billing/view/tariff-list-view';
+import { TariffListView } from 'src/sections/tariffs/view/tariff-list-view';
 
 export const metadata = {
   title: 'Tariffs',

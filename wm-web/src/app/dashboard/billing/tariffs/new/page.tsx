@@ -1,4 +1,4 @@
-import { TariffCreateView } from 'src/sections/billing/view/tariff-create-view';
+import { TariffCreateView } from 'src/sections/tariffs/view/tariff-create-view';
 
 export const metadata = {
   title: 'New tariff',
