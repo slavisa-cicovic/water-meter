@@ -414,6 +414,7 @@
       "confirm": "Potvrdi",
       "cancelInvoices": "Storniraj fakture",
       "cancel": "Storniraj",
+      "save": "Sacuvaj izmene",
       "invoiceDetail": "Detalji fakture"
     },
     "confirm": {
@@ -543,6 +544,7 @@
         "name": "Naziv",
         "type": "Tip",
         "value": "Vrednost",
+        "sortOrder": "Redosled",
         "created": "Kreiran",
         "updated": "Azuriran",
         "actions": "Akcije"
@@ -571,7 +573,8 @@
           "name": "Naziv",
           "description": "Opis",
           "type": "Tip",
-          "value": "Vrednost"
+          "value": "Vrednost",
+          "sortOrder": "Redosled"
         },
         "cancel": "Otkazi",
         "create": "Kreiraj stavku",
@@ -602,11 +605,15 @@
       "meter": "Vodomer",
       "period": "Period",
       "consumption": "Potrosnja",
+      "previousReading": "Prethodno stanje",
+      "currentReading": "Tekuce stanje",
       "unitPrice": "Cena po jedinici",
       "subtotal": "Medjuzbir",
       "vat": "PDV",
       "total": "Ukupno",
       "status": "Status",
+      "updatedAt": "Azuriran",
+      "readOnly": "Faktura se moze menjati samo u statusu nacrt ili izdato.",
       "lineItems": "Stavke",
       "readings": "Ocitavanja",
       "tariffSnapshot": "Snimak tarife"

@@ -10,6 +10,7 @@ export type InvoiceLineItem = {
   description?: string | null;
   isPercentage: boolean;
   value: string;
+  sortOrder: number;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -61,11 +62,13 @@ export type Invoice = {
 export type InvoiceLine = {
   id: string;
   invoiceId: string;
+  invoiceLineItemId?: string | null;
   type: InvoiceLineType;
   description?: string;
   quantity?: string;
   unitPrice?: string;
   amount: string;
+  invoiceLineItem?: InvoiceLineItem | null;
 };
 
 export type InvoiceReadingLink = {
@@ -107,6 +110,7 @@ export type InvoiceLineItemCreateInput = {
   description?: string | null;
   isPercentage: boolean;
   value: number;
+  sortOrder?: number;
 };
 
 export type InvoiceLineItemUpdateInput = {
@@ -115,6 +119,7 @@ export type InvoiceLineItemUpdateInput = {
   description?: string | null;
   isPercentage?: boolean;
   value?: number;
+  sortOrder?: number;
 };
 
 export type InvoiceCreateInput = {

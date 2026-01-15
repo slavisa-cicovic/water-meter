@@ -88,7 +88,7 @@ export const BillingRepository = {
 
   async listInvoiceLineItems() {
     return prisma.invoiceLineItem.findMany({
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
     });
   },
 
@@ -103,6 +103,7 @@ export const BillingRepository = {
         description: input.description ?? null,
         isPercentage: input.isPercentage,
         value: input.value,
+        sortOrder: input.sortOrder ?? 0,
       },
     });
   },
@@ -115,7 +116,21 @@ export const BillingRepository = {
         ...(input.description !== undefined ? { description: input.description ?? null } : {}),
         ...(input.isPercentage !== undefined ? { isPercentage: input.isPercentage } : {}),
         ...(input.value !== undefined ? { value: input.value } : {}),
+        ...(input.sortOrder !== undefined ? { sortOrder: input.sortOrder } : {}),
       },
+    });
+  },
+
+  async findInvoiceLineItemsByIds(ids: string[], client: Prisma.TransactionClient | PrismaClient = prisma) {
+    return client.invoiceLineItem.findMany({
+      where: { id: { in: ids } },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+    });
+  },
+
+  async deleteInvoiceFeeLines(invoiceId: string, client: Prisma.TransactionClient | PrismaClient = prisma) {
+    return client.invoiceLine.deleteMany({
+      where: { invoiceId, type: 'fee' },
     });
   },
 
@@ -284,9 +299,11 @@ export const BillingRepository = {
     return client.invoice.findUnique({
       where: { id },
       include: {
-        lines: true,
+        lines: { include: { invoiceLineItem: true } },
         readings: { include: { reading: true } },
         tariff: true,
+        account: true,
+        meter: true,
       },
     });
   },
@@ -344,7 +361,7 @@ export const BillingRepository = {
           { periodEnd: null, createdAt: { gte: monthStart, lte: monthEnd } },
         ],
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
     });
   },
 
@@ -433,6 +450,7 @@ export const BillingRepository = {
   async addInvoiceLine(
     params: {
     invoiceId: string;
+    invoiceLineItemId?: string | null;
     type: 'consumption' | 'fee' | 'vat';
     description?: string;
     quantity?: number;
@@ -444,6 +462,7 @@ export const BillingRepository = {
     return client.invoiceLine.create({
       data: {
         invoiceId: params.invoiceId,
+        invoiceLineItemId: params.invoiceLineItemId ?? null,
         type: params.type,
         description: params.description,
         quantity: params.quantity,

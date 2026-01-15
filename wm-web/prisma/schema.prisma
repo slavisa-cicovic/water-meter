@@ -477,6 +477,7 @@ model InvoiceOverrideLog {
 model InvoiceLine {
   id          String          @id @default(uuid())
   invoiceId   String
+  invoiceLineItemId String?
   type        InvoiceLineType
   description String?
   quantity    Decimal?        @db.Decimal(12, 3)
@@ -484,8 +485,10 @@ model InvoiceLine {
   amount      Decimal         @db.Decimal(12, 2)
 
   invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoiceLineItem InvoiceLineItem? @relation(fields: [invoiceLineItemId], references: [id], onDelete: SetNull)
 
   @@index([invoiceId])
+  @@index([invoiceLineItemId])
 }
 
 model InvoiceLineItem {
@@ -494,8 +497,11 @@ model InvoiceLineItem {
   description  String?
   isPercentage Boolean  @default(false)
   value        Decimal  @db.Decimal(12, 2)
+  sortOrder    Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  lines InvoiceLine[]
 }
 
 model InvoiceReadingLink {

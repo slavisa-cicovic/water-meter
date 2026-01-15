@@ -414,6 +414,7 @@
       "confirm": "Confirm",
       "cancelInvoices": "Cancel invoices",
       "cancel": "Cancel",
+      "save": "Save changes",
       "invoiceDetail": "Invoice detail"
     },
     "confirm": {
@@ -543,6 +544,7 @@
         "name": "Name",
         "type": "Type",
         "value": "Value",
+        "sortOrder": "Order",
         "created": "Created",
         "updated": "Updated",
         "actions": "Actions"
@@ -571,7 +573,8 @@
           "name": "Name",
           "description": "Description",
           "type": "Type",
-          "value": "Value"
+          "value": "Value",
+          "sortOrder": "Order"
         },
         "cancel": "Cancel",
         "create": "Create line item",
@@ -602,11 +605,15 @@
       "meter": "Meter",
       "period": "Period",
       "consumption": "Consumption",
+      "previousReading": "Previous reading",
+      "currentReading": "Current reading",
       "unitPrice": "Unit price",
       "subtotal": "Subtotal",
       "vat": "VAT",
       "total": "Total",
       "status": "Status",
+      "updatedAt": "Updated",
+      "readOnly": "Invoice can only be edited in draft or issued status.",
       "lineItems": "Line items",
       "readings": "Readings",
       "tariffSnapshot": "Tariff snapshot"

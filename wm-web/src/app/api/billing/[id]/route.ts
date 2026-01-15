@@ -50,3 +50,27 @@ export const PATCH = withPermission(
     return NextResponse.json({ success: true, data });
   }
 );
+
+export const PUT = withPermission(
+  PERMISSIONS.BILLING_UPDATE,
+  async (req: NextRequest, { params }: Params) => {
+    const body = await req.json();
+    if (!Array.isArray(body?.lineItemIds)) {
+      return NextResponse.json({ success: false, error: 'VALIDATION_FAILED' }, { status: 400 });
+    }
+
+    const { id } = await params;
+    const result = await BillingService.updateInvoiceLineItems({
+      invoiceId: id,
+      lineItemIds: body.lineItemIds,
+    });
+
+    if (!result.success) {
+      const status = result.error === 'NOT_FOUND' ? 404 : 400;
+      return NextResponse.json({ success: false, error: result.error, details: (result as any).details }, { status });
+    }
+
+    const data = (result as { data: unknown }).data;
+    return NextResponse.json({ success: true, data });
+  }
+);

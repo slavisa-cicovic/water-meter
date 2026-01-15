@@ -61,6 +61,8 @@ const sortLineItems = (lineItems: InvoiceLineItem[], orderBy: string, order: 'as
       ? 'isPercentage'
       : orderBy === 'value'
       ? 'value'
+      : orderBy === 'sortOrder'
+      ? 'sortOrder'
       : orderBy === 'updatedAt'
       ? 'updatedAt'
       : 'createdAt';
@@ -78,6 +80,7 @@ export function InvoiceLineItemListView() {
       { id: 'name', label: t('billing.lineItems.table.name'), minWidth: 200 },
       { id: 'type', label: t('billing.lineItems.table.type'), width: 140 },
       { id: 'value', label: t('billing.lineItems.table.value'), width: 140 },
+      { id: 'sortOrder', label: t('billing.lineItems.table.sortOrder'), width: 120 },
       { id: 'createdAt', label: t('billing.lineItems.table.created'), width: 120 },
       { id: 'updatedAt', label: t('billing.lineItems.table.updated'), width: 120 },
       { id: '', label: t('billing.lineItems.table.actions'), align: 'right', width: 120, disableSort: true },

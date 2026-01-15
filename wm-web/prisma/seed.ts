@@ -172,6 +172,7 @@ const staff: StaffSeed[] = [
 ];
 
 async function clearData() {
+  await prisma.invoiceLineItem.deleteMany({});
   await prisma.accountRoleLink.deleteMany({});
   await prisma.rolePermission.deleteMany({});
   await prisma.permission.deleteMany({});
@@ -444,6 +445,7 @@ const permissions: PermissionSeed[] = [
   { slug: 'billing:confirm', name: 'Confirm invoices', resource: 'billing', action: 'confirm' },
   { slug: 'billing:read', name: 'Read invoice', resource: 'billing', action: 'read' },
   { slug: 'billing:review', name: 'Review invoice', resource: 'billing', action: 'review' },
+  { slug: 'billing:update', name: 'Update invoice', resource: 'billing', action: 'update' },
   {
     slug: 'invoice_line_items:list',
     name: 'List invoice line items',
@@ -569,6 +571,7 @@ async function seedRbac() {
     'billing:confirm',
     'billing:read',
     'billing:review',
+    'billing:update',
     'invoice_line_items:list',
     'invoice_line_items:read',
     'invoice_line_items:create',
@@ -888,6 +891,7 @@ async function seedInvoiceLineItems() {
       description: 'Standardni porez',
       isPercentage: true,
       value: 19,
+      sortOrder: 0,
     },
   });
 

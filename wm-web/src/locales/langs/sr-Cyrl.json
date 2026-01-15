@@ -414,6 +414,7 @@
       "confirm": "Потврди",
       "cancelInvoices": "Сторнирај фактуре",
       "cancel": "Сторнирај",
+      "save": "Сачувај измене",
       "invoiceDetail": "Детаљи фактуре"
     },
     "confirm": {
@@ -543,6 +544,7 @@
         "name": "Назив",
         "type": "Тип",
         "value": "Вредност",
+        "sortOrder": "Редослед",
         "created": "Креиран",
         "updated": "Ажуриран",
         "actions": "Акције"
@@ -571,7 +573,8 @@
           "name": "Назив",
           "description": "Опис",
           "type": "Тип",
-          "value": "Вредност"
+          "value": "Вредност",
+          "sortOrder": "Редослед"
         },
         "cancel": "Откажи",
         "create": "Креирај ставку",
@@ -602,11 +605,15 @@
       "meter": "Водомер",
       "period": "Период",
       "consumption": "Потрошња",
+      "previousReading": "Претходно стање",
+      "currentReading": "Текуће стање",
       "unitPrice": "Цена по јединици",
       "subtotal": "Међузбир",
       "vat": "ПДВ",
       "total": "Укупно",
       "status": "Статус",
+      "updatedAt": "Ажуриран",
+      "readOnly": "Фактура се може мењати само у статусу нацрт или издато.",
       "lineItems": "Ставке",
       "readings": "Очитавања",
       "tariffSnapshot": "Снимак тарифе"

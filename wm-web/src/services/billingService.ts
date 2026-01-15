@@ -107,6 +107,76 @@ export const BillingService = {
     }
   },
 
+  async updateInvoiceLineItems(params: { invoiceId: string; lineItemIds: string[] }) {
+    const { invoiceId, lineItemIds } = params;
+    if (!invoiceId) return { success: false, error: 'VALIDATION_FAILED', details: { invoiceId: ['Required'] } };
+
+    return prisma.$transaction(async (tx) => {
+      const invoice = await BillingRepository.findInvoiceById(invoiceId, tx);
+      if (!invoice) return { success: false, error: 'NOT_FOUND' };
+      if (!['draft', 'issued'].includes(invoice.status)) {
+        return { success: false, error: 'INVALID_STATUS' };
+      }
+
+      const uniqueIds = Array.from(new Set(lineItemIds || []));
+      const lineItems = uniqueIds.length
+        ? await BillingRepository.findInvoiceLineItemsByIds(uniqueIds, tx)
+        : [];
+      if (uniqueIds.length !== lineItems.length) return { success: false, error: 'NOT_FOUND' };
+
+      const subtotal = toMoney(toNumber((invoice as any).subtotal));
+      const vatRate = toNumber((invoice as any).vatRate);
+      const vatAmount = toMoney(subtotal * vatRate);
+
+      const feeLines = lineItems.map((item) => {
+        const value = toNumber((item as any).value);
+        const amount = item.isPercentage ? toMoney(subtotal * (value / 100)) : toMoney(value);
+        return {
+          invoiceLineItemId: item.id,
+          type: 'fee' as const,
+          description: item.name,
+          unitPrice: item.isPercentage ? undefined : value,
+          amount,
+        };
+      });
+
+      const feesTotal = feeLines.reduce((sum, line) => sum + toNumber(line.amount), 0);
+      const totalAmount = toMoney(subtotal + vatAmount + feesTotal);
+
+      await BillingRepository.deleteInvoiceFeeLines(invoiceId, tx);
+
+      for (const line of feeLines) {
+        await BillingRepository.addInvoiceLine(
+          {
+            invoiceId,
+            invoiceLineItemId: line.invoiceLineItemId,
+            type: line.type,
+            description: line.description,
+            unitPrice: line.unitPrice,
+            amount: line.amount,
+          },
+          tx
+        );
+      }
+
+      await tx.invoice.update({
+        where: { id: invoiceId },
+        data: {
+          vatAmount,
+          totalAmount,
+        },
+      });
+
+      await tx.invoiceLine.updateMany({
+        where: { invoiceId, type: 'vat' },
+        data: { amount: vatAmount },
+      });
+
+      const refreshed = await BillingRepository.findInvoiceById(invoiceId, tx);
+      return { success: true, data: { invoice: refreshed } };
+    });
+  },
+
   async listInvoiceLineItems() {
     const lineItems = await BillingRepository.listInvoiceLineItems();
     return { success: true, data: { lineItems } };

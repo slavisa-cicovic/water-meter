@@ -33,6 +33,7 @@ export const PERMISSIONS = {
   BILLING_CONFIRM: 'billing:confirm',
   BILLING_READ: 'billing:read',
   BILLING_REVIEW: 'billing:review',
+  BILLING_UPDATE: 'billing:update',
   INVOICE_LINE_ITEMS_LIST: 'invoice_line_items:list',
   INVOICE_LINE_ITEMS_READ: 'invoice_line_items:read',
   INVOICE_LINE_ITEMS_CREATE: 'invoice_line_items:create',

@@ -32,6 +32,10 @@ export function InvoiceLineItemEditForm({ currentLineItem }: Props) {
     description: Yup.string().nullable(),
     isPercentage: Yup.boolean().required(t('validation.required')),
     value: Yup.number().min(0, t('validation.min', { min: 0 })).required(t('validation.required')),
+    sortOrder: Yup.number()
+      .integer()
+      .min(0, t('validation.min', { min: 0 }))
+      .required(t('validation.required')),
   });
 
   const defaultValues = useMemo(
@@ -40,6 +44,7 @@ export function InvoiceLineItemEditForm({ currentLineItem }: Props) {
       description: currentLineItem?.description || '',
       isPercentage: currentLineItem?.isPercentage ?? true,
       value: currentLineItem?.value ? Number(currentLineItem.value) : 0,
+      sortOrder: currentLineItem?.sortOrder ?? 0,
     }),
     [currentLineItem]
   );
@@ -67,6 +72,7 @@ export function InvoiceLineItemEditForm({ currentLineItem }: Props) {
       description: data.description || null,
       isPercentage: Boolean(data.isPercentage),
       value: Number(data.value),
+      sortOrder: Number(data.sortOrder),
     };
 
     if (isCreate) {
@@ -136,6 +142,13 @@ export function InvoiceLineItemEditForm({ currentLineItem }: Props) {
                   <RHFTextField
                     name="value"
                     label={t('billing.lineItems.form.fields.value')}
+                    type="number"
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 2 }}>
+                  <RHFTextField
+                    name="sortOrder"
+                    label={t('billing.lineItems.form.fields.sortOrder')}
                     type="number"
                   />
                 </Grid>

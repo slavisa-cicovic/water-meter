@@ -85,6 +85,10 @@ export const BillingApi = {
     const res = await axiosInstance.patch(endpoints.billing.details(id), payload);
     return res.data;
   },
+  async updateInvoiceLineItems(id: string, lineItemIds: string[]) {
+    const res = await axiosInstance.put(endpoints.billing.details(id), { lineItemIds });
+    return res.data;
+  },
 };
 
 export function useGetInvoice(id?: string) {
@@ -93,13 +97,13 @@ export function useGetInvoice(id?: string) {
 
   return useMemo(
     () => ({
-      invoice: data?.invoice as Invoice | undefined,
+      invoice: (data?.data?.invoice as Invoice | undefined) || (data?.invoice as Invoice | undefined),
       invoiceLoading: isLoading,
       invoiceError: error,
       invoiceValidating: isValidating,
       mutate,
     }),
-    [data?.invoice, error, isLoading, isValidating, mutate]
+    [data?.data?.invoice, data?.invoice, error, isLoading, isValidating, mutate]
   );
 }
 

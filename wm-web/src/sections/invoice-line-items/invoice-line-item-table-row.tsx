@@ -33,6 +33,7 @@ export function InvoiceLineItemTableRow({ row, currency }: Props) {
         <Chip size="small" label={typeLabel} />
       </TableCell>
       <TableCell sx={{ width: 140 }}>{valueLabel}</TableCell>
+      <TableCell sx={{ width: 120 }}>{row.sortOrder}</TableCell>
       <TableCell sx={{ width: 140 }}>{row.createdAt?.slice(0, 10) || '-'}</TableCell>
       <TableCell sx={{ width: 140 }}>{row.updatedAt?.slice(0, 10) || '-'}</TableCell>
       <TableCell align="right" sx={{ width: 120 }}>

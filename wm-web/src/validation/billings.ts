@@ -95,6 +95,7 @@ export const validateInvoiceLineItemCreate = (input: InvoiceLineItemCreateInput)
 
   if (isBlank(input.name)) pushError(errors, 'name', 'Required');
   validateNonNegative(input.value, 'value', errors);
+  if (input.sortOrder !== undefined) validatePositiveInt(input.sortOrder, 'sortOrder', errors);
 
   return { valid: Object.keys(errors).length === 0, errors };
 };
@@ -104,6 +105,7 @@ export const validateInvoiceLineItemUpdate = (input: InvoiceLineItemUpdateInput)
 
   if (isBlank(input.id)) pushError(errors, 'id', 'Required');
   if (input.value !== undefined) validateNonNegative(input.value, 'value', errors);
+  if (input.sortOrder !== undefined) validatePositiveInt(input.sortOrder, 'sortOrder', errors);
 
   return { valid: Object.keys(errors).length === 0, errors };
 };
