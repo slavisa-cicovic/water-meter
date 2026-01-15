@@ -52,8 +52,8 @@ const defaultFilters: IBillingTableFilters = {
   review: '',
   createdStart: defaultCreatedStart,
   createdEnd: defaultCreatedEnd,
-  periodEndStart: '',
-  periodEndEnd: '',
+  periodEndStart: defaultCreatedStart,
+  periodEndEnd: defaultCreatedEnd,
 };
 
 export function BillingOverviewView() {
