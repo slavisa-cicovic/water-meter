@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, ViewStyle } from "react-native";
+import { StyleSheet, Text, TextStyle, TouchableOpacity, ViewStyle } from "react-native";
 
 type SubmitButtonProps = {
   label: string;
@@ -7,7 +7,7 @@ type SubmitButtonProps = {
   disabled?: boolean;
   onPress: () => void;
   style?: ViewStyle;
-  textStyle?: ViewStyle;
+  textStyle?: TextStyle;
 };
 
 export default function SubmitButton({
