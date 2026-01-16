@@ -2,16 +2,15 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import {
   Alert,
   Button,
-  Card,
-  CardContent,
-  CardHeader,
   Checkbox,
+  Box,
   Stack,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableFooter,
+  TableHead,
   TableRow,
   Typography,
 } from '@mui/material';
@@ -20,12 +19,14 @@ import * as Yup from 'yup';
 import { useForm } from 'react-hook-form';
 import { useEffect, useMemo, useState } from 'react';
 import { BillingApi, useGetInvoiceLineItems } from 'src/api/billing';
+import { useGetSettings } from 'src/api/settings';
 import { TableHeadCustom, TableNoData } from 'src/components/table';
 import { Invoice } from 'src/types/billings';
 import { formatCurrencyValue } from 'src/utils/format-currency';
 import { formatReadingValue } from 'src/utils/reading-format';
 import { useLocales } from 'src/locales';
 import { ConfirmDialog } from 'src/components/custom-dialog';
+import Logo from 'src/components/logo';
 
 type Props = {
   invoice: Invoice;
@@ -46,18 +47,19 @@ type SummaryRow = {
   amount?: string | number;
   hover?: boolean;
 } & (
-  | { checkbox: 'none' }
-  | { checkbox: 'locked' }
-  | {
+    | { checkbox: 'none' }
+    | { checkbox: 'locked' }
+    | {
       checkbox: 'toggle';
       checked: boolean;
       disabled: boolean;
       onToggle: () => void;
     }
-);
+  );
 
 export function InvoiceEditForm({ invoice, currency, onUpdated }: Props) {
   const { t } = useLocales();
+  const { settings: appSettings } = useGetSettings();
   const { lineItems } = useGetInvoiceLineItems();
   const [cancelOpen, setCancelOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -195,9 +197,9 @@ export function InvoiceEditForm({ invoice, currency, onUpdated }: Props) {
         : formatCurrencyValue(item.value, currency);
       const lineAmount = item.isPercentage
         ? formatCurrencyValue(
-            Number(invoice.subtotal) * (Number(item.value) / 100),
-            currency
-          )
+          Number(invoice.subtotal) * (Number(item.value) / 100),
+          currency
+        )
         : formatCurrencyValue(item.value, currency);
       return {
         id: item.id,
@@ -219,6 +221,17 @@ export function InvoiceEditForm({ invoice, currency, onUpdated }: Props) {
     .slice()
     .sort((a, b) => a.sortOrder - b.sortOrder);
 
+  const companyLogoUrl = appSettings?.companyLogoUrl?.trim() || "";
+  const companyName = appSettings?.companyName?.trim() || "Vodoprivredno preduzece";
+  const companyAddress = appSettings?.companyAddress?.trim() || "";
+  const companyZip = appSettings?.companyZip?.trim() || "";
+  const companyCity = appSettings?.companyCity?.trim() || "";
+  const companyRegistrationNumber = appSettings?.companyRegistrationNumber?.trim() || "";
+  const companyCompanyNumber = appSettings?.companyCompanyNumber?.trim() || "";
+  const companyTaxId = appSettings?.companyTaxId?.trim() || "";
+  const companyLocation =
+    companyZip || companyCity ? `${companyZip}${companyZip && companyCity ? " " : ""}${companyCity}` : "";
+
   return (
     <Stack spacing={3}>
       <Grid container spacing={3}>
@@ -229,7 +242,52 @@ export function InvoiceEditForm({ invoice, currency, onUpdated }: Props) {
             </Alert>
           )}
           <TableContainer>
-            <Table size="small" sx={{ tableLayout: 'fixed' }}>
+            <Table size="small" >
+              <TableHead>
+                <TableRow>
+                  <TableCell colSpan={5} sx={{ borderBottom: '1px solid', borderColor: 'divider' }}>
+                    <Box display="grid" gridTemplateColumns={{ xs: "1fr", md: "64px 1fr auto" }} columnGap={2}>
+                      <Box>
+                        {companyLogoUrl ? (
+                          <Box
+                            component="img"
+                            src={companyLogoUrl}
+                            alt={companyName}
+                            sx={{ width: 56, height: 56, objectFit: "contain" }}
+                          />
+                        ) : (
+                          <Logo disabledLink sx={{ width: 56, height: 56 }} />
+                        )}
+                      </Box>
+                      <Box>
+                        <Typography variant="h6">{companyName}</Typography>
+                        {companyLocation || companyAddress ? (
+                          <Typography variant="body2" color="text.secondary">
+                            {[companyLocation, companyAddress].filter(Boolean).join(", ")}
+                          </Typography>
+                        ) : null}
+                      </Box>
+                      <Stack spacing={0.5} alignItems={{ xs: "flex-start", md: "flex-end" }}>
+                        {companyRegistrationNumber && (
+                          <Typography variant="body2">
+                            {t("settings.company.registrationNumber")}: {companyRegistrationNumber}
+                          </Typography>
+                        )}
+                        {companyCompanyNumber && (
+                          <Typography variant="body2">
+                            {t("settings.company.companyNumber")}: {companyCompanyNumber}
+                          </Typography>
+                        )}
+                        {companyTaxId && (
+                          <Typography variant="body2">
+                            {t("settings.company.taxId")}: {companyTaxId}
+                          </Typography>
+                        )}
+                      </Stack>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              </TableHead>
               <TableBody
                 sx={{
                   border: '1px solid',
@@ -266,7 +324,7 @@ export function InvoiceEditForm({ invoice, currency, onUpdated }: Props) {
               >
                 <TableRow>
                   <TableCell padding="checkbox" sx={{ width: tableColumnWidths.checkbox }} />
-                    <TableCell sx={{ width: tableColumnWidths.label, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+                  <TableCell sx={{ width: tableColumnWidths.label, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
                     <Typography variant="h6" fontWeight={700}>
                       {t('billing.invoice.total')}
                     </Typography>

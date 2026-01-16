@@ -24,6 +24,7 @@ import RolePermissionsManager from "../role-permissions-manager";
 import TranslationManager from "../translation-manager";
 import AiPromptManager from "../ai-prompt-manager";
 import AiFaqManager from "../ai-faq-manager";
+import CompanyProfileManager from "../company-profile-manager";
 import { useLocales } from "src/locales";
 import { useAuthContext } from "src/auth/hooks";
 
@@ -144,6 +145,8 @@ export function SettingsView() {
         gridTemplateColumns={{ xs: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(4, 1fr)" }}
         sx={{ mt: 1 }}
       >
+          <CompanyProfileManager />
+
           <Card>
             <CardContent sx={{ height: "100%" }}>
               <Stack spacing={2} sx={{ height: "100%" }}>

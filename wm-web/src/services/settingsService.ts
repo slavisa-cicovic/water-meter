@@ -16,9 +16,30 @@ const DEFAULTS: SettingsData = {
   currentDateValue: null,
   currency: "RSD",
   aiSystemPrompt: null,
+  companyLogoUrl: "",
+  companyName: "",
+  companyAddress: "",
+  companyZip: "",
+  companyCity: "",
+  companyRegistrationNumber: "",
+  companyCompanyNumber: "",
+  companyTaxId: "",
 };
 
-const SETTINGS_KEYS: SettingsKey[] = ["currentDate.mode", "currentDate.value", "currency", "ai.systemPrompt"];
+const SETTINGS_KEYS: SettingsKey[] = [
+  "currentDate.mode",
+  "currentDate.value",
+  "currency",
+  "ai.systemPrompt",
+  "company.logoUrl",
+  "company.name",
+  "company.address",
+  "company.zip",
+  "company.city",
+  "company.registrationNumber",
+  "company.companyNumber",
+  "company.taxId",
+];
 
 const resolveString = (value: Prisma.JsonValue, fallback: string) =>
   typeof value === "string" ? value : fallback;
@@ -41,6 +62,20 @@ export const SettingsService = {
         ) || DEFAULTS.currentDateValue,
         currency: resolveString(map.get("currency") ?? DEFAULTS.currency, DEFAULTS.currency),
         aiSystemPrompt: resolveString(map.get("ai.systemPrompt") ?? DEFAULTS.aiSystemPrompt ?? "", "") || null,
+        companyLogoUrl: resolveString(map.get("company.logoUrl") ?? DEFAULTS.companyLogoUrl, DEFAULTS.companyLogoUrl),
+        companyName: resolveString(map.get("company.name") ?? DEFAULTS.companyName, DEFAULTS.companyName),
+        companyAddress: resolveString(map.get("company.address") ?? DEFAULTS.companyAddress, DEFAULTS.companyAddress),
+        companyZip: resolveString(map.get("company.zip") ?? DEFAULTS.companyZip, DEFAULTS.companyZip),
+        companyCity: resolveString(map.get("company.city") ?? DEFAULTS.companyCity, DEFAULTS.companyCity),
+        companyRegistrationNumber: resolveString(
+          map.get("company.registrationNumber") ?? DEFAULTS.companyRegistrationNumber,
+          DEFAULTS.companyRegistrationNumber
+        ),
+        companyCompanyNumber: resolveString(
+          map.get("company.companyNumber") ?? DEFAULTS.companyCompanyNumber,
+          DEFAULTS.companyCompanyNumber
+        ),
+        companyTaxId: resolveString(map.get("company.taxId") ?? DEFAULTS.companyTaxId, DEFAULTS.companyTaxId),
       },
     };
   },

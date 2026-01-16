@@ -783,6 +783,21 @@
         "saveFailed": "Unable to save currency."
       }
     },
+    "company": {
+      "title": "Company profile",
+      "subtitle": "Define invoice header details and registration data.",
+      "logo": "Logo URL",
+      "name": "Name",
+      "address": "Address",
+      "zip": "ZIP",
+      "city": "City",
+      "registrationNumber": "Registration number",
+      "companyNumber": "Company number",
+      "taxId": "Tax ID",
+      "errors": {
+        "saveFailed": "Unable to save company settings."
+      }
+    },
     "roles": {
       "title": "Role permissions",
       "description": "Manage which roles can access each domain and configure account visibility rules.",

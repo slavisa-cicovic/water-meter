@@ -783,6 +783,21 @@
         "saveFailed": "Nije moguce sacuvati valutu."
       }
     },
+    "company": {
+      "title": "Podaci o preduzecu",
+      "subtitle": "Definisite zaglavlje fakture i registracione podatke.",
+      "logo": "Logo URL",
+      "name": "Naziv",
+      "address": "Adresa",
+      "zip": "Postanski broj",
+      "city": "Grad",
+      "registrationNumber": "Registarski broj",
+      "companyNumber": "Maticni broj",
+      "taxId": "PIB",
+      "errors": {
+        "saveFailed": "Nije moguce sacuvati podatke o preduzecu."
+      }
+    },
     "roles": {
       "title": "Dozvole po rolama",
       "description": "Upravljajte rolama i podesite vidljivost naloga.",

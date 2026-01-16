@@ -42,6 +42,13 @@ export const validateSettingsUpdate = (input: SettingsUpdateInput): ValidationRe
     if (typeof input.value !== "string") {
       pushError(errors, "value", "Must be a string");
     }
+  } else if (input.key.startsWith("company.")) {
+    if (input.value === null) {
+      return { valid: true, errors };
+    }
+    if (typeof input.value !== "string") {
+      pushError(errors, "value", "Must be a string");
+    }
   }
 
   return { valid: Object.keys(errors).length === 0, errors };
