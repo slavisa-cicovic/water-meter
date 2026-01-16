@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Alert, Image, StyleSheet, Text, View } from "react-native";
 import ScrollScreen from "@src/components/layout/scroll-screen";
 import SubmitButton from "@src/components/ui/submit-button";
@@ -8,6 +8,7 @@ import { useRouter } from "expo-router";
 import { useNotificationsStore } from "@src/state/notifications-store";
 import { useTranslation } from "@src/hooks/use-translation";
 import { formatCurrencyValue } from "@src/utils/format-currency";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function PaymentScreen() {
   const router = useRouter();
@@ -20,6 +21,7 @@ export default function PaymentScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadPayment = async () => {
     setLoading(true);
@@ -34,22 +36,49 @@ export default function PaymentScreen() {
     setCompany(result.data.company);
   };
 
-  useEffect(() => {
-    let active = true;
-    loadPayment().catch(() => null);
-    return () => {
-      active = false;
-    };
+  useFocusEffect(
+    useCallback(() => {
+      loadPayment().catch(() => null);
+    }, [])
+  );
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await loadPayment();
+    } finally {
+      setRefreshing(false);
+    }
   }, []);
 
   const handleSubmitPayment = async () => {
     if (!invoice) return;
     setSubmitting(true);
-    const result = await MobileService.payInvoice(invoice.id);
-    setSubmitting(false);
-    if (!result.success) {
-      Alert.alert(t("payment.alert.failedTitle"), result.message);
-      return;
+    try {
+      const latest = await MobileService.getPayment();
+      if (!latest.success) {
+        Alert.alert(t("payment.alert.failedTitle"), latest.message);
+        return;
+      }
+      const latestInvoice = latest.data.invoice;
+      setInvoice(latestInvoice);
+      setCompany(latest.data.company);
+      if (!latestInvoice) {
+        Alert.alert(t("payment.alert.failedTitle"), t("payment.alert.noInvoice"));
+        return;
+      }
+      if (hasInvoiceChanges(invoice, latestInvoice)) {
+        Alert.alert(t("payment.alert.changedTitle"), t("payment.alert.changedMessage"));
+        return;
+      }
+
+      const result = await MobileService.payInvoice(invoice.id);
+      if (!result.success) {
+        Alert.alert(t("payment.alert.failedTitle"), result.message);
+        return;
+      }
+    } finally {
+      setSubmitting(false);
     }
     setHasIssuedInvoice(false);
     refreshNotifications().catch(() => null);
@@ -135,7 +164,12 @@ export default function PaymentScreen() {
     : [];
 
   return (
-    <ScrollScreen title={t("payment.title")} contentContainerStyle={styles.content}>
+    <ScrollScreen
+      title={t("payment.title")}
+      contentContainerStyle={styles.content}
+      refreshing={refreshing}
+      onRefresh={handleRefresh}
+    >
       <View style={styles.card}>
         {loading ? <Text style={styles.subtle}>{t("payment.loadingInvoice")}</Text> : null}
         {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -212,6 +246,15 @@ export default function PaymentScreen() {
               onPress={handleSubmitPayment}
               style={styles.submitButton}
             />
+            <SubmitButton
+              label={t("payment.action.refresh")}
+              loadingLabel={t("payment.action.refresh")}
+              loading={refreshing}
+              disabled={refreshing}
+              onPress={handleRefresh}
+              style={styles.refreshButton}
+              textStyle={styles.refreshButtonText}
+            />
           </>
         ) : null}
       </View>
@@ -224,6 +267,52 @@ const formatPercent = (value: number) => `${value.toFixed(2)}%`;
 const formatReading = (value: number | null) => (value === null ? "-" : `${value}`);
 
 const formatDate = (value: string | null) => (value ? new Date(value).toLocaleDateString() : "-");
+
+const hasInvoiceChanges = (current: MobilePaymentInvoice, latest: MobilePaymentInvoice) => {
+  if (current.id !== latest.id) return true;
+  if (current.totalAmount !== latest.totalAmount) return true;
+  if (current.subtotal !== latest.subtotal) return true;
+  if (current.vatAmount !== latest.vatAmount) return true;
+  if (current.unitPrice !== latest.unitPrice) return true;
+  if (current.consumption !== latest.consumption) return true;
+  if (current.periodStart !== latest.periodStart) return true;
+  if (current.periodEnd !== latest.periodEnd) return true;
+  if (current.previousValue !== latest.previousValue) return true;
+  if (current.currentValue !== latest.currentValue) return true;
+  if (current.lines.length !== latest.lines.length) return true;
+
+  const normalizeLine = (line: MobilePaymentInvoice["lines"][number]) => ({
+    id: line.id,
+    type: line.type,
+    description: line.description ?? "",
+    amount: line.amount,
+    unitPrice: line.unitPrice ?? null,
+    quantity: line.quantity ?? null,
+    value: line.value ?? null,
+    isPercentage: line.isPercentage ?? null,
+    sortOrder: line.sortOrder ?? null,
+  });
+
+  const currentLines = current.lines.map(normalizeLine).sort((a, b) => a.id.localeCompare(b.id));
+  const latestLines = latest.lines.map(normalizeLine).sort((a, b) => a.id.localeCompare(b.id));
+
+  for (let index = 0; index < currentLines.length; index += 1) {
+    const left = currentLines[index];
+    const right = latestLines[index];
+    if (!right) return true;
+    if (left.id !== right.id) return true;
+    if (left.type !== right.type) return true;
+    if (left.description !== right.description) return true;
+    if (left.amount !== right.amount) return true;
+    if (left.unitPrice !== right.unitPrice) return true;
+    if (left.quantity !== right.quantity) return true;
+    if (left.value !== right.value) return true;
+    if (left.isPercentage !== right.isPercentage) return true;
+    if (left.sortOrder !== right.sortOrder) return true;
+  }
+
+  return false;
+};
 
 const styles = StyleSheet.create({
   content: { padding: 4 },
@@ -284,4 +373,13 @@ const styles = StyleSheet.create({
   totalLabel: { color: "#1f2a44", fontSize: 14, fontWeight: "700" },
   totalValue: { color: "#1f2a44", fontSize: 14, fontWeight: "700" },
   submitButton: { marginTop: 16 },
+  refreshButton: {
+    marginTop: 10,
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#e1e6f3",
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  refreshButtonText: { color: "#3b6fb6" },
 });

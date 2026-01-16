@@ -4,9 +4,15 @@ import { useAuthStore } from "@src/state/auth-store";
 
 type AppBarProps = {
   title: string;
+  action?: {
+    icon: string;
+    onPress: () => void;
+    disabled?: boolean;
+    accessibilityLabel?: string;
+  };
 };
 
-export default function AppBar({ title }: AppBarProps) {
+export default function AppBar({ title, action }: AppBarProps) {
   const clearSession = useAuthStore((state) => state.clearSession);
 
   const handleLogout = async () => {
@@ -26,6 +32,16 @@ export default function AppBar({ title }: AppBarProps) {
           <Text style={styles.headerSubtitle}>{title}</Text>
         </View>
         <View style={styles.actions}>
+          {action ? (
+            <TouchableOpacity
+              style={[styles.iconButton, action.disabled ? styles.iconButtonDisabled : null]}
+              onPress={action.onPress}
+              disabled={action.disabled}
+              accessibilityLabel={action.accessibilityLabel}
+            >
+              <MaterialCommunityIcons name={action.icon} size={18} color="#3a4c7a" />
+            </TouchableOpacity>
+          ) : null}
           <TouchableOpacity
             style={styles.iconButton}
             onPress={handleLogout}
@@ -61,5 +77,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderWidth: 1,
     borderColor: "#e1e6f3",
+  },
+  iconButtonDisabled: {
+    opacity: 0.5,
   },
 });

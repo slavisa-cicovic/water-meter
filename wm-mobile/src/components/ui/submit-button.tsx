@@ -7,6 +7,7 @@ type SubmitButtonProps = {
   disabled?: boolean;
   onPress: () => void;
   style?: ViewStyle;
+  textStyle?: ViewStyle;
 };
 
 export default function SubmitButton({
@@ -16,6 +17,7 @@ export default function SubmitButton({
   disabled = false,
   onPress,
   style,
+  textStyle,
 }: SubmitButtonProps) {
   const isDisabled = disabled || loading;
 
@@ -25,7 +27,7 @@ export default function SubmitButton({
       onPress={onPress}
       disabled={isDisabled}
     >
-      <Text style={styles.buttonText}>{loading ? loadingLabel : label}</Text>
+      <Text style={[styles.buttonText, textStyle]}>{loading ? loadingLabel : label}</Text>
     </TouchableOpacity>
   );
 }

@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
   ScrollView,
   StyleProp,
   StyleSheet,
@@ -18,6 +19,14 @@ type ScrollScreenProps = {
   contentContainerStyle?: StyleProp<ViewStyle>;
   keyboardAvoiding?: boolean;
   keyboardOffset?: number;
+  refreshing?: boolean;
+  onRefresh?: () => void;
+  action?: {
+    icon: string;
+    onPress: () => void;
+    disabled?: boolean;
+    accessibilityLabel?: string;
+  };
 };
 
 const CONTENT_PADDING_BOTTOM = 32;
@@ -28,6 +37,9 @@ export default function ScrollScreen({
   contentContainerStyle,
   keyboardAvoiding = false,
   keyboardOffset = 0,
+  refreshing = false,
+  onRefresh,
+  action,
 }: ScrollScreenProps) {
   const tabBarHeight = useBottomTabBarHeight();
   const insets = useSafeAreaInsets();
@@ -38,6 +50,9 @@ export default function ScrollScreen({
       contentContainerStyle={[styles.content, contentContainerStyle, { paddingBottom: bottomPadding }]}
       scrollIndicatorInsets={{ bottom: bottomPadding }}
       keyboardShouldPersistTaps="handled"
+      refreshControl={
+        onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> : undefined
+      }
     >
       {children}
     </ScrollView>
@@ -45,7 +60,7 @@ export default function ScrollScreen({
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-      <AppBar title={title} />
+      <AppBar title={title} action={action} />
       {keyboardAvoiding ? (
         <KeyboardAvoidingView
           style={styles.keyboardContainer}
