@@ -284,6 +284,10 @@ export const MobileRepository = {
     lines: Array<{
       id: string;
       type: "consumption" | "fee" | "vat";
+      lineItemId?: string | null;
+      isPercentage?: boolean | null;
+      value?: number | null;
+      sortOrder?: number | null;
       description?: string | null;
       quantity?: number | null;
       unitPrice?: number | null;
@@ -293,7 +297,11 @@ export const MobileRepository = {
     const invoice = await prisma.invoice.findFirst({
       where: { accountId, status: "issued" },
       orderBy: { periodEnd: "desc" },
-      include: { lines: true, meter: true, readings: { include: { reading: true } } },
+      include: {
+        lines: { include: { invoiceLineItem: true } },
+        meter: true,
+        readings: { include: { reading: true } },
+      },
     });
 
     if (!invoice) return null;
@@ -318,6 +326,10 @@ export const MobileRepository = {
       lines: invoice.lines.map((line) => ({
         id: line.id,
         type: line.type,
+        lineItemId: line.invoiceLineItemId ?? null,
+        isPercentage: line.invoiceLineItem?.isPercentage ?? null,
+        value: line.invoiceLineItem ? Number(line.invoiceLineItem.value) : null,
+        sortOrder: line.invoiceLineItem?.sortOrder ?? null,
         description: line.description ?? undefined,
         quantity: line.quantity === null ? null : line.quantity ? Number(line.quantity) : null,
         unitPrice: line.unitPrice === null ? null : line.unitPrice ? Number(line.unitPrice) : null,

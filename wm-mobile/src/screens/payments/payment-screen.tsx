@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Alert, Image, StyleSheet, Text, View } from "react-native";
 import ScrollScreen from "@src/components/layout/scroll-screen";
 import SubmitButton from "@src/components/ui/submit-button";
 import { MobileService } from "@src/services/mobile.service";
-import { MobilePaymentInvoice } from "@src/api/types/mobile";
+import { MobileCompanyProfile, MobilePaymentInvoice } from "@src/api/types/mobile";
 import { useRouter } from "expo-router";
 import { useNotificationsStore } from "@src/state/notifications-store";
 import { useTranslation } from "@src/hooks/use-translation";
@@ -12,9 +12,11 @@ import { formatCurrencyValue } from "@src/utils/format-currency";
 export default function PaymentScreen() {
   const router = useRouter();
   const { t } = useTranslation();
+  const apiBaseUrl = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
   const refreshNotifications = useNotificationsStore((state) => state.refreshNotifications);
   const setHasIssuedInvoice = useNotificationsStore((state) => state.setHasIssuedInvoice);
   const [invoice, setInvoice] = useState<MobilePaymentInvoice | null>(null);
+  const [company, setCompany] = useState<MobileCompanyProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -29,6 +31,7 @@ export default function PaymentScreen() {
     }
     setError(null);
     setInvoice(result.data.invoice);
+    setCompany(result.data.company);
   };
 
   useEffect(() => {
@@ -66,6 +69,71 @@ export default function PaymentScreen() {
     return t("payment.line.fee");
   };
 
+  const companyLocation =
+    company && (company.zip || company.city)
+      ? `${company.zip}${company.zip && company.city ? " " : ""}${company.city}`
+      : "";
+  const companyLogoUri =
+    company?.logoUrl
+      ? company.logoUrl.startsWith("http")
+        ? company.logoUrl
+        : `${apiBaseUrl}${company.logoUrl}`
+      : null;
+
+  const summaryRows = invoice
+    ? [
+        {
+          key: "meter",
+          label: t("payment.label.meter"),
+          detail: "",
+          amount: invoice.meterSerialNumber ?? "-",
+          spanAmount: true,
+        },
+        {
+          key: "previous",
+          label: t("payment.label.previousReading"),
+          detail: formatDate(invoice.periodStart),
+          amount: formatReading(invoice.previousValue),
+        },
+        {
+          key: "current",
+          label: t("payment.label.currentReading"),
+          detail: formatDate(invoice.periodEnd),
+          amount: formatReading(invoice.currentValue),
+        },
+        {
+          key: "consumption",
+          label: t("payment.label.consumption"),
+          detail: `${invoice.consumption} x ${formatCurrencyValue(invoice.unitPrice, invoice.currency)}`,
+          amount: formatCurrencyValue(invoice.subtotal, invoice.currency),
+          isEmphasized: true,
+        },
+        ...invoice.lines
+          .filter((line) => line.type !== "consumption")
+          .slice()
+          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+          .map((line) => {
+            const valueLabel =
+              line.isPercentage && line.value != null
+                ? `${line.value}%`
+                : line.value != null
+                  ? formatCurrencyValue(line.value, invoice.currency)
+                  : line.type === "vat"
+                    ? formatPercent(invoice.vatRate)
+                    : line.unitPrice != null
+                      ? formatCurrencyValue(line.unitPrice, invoice.currency)
+                      : "-";
+
+            return {
+              key: line.id,
+              label: line.description || formatLineTypeLabel(line.type),
+              detail: valueLabel,
+              amount: formatCurrencyValue(line.amount, invoice.currency),
+            };
+          }),
+      ]
+    : [];
+
   return (
     <ScrollScreen title={t("payment.title")} contentContainerStyle={styles.content}>
       <View style={styles.card}>
@@ -77,68 +145,65 @@ export default function PaymentScreen() {
         ) : null}
         {!loading && !error && invoice ? (
           <>
-            <View style={styles.row}>
-              <Text style={styles.label}>{t("payment.label.meter")}</Text>
-              <Text style={styles.value}>{invoice.meterSerialNumber ?? "-"}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>{t("payment.label.period")}</Text>
-              <Text style={styles.value}>{formatPeriod(invoice.periodStart, invoice.periodEnd)}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>{t("payment.label.previousReading")}</Text>
-              <Text style={styles.value}>{formatReading(invoice.previousValue)}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>{t("payment.label.currentReading")}</Text>
-              <Text style={styles.value}>{formatReading(invoice.currentValue)}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>{t("payment.label.consumption")}</Text>
-              <Text style={styles.value}>{invoice.consumption}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>{t("payment.label.unitPrice")}</Text>
-              <Text style={styles.value}>{formatCurrencyValue(invoice.unitPrice, invoice.currency)}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>{t("payment.label.subtotal")}</Text>
-              <Text style={styles.value}>{formatCurrencyValue(invoice.subtotal, invoice.currency)}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>{t("payment.label.vatRate")}</Text>
-              <Text style={styles.value}>{formatPercent(invoice.vatRate)}</Text>
-            </View>
-            <View style={styles.row}>
-              <Text style={styles.label}>{t("payment.label.vatAmount")}</Text>
-              <Text style={styles.value}>{formatCurrencyValue(invoice.vatAmount, invoice.currency)}</Text>
-            </View>
-            <View style={styles.rowTotal}>
-              <Text style={styles.totalLabel}>{t("payment.label.total")}</Text>
-              <Text style={styles.totalValue}>{formatCurrencyValue(invoice.totalAmount, invoice.currency)}</Text>
-            </View>
-
-            {invoice.lines.length ? (
-              <View style={styles.lines}>
-                <Text style={styles.linesTitle}>{t("payment.lines.title")}</Text>
-                {invoice.lines.map((line) => (
-                  <View key={line.id} style={styles.lineRow}>
-                    <View>
-                      <Text style={styles.lineLabel}>{formatLineTypeLabel(line.type)}</Text>
-                      {line.description ? <Text style={styles.lineDescription}>{line.description}</Text> : null}
-                    </View>
-                    <View style={styles.lineMeta}>
-                      <Text style={styles.lineAmount}>{formatCurrencyValue(line.amount, invoice.currency)}</Text>
-                      {line.quantity != null && line.unitPrice != null ? (
-                        <Text style={styles.lineQuantity}>
-                          {line.quantity} x {formatCurrencyValue(line.unitPrice, invoice.currency)}
-                        </Text>
-                      ) : null}
-                    </View>
-                  </View>
-                ))}
+            {company ? (
+              <View style={styles.companyHeader}>
+                {companyLogoUri ? (
+                  <Image source={{ uri: companyLogoUri }} style={styles.companyLogo} resizeMode="contain" />
+                ) : null}
+                <View style={styles.companyDetails}>
+                  <Text style={styles.companyName}>{company.name || t("payment.company.fallbackName")}</Text>
+                  {companyLocation || company.address ? (
+                    <Text style={styles.companyAddress}>
+                      {[companyLocation, company.address].filter(Boolean).join(", ")}
+                    </Text>
+                  ) : null}
+                </View>
+                <View style={styles.companyMeta}>
+                  {company.registrationNumber ? (
+                    <Text style={styles.companyMetaText}>
+                      {t("payment.company.registrationNumber")}: {company.registrationNumber}
+                    </Text>
+                  ) : null}
+                  {company.companyNumber ? (
+                    <Text style={styles.companyMetaText}>
+                      {t("payment.company.companyNumber")}: {company.companyNumber}
+                    </Text>
+                  ) : null}
+                  {company.taxId ? (
+                    <Text style={styles.companyMetaText}>
+                      {t("payment.company.taxId")}: {company.taxId}
+                    </Text>
+                  ) : null}
+                </View>
               </View>
             ) : null}
+
+            <View style={styles.table}>
+              {summaryRows.map((row) => (
+                <View
+                  key={row.key}
+                  style={[styles.tableRow, row.isEmphasized ? styles.tableRowEmphasized : null]}
+                >
+                  <Text style={[styles.tableCell, styles.cellLabel]}>{row.label}</Text>
+                  <Text style={[styles.tableCell, styles.cellDetail]}>{row.detail}</Text>
+                  <Text
+                    style={[
+                      styles.tableCell,
+                      row.spanAmount ? styles.cellAmountSpan : styles.cellAmount,
+                    ]}
+                  >
+                    {row.amount}
+                  </Text>
+                </View>
+              ))}
+              <View style={styles.tableFooter}>
+                <Text style={[styles.totalLabel, styles.cellLabel]}>{t("payment.label.total")}</Text>
+                <Text style={[styles.cellDetail]} />
+                <Text style={[styles.totalValue, styles.cellAmountSpan]}>
+                  {formatCurrencyValue(invoice.totalAmount, invoice.currency)}
+                </Text>
+              </View>
+            </View>
 
             <SubmitButton
               label={t("payment.action.submit")}
@@ -155,19 +220,14 @@ export default function PaymentScreen() {
   );
 }
 
-const formatPeriod = (start: string | null, end: string | null) => {
-  if (!start && !end) return "-";
-  const startLabel = start ? new Date(start).toLocaleDateString() : "-";
-  const endLabel = end ? new Date(end).toLocaleDateString() : "-";
-  return `${startLabel} - ${endLabel}`;
-};
-
 const formatPercent = (value: number) => `${value.toFixed(2)}%`;
 
 const formatReading = (value: number | null) => (value === null ? "-" : `${value}`);
 
+const formatDate = (value: string | null) => (value ? new Date(value).toLocaleDateString() : "-");
+
 const styles = StyleSheet.create({
-  content: { padding: 20, paddingBottom: 32 },
+  content: { padding: 4 },
   card: {
     backgroundColor: "#ffffff",
     borderRadius: 16,
@@ -176,38 +236,53 @@ const styles = StyleSheet.create({
     borderColor: "#e1e6f3",
   },
   title: { color: "#1f2a44", fontSize: 18, fontWeight: "700", marginBottom: 8 },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 10,
-  },
-  label: { color: "#6b7aa6", fontSize: 12, fontWeight: "600" },
-  value: { color: "#1f2a44", fontSize: 12, fontWeight: "600" },
-  rowTotal: {
-    marginTop: 14,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#e1e6f3",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  totalLabel: { color: "#1f2a44", fontSize: 14, fontWeight: "700" },
-  totalValue: { color: "#1f2a44", fontSize: 14, fontWeight: "700" },
   subtle: { color: "#6b7aa6", fontSize: 12, marginTop: 8 },
   error: { color: "#b23a3a", fontSize: 12, marginTop: 8 },
-  lines: { marginTop: 16 },
-  linesTitle: { color: "#1f2a44", fontSize: 13, fontWeight: "700", marginBottom: 8 },
-  lineRow: {
+  companyHeader: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  companyLogo: { width: 48, height: 48, borderRadius: 8, marginRight: 12 },
+  companyDetails: { flex: 1, marginRight: 12 },
+  companyName: { color: "#1f2a44", fontSize: 16, fontWeight: "700" },
+  companyAddress: { color: "#6b7aa6", fontSize: 12, marginTop: 2 },
+  companyMeta: { alignItems: "flex-end" },
+  companyMetaText: { color: "#1f2a44", fontSize: 11, fontWeight: "600" },
+  table: {
+    borderWidth: 1,
+    borderColor: "#e1e6f3",
+    borderRadius: 12,
+    overflow: "hidden",
+    marginTop: 8,
+  },
+  tableRow: {
+    flexDirection: "row",
     paddingVertical: 8,
+    paddingHorizontal: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#eef1fb",
   },
-  lineLabel: { color: "#3a4c7a", fontSize: 12, fontWeight: "600" },
-  lineDescription: { color: "#6b7aa6", fontSize: 11, marginTop: 2 },
-  lineMeta: { alignItems: "flex-end" },
-  lineAmount: { color: "#1f2a44", fontSize: 12, fontWeight: "600" },
-  lineQuantity: { color: "#6b7aa6", fontSize: 11, marginTop: 2 },
+  tableHeaderRow: {
+    backgroundColor: "#f4f6fb",
+  },
+  tableRowEmphasized: {
+    backgroundColor: "#fbfcff",
+  },
+  tableHeader: { color: "#6b7aa6", fontSize: 11, fontWeight: "700" },
+  tableCell: { color: "#1f2a44", fontSize: 12, fontWeight: "600" },
+  cellLabel: { flex: 2 },
+  cellDetail: { flex: 1.6, textAlign: "left" },
+  cellAmount: { flex: 1.2, textAlign: "right" },
+  cellAmountSpan: { flex: 2.8, textAlign: "right" },
+  tableFooter: {
+    flexDirection: "row",
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    backgroundColor: "#ffffff",
+  },
+  totalLabel: { color: "#1f2a44", fontSize: 14, fontWeight: "700" },
+  totalValue: { color: "#1f2a44", fontSize: 14, fontWeight: "700" },
   submitButton: { marginTop: 16 },
 });

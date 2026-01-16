@@ -99,9 +99,24 @@ export type MobilePaymentInvoiceLine = {
   id: string;
   type: "consumption" | "fee" | "vat";
   description?: string;
+  lineItemId?: string | null;
+  isPercentage?: boolean | null;
+  value?: number | null;
+  sortOrder?: number | null;
   quantity?: number | null;
   unitPrice?: number | null;
   amount: number;
+};
+
+export type MobileCompanyProfile = {
+  logoUrl: string;
+  name: string;
+  address: string;
+  zip: string;
+  city: string;
+  registrationNumber: string;
+  companyNumber: string;
+  taxId: string;
 };
 
 export type MobilePaymentInvoice = {
@@ -120,6 +135,11 @@ export type MobilePaymentInvoice = {
   vatAmount: number;
   totalAmount: number;
   lines: MobilePaymentInvoiceLine[];
+};
+
+export type MobilePaymentData = {
+  invoice: MobilePaymentInvoice | null;
+  company: MobileCompanyProfile;
 };
 
 export type MobileNotificationsData = {

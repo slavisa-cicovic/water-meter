@@ -1,4 +1,5 @@
 import { MobileRepository } from "src/repositories/mobileRepository";
+import { SettingsService } from "src/services/settingsService";
 import {
   MobileAccountData,
   MobileBillingData,
@@ -6,7 +7,7 @@ import {
   MobileLocaleUpdateInput,
   MobileProfileUpdateInput,
   MobileReadingContext,
-  MobilePaymentInvoice,
+  MobilePaymentData,
   MobileNotificationsData,
   MobileStaffMetersData,
 } from "src/types/mobile";
@@ -16,7 +17,6 @@ import { ReadingsService } from "src/services/readingsService";
 import { Reading, ReadingCreateInput } from "src/types/readings";
 import { AuthorizationService } from "src/services/authorizationService";
 import { PERMISSIONS } from "src/constants/permissions";
-import { SettingsService } from "src/services/settingsService";
 
 type ServiceResult<T> = { success: true; data: T } | { success: false; error: string; details?: Record<string, string[]> };
 
@@ -144,12 +144,35 @@ export const MobileService = {
     return { success: true, data: { year, chart, rows, currency } };
   },
 
-  async getLatestIssuedInvoice(accountId: string): Promise<ServiceResult<{ invoice: MobilePaymentInvoice | null }>> {
+  async getLatestIssuedInvoice(accountId: string): Promise<ServiceResult<MobilePaymentData>> {
     const invoice = await MobileRepository.findLatestIssuedInvoice(accountId);
+    const settings = await SettingsService.getSettings();
+    const currency = settings.success ? settings.data.currency : "RSD";
+    const company = settings.success
+      ? {
+          logoUrl: settings.data.companyLogoUrl || "",
+          name: settings.data.companyName || "",
+          address: settings.data.companyAddress || "",
+          zip: settings.data.companyZip || "",
+          city: settings.data.companyCity || "",
+          registrationNumber: settings.data.companyRegistrationNumber || "",
+          companyNumber: settings.data.companyCompanyNumber || "",
+          taxId: settings.data.companyTaxId || "",
+        }
+      : {
+          logoUrl: "",
+          name: "",
+          address: "",
+          zip: "",
+          city: "",
+          registrationNumber: "",
+          companyNumber: "",
+          taxId: "",
+        };
+
     if (!invoice) {
-      return { success: true, data: { invoice: null } };
+      return { success: true, data: { invoice: null, company } };
     }
-    const currency = await resolveCurrency();
 
     return {
       success: true,
@@ -173,11 +196,16 @@ export const MobileService = {
             id: line.id,
             type: line.type,
             description: line.description ?? undefined,
+            lineItemId: line.lineItemId ?? null,
+            isPercentage: line.isPercentage ?? null,
+            value: line.value ?? null,
+            sortOrder: line.sortOrder ?? null,
             quantity: line.quantity ?? null,
             unitPrice: line.unitPrice ?? null,
             amount: line.amount,
           })),
         },
+        company,
       },
     };
   },
