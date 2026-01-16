@@ -37,6 +37,25 @@ type FormValues = {
   lineItemIds: string[];
 };
 
+type SummaryRow = {
+  id: string;
+  sortOrder: number;
+  label: string;
+  detail?: string | number;
+  unit?: string;
+  amount?: string | number;
+  hover?: boolean;
+} & (
+  | { checkbox: 'none' }
+  | { checkbox: 'locked' }
+  | {
+      checkbox: 'toggle';
+      checked: boolean;
+      disabled: boolean;
+      onToggle: () => void;
+    }
+);
+
 export function InvoiceEditForm({ invoice, currency, onUpdated }: Props) {
   const { t } = useLocales();
   const { lineItems } = useGetInvoiceLineItems();
@@ -112,6 +131,94 @@ export function InvoiceEditForm({ invoice, currency, onUpdated }: Props) {
     }
   };
 
+  const summaryRows: SummaryRow[] = [
+    {
+      id: 'account',
+      sortOrder: -700,
+      checkbox: 'none' as const,
+      label: t('billing.invoice.account'),
+      amount: invoice.account ? `${invoice.account.firstName} ${invoice.account.lastName}` : invoice.accountId,
+    },
+    {
+      id: 'address',
+      sortOrder: -650,
+      checkbox: 'none' as const,
+      label: t('billing.invoice.address'),
+      amount: invoice.account?.address || '-',
+    },
+    {
+      id: 'status',
+      sortOrder: -600,
+      checkbox: 'none' as const,
+      label: t('billing.invoice.status'),
+      amount: statusLabel,
+    },
+    {
+      id: 'meter',
+      sortOrder: -550,
+      checkbox: 'none' as const,
+      label: t('billing.invoice.meter'),
+      amount: invoice.meter?.serialNumber || invoice.meterId || '-',
+    },
+    {
+      id: 'previous-reading',
+      sortOrder: -500,
+      checkbox: 'none' as const,
+      label: t('billing.invoice.previousReading'),
+      detail: invoice.periodStart?.slice(0, 10) || '',
+      amount: readings[0]?.role === 'start' ? readings[0]?.value : '-',
+    },
+    {
+      id: 'current-reading',
+      sortOrder: -450,
+      checkbox: 'none' as const,
+      label: t('billing.invoice.currentReading'),
+      detail: invoice.periodEnd?.slice(0, 10) || '',
+      amount:
+        readings[0]?.role === 'end'
+          ? readings[0]?.value
+          : readings.find((reading: any) => reading.role === 'end')?.value || '-',
+    },
+    {
+      id: 'consumption',
+      sortOrder: -100,
+      checkbox: 'none' as const,
+      label: t('billing.invoice.consumption'),
+      detail: invoice.consumption,
+      unit: formatCurrencyValue(invoice.unitPrice, currency),
+      amount: formatCurrencyValue(invoice.subtotal, currency),
+      hover: true,
+    },
+    ...lineItems.map<SummaryRow>((item) => {
+      const valueLabel = item.isPercentage
+        ? `${item.value}%`
+        : formatCurrencyValue(item.value, currency);
+      const lineAmount = item.isPercentage
+        ? formatCurrencyValue(
+            Number(invoice.subtotal) * (Number(item.value) / 100),
+            currency
+          )
+        : formatCurrencyValue(item.value, currency);
+      return {
+        id: item.id,
+        sortOrder: item.sortOrder ?? 0,
+        checkbox: 'toggle',
+        label: item.description || item.name,
+        detail: '-',
+        unit: valueLabel,
+        amount: lineAmount,
+        checked: selectedLineItemIds?.includes(item.id) ?? false,
+        disabled: !canEdit || saving,
+        hover: true,
+        onToggle: () => {
+          void handleToggleLineItem(item.id);
+        },
+      };
+    }),
+  ]
+    .slice()
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+
   return (
     <Stack spacing={3}>
       <Grid container spacing={3}>
@@ -129,155 +236,27 @@ export function InvoiceEditForm({ invoice, currency, onUpdated }: Props) {
                   borderColor: 'divider',
                 }}
               >
-                <TableRow>
-                  <TableCell padding="checkbox" sx={{ width: tableColumnWidths.checkbox }} />
-                  <TableCell sx={{ width: tableColumnWidths.label }}>
-                    {t('billing.invoice.account')}
-                  </TableCell>
-                  <TableCell sx={{ width: tableColumnWidths.detail }} />
-                  <TableCell sx={{ width: tableColumnWidths.unit }} />
-                  <TableCell
-                    sx={{ width: tableColumnWidths.amount, whiteSpace: 'nowrap' }}
-                    align="right"
-                  >
-                    {invoice.account ? `${invoice.account.firstName} ${invoice.account.lastName}` : invoice.accountId}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell padding="checkbox" sx={{ width: tableColumnWidths.checkbox }} />
-                  <TableCell sx={{ width: tableColumnWidths.label }}>
-                    {t('billing.invoice.address')}
-                  </TableCell>
-                  <TableCell sx={{ width: tableColumnWidths.detail }} />
-                  <TableCell sx={{ width: tableColumnWidths.unit }} />
-                  <TableCell
-                    sx={{ width: tableColumnWidths.amount, whiteSpace: 'nowrap' }}
-                    align="right"
-                  >
-                    {invoice.account?.address || '-'}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell padding="checkbox" sx={{ width: tableColumnWidths.checkbox }} />
-                  <TableCell sx={{ width: tableColumnWidths.label }}>
-                    {t('billing.invoice.status')}
-                  </TableCell>
-                  <TableCell sx={{ width: tableColumnWidths.detail }} />
-                  <TableCell sx={{ width: tableColumnWidths.unit }} />
-                  <TableCell
-                    sx={{ width: tableColumnWidths.amount, whiteSpace: 'nowrap' }}
-                    align="right"
-                  >
-                    {statusLabel}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell padding="checkbox" sx={{ width: tableColumnWidths.checkbox }} />
-                  <TableCell sx={{ width: tableColumnWidths.label }}>
-                    {t('billing.invoice.meter')}
-                  </TableCell>
-                  <TableCell sx={{ width: tableColumnWidths.detail }} />
-                  <TableCell sx={{ width: tableColumnWidths.unit }} />
-                  <TableCell
-                    sx={{ width: tableColumnWidths.amount, whiteSpace: 'nowrap' }}
-                    align="right"
-                  >
-                    {invoice.meter?.serialNumber || invoice.meterId || '-'}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell padding="checkbox" sx={{ width: tableColumnWidths.checkbox }} />
-                  <TableCell sx={{ width: tableColumnWidths.label }}>
-                    {t('billing.invoice.previousReading')}
-                  </TableCell>
-                  <TableCell sx={{ width: tableColumnWidths.detail }}>
-                    {invoice.periodStart?.slice(0, 10) || ''}
-                  </TableCell>
-                  <TableCell sx={{ width: tableColumnWidths.unit }} />
-                  <TableCell
-                    sx={{ width: tableColumnWidths.amount, whiteSpace: 'nowrap' }}
-                    align="right"
-                  >
-                    {readings[0]?.role === 'start' ? readings[0]?.value : '-'}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell padding="checkbox" sx={{ width: tableColumnWidths.checkbox }} />
-                  <TableCell sx={{ width: tableColumnWidths.label }}>
-                    {t('billing.invoice.currentReading')}
-                  </TableCell>
-                  <TableCell sx={{ width: tableColumnWidths.detail }}>
-                    {invoice.periodEnd?.slice(0, 10) || ''}
-                  </TableCell>
-                  <TableCell sx={{ width: tableColumnWidths.unit }} />
-                  <TableCell
-                    sx={{ width: tableColumnWidths.amount, whiteSpace: 'nowrap' }}
-                    align="right"
-                  >
-                    {readings[0]?.role === 'end'
-                      ? readings[0]?.value
-                      : readings.find((reading: any) => reading.role === 'end')?.value || '-'}
-                  </TableCell>
-                </TableRow>
-                <TableRow hover>
-                  <TableCell padding="checkbox" sx={{ width: tableColumnWidths.checkbox }}>
-                    <Checkbox checked disabled />
-                  </TableCell>
-                  <TableCell sx={{ width: tableColumnWidths.label }}>
-                    {t('billing.invoice.consumption')}
-                  </TableCell>
-                  <TableCell sx={{ width: tableColumnWidths.detail, whiteSpace: 'nowrap' }}>
-                    {invoice.consumption}
-                  </TableCell>
-                  <TableCell sx={{ width: tableColumnWidths.unit, whiteSpace: 'nowrap' }}>
-                    {formatCurrencyValue(invoice.unitPrice, currency)}
-                  </TableCell>
-                  <TableCell
-                    sx={{ width: tableColumnWidths.amount, whiteSpace: 'nowrap' }}
-                    align="right"
-                  >
-                    {formatCurrencyValue(invoice.subtotal, currency)}
-                  </TableCell>
-                </TableRow>
-                {lineItems
-                  .slice()
-                  .sort((a, b) => a.sortOrder - b.sortOrder)
-                  .map((item) => {
-                    const isChecked = selectedLineItemIds?.includes(item.id);
-                    const valueLabel = item.isPercentage
-                      ? `${item.value}%`
-                      : formatCurrencyValue(item.value, currency);
-                    const lineAmount = item.isPercentage
-                      ? formatCurrencyValue(
-                        Number(invoice.subtotal) * (Number(item.value) / 100),
-                        currency
-                      )
-                      : formatCurrencyValue(item.value, currency);
-                    return (
-                      <TableRow key={item.id} hover>
-                        <TableCell padding="checkbox" sx={{ width: tableColumnWidths.checkbox }}>
-                          <Checkbox
-                            checked={!!isChecked}
-                            onChange={() => handleToggleLineItem(item.id)}
-                            disabled={!canEdit || saving}
-                          />
-                        </TableCell>
-                        <TableCell sx={{ width: tableColumnWidths.label }}>
-                          {item.description || item.name}
-                        </TableCell>
-                        <TableCell sx={{ width: tableColumnWidths.detail }}>-</TableCell>
-                        <TableCell sx={{ width: tableColumnWidths.unit, whiteSpace: 'nowrap' }}>
-                          {valueLabel}
-                        </TableCell>
-                        <TableCell
-                          sx={{ width: tableColumnWidths.amount, whiteSpace: 'nowrap' }}
-                          align="right"
-                        >
-                          {lineAmount}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
+                {summaryRows.map((row) => (
+                  <TableRow key={row.id} hover={row.hover}>
+                    <TableCell padding="checkbox" sx={{ width: tableColumnWidths.checkbox }}>
+                      {row.checkbox === 'locked' && <Checkbox checked disabled />}
+                      {row.checkbox === 'toggle' && (
+                        <Checkbox checked={!!row.checked} onChange={row.onToggle} disabled={row.disabled} />
+                      )}
+                    </TableCell>
+                    <TableCell sx={{ width: tableColumnWidths.label }}>{row.label}</TableCell>
+                    <TableCell sx={{ width: tableColumnWidths.detail }}>{row.detail ?? ''}</TableCell>
+                    <TableCell sx={{ width: tableColumnWidths.unit, whiteSpace: 'nowrap' }}>
+                      {row.unit ?? ''}
+                    </TableCell>
+                    <TableCell
+                      sx={{ width: tableColumnWidths.amount, whiteSpace: 'nowrap' }}
+                      align="right"
+                    >
+                      {row.amount ?? ''}
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
               <TableFooter
                 sx={{
@@ -287,8 +266,8 @@ export function InvoiceEditForm({ invoice, currency, onUpdated }: Props) {
               >
                 <TableRow>
                   <TableCell padding="checkbox" sx={{ width: tableColumnWidths.checkbox }} />
-                  <TableCell sx={{ width: tableColumnWidths.label, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-                    <Typography variant="body2" fontWeight={700}>
+                    <TableCell sx={{ width: tableColumnWidths.label, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+                    <Typography variant="h6" fontWeight={700}>
                       {t('billing.invoice.total')}
                     </Typography>
                   </TableCell>
@@ -304,7 +283,7 @@ export function InvoiceEditForm({ invoice, currency, onUpdated }: Props) {
                     }}
                     align="right"
                   >
-                    <Typography variant="body2" fontWeight={700}>
+                    <Typography variant="h6" fontWeight={700}>
                       {formatCurrencyValue(invoice.totalAmount, currency)}
                     </Typography>
                   </TableCell>
