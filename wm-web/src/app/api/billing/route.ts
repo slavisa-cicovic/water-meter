@@ -66,14 +66,16 @@ export const PATCH = withPermission(PERMISSIONS.BILLING_CONFIRM, async (req: Nex
     return NextResponse.json({ success: false, error: 'VALIDATION_FAILED' }, { status: 400 });
   }
 
-  if (body.status !== 'confirmed' && body.status !== 'void') {
+  if (body.status !== 'confirmed' && body.status !== 'void' && body.status !== 'issued') {
     return NextResponse.json({ success: false, error: 'UNSUPPORTED_STATUS' }, { status: 400 });
   }
 
   const result =
     body.status === 'confirmed'
       ? await BillingService.confirmInvoices(body.ids)
-      : await BillingService.voidInvoices(body.ids, guard.payload.accountId);
+      : body.status === 'issued'
+        ? await BillingService.issueInvoices(body.ids)
+        : await BillingService.voidInvoices(body.ids, guard.payload.accountId);
   if (!result.success) {
     return NextResponse.json({ success: false, error: result.error }, { status: 400 });
   }

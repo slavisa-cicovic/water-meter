@@ -66,6 +66,13 @@ export const BillingApi = {
     });
     return res.data;
   },
+  async issueInvoices(ids: string[]) {
+    const res = await axiosInstance.patch(endpoints.billing.list, {
+      ids,
+      status: 'issued',
+    });
+    return res.data;
+  },
   async cancelInvoices(ids: string[]) {
     const res = await axiosInstance.patch(endpoints.billing.list, {
       ids,

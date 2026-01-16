@@ -414,6 +414,7 @@
       "confirm": "Potvrdi",
       "cancelInvoices": "Storniraj fakture",
       "cancel": "Storniraj",
+      "issue": "Potvrdi i izdaj",
       "save": "Sacuvaj izmene",
       "invoiceDetail": "Detalji fakture"
     },
@@ -424,6 +425,10 @@
     "cancel": {
       "title": "Storniraj fakture",
       "body": "Upravo cete stornirati {{count}} faktura. Ova akcija se ne moze opozvati."
+    },
+    "issue": {
+      "title": "Potvrda i izdavanje fakture",
+      "body": "Upravo cete potvrditi i izdati ovu fakturu. Ova akcija se ne moze opozvati."
     },
     "reviewDialog": {
       "title": "Izmena ocitavanja",

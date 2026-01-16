@@ -62,8 +62,10 @@ export function InvoiceEditForm({ invoice, currency, onUpdated }: Props) {
   const { settings: appSettings } = useGetSettings();
   const { lineItems } = useGetInvoiceLineItems();
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [issueOpen, setIssueOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const canEdit = ['draft', 'issued'].includes(invoice.status);
+  const canIssue = invoice.status === 'draft';
   const tableColumnWidths = {
     checkbox: 40,
     label: '35%',
@@ -109,6 +111,12 @@ export function InvoiceEditForm({ invoice, currency, onUpdated }: Props) {
   const handleCancelInvoice = async () => {
     await BillingApi.cancelInvoices([invoice.id]);
     setCancelOpen(false);
+    await onUpdated?.();
+  };
+
+  const handleIssueInvoice = async () => {
+    await BillingApi.issueInvoices([invoice.id]);
+    setIssueOpen(false);
     await onUpdated?.();
   };
 
@@ -350,7 +358,12 @@ export function InvoiceEditForm({ invoice, currency, onUpdated }: Props) {
             </Table>
           </TableContainer>
           {canEdit && (
-            <Stack direction="row" justifyContent="flex-end" sx={{ mt: 3 }}>
+            <Stack direction="row" justifyContent="flex-end" sx={{ mt: 3 }} spacing={1}>
+              {canIssue && (
+                <Button variant="contained" onClick={() => setIssueOpen(true)}>
+                  {t('billing.actions.issue')}
+                </Button>
+              )}
               <Button variant="outlined" color="error" onClick={() => setCancelOpen(true)}>
                 {t('billing.actions.cancel')}
               </Button>
@@ -367,6 +380,17 @@ export function InvoiceEditForm({ invoice, currency, onUpdated }: Props) {
         action={
           <Button variant="contained" color="error" onClick={handleCancelInvoice}>
             {t('billing.actions.cancel')}
+          </Button>
+        }
+      />
+      <ConfirmDialog
+        open={issueOpen}
+        onClose={() => setIssueOpen(false)}
+        title={t('billing.issue.title')}
+        content={t('billing.issue.body')}
+        action={
+          <Button variant="contained" onClick={handleIssueInvoice}>
+            {t('billing.actions.issue')}
           </Button>
         }
       />

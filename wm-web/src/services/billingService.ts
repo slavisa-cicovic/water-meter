@@ -1070,6 +1070,32 @@ export const BillingService = {
     });
   },
 
+  async issueInvoices(ids: string[]) {
+    if (!ids.length) return { success: false, error: 'NO_IDS' };
+    return prisma.$transaction(async (tx) => {
+      const invoices = await BillingRepository.findInvoicesByIds(ids, tx);
+      if (invoices.length !== ids.length) return { success: false, error: 'NOT_FOUND' };
+
+      const flagged = invoices.filter((invoice) =>
+        Array.isArray(invoice.reviewFlags) ? invoice.reviewFlags.length > 0 : Boolean(invoice.reviewFlags)
+      );
+      if (flagged.length) return { success: false, error: 'REVIEW_FLAGS_PRESENT' };
+
+      const notDraft = invoices.filter((invoice) => invoice.status !== 'draft');
+      if (notDraft.length) return { success: false, error: 'INVALID_STATUS' };
+
+      const updated = await BillingRepository.bulkUpdateStatus(
+        {
+          ids,
+          status: 'issued',
+          onlyFromStatus: 'draft',
+        },
+        tx
+      );
+      return { success: true, data: { updated } };
+    });
+  },
+
   async voidInvoices(ids: string[], actorAccountId?: string) {
     if (!ids.length) return { success: false, error: 'NO_IDS' };
     const toNotify: Array<{
