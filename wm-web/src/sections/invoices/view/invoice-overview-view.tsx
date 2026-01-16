@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   Alert,
@@ -26,6 +26,7 @@ import { useGetSettings } from 'src/api/settings';
 import { RouterLink } from 'src/routes/components';
 import { paths } from 'src/routes/paths';
 import { useLocales } from 'src/locales';
+import { useAuthContext } from 'src/auth/hooks';
 import { InvoiceTableFiltersResult } from '../invoice-table-filters-result';
 import { InvoiceTableRow } from '../invoice-table-row';
 import { InvoiceTableSkeleton } from '../invoice-skeleton';
@@ -56,18 +57,42 @@ const defaultFilters: IInvoiceTableFilters = {
   periodEndEnd: defaultCreatedEnd,
 };
 
+const getFiltersStorageKey = (user: Record<string, any>) => {
+  const id = user?.id ?? user?._id ?? user?.email ?? 'anonymous';
+  return `wm.invoice.filters.${id}`;
+};
+
+const readStoredFilters = (storageKey: string) => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    return { ...defaultFilters, ...parsed };
+  } catch (error) {
+    console.warn('Failed to read stored invoice filters', error);
+    return null;
+  }
+};
+
 export function InvoiceOverviewView() {
   const { t } = useLocales();
+  const { user } = useAuthContext();
   const settings = useSettingsContext();
   const { settings: appSettings } = useGetSettings();
   const searchParams = useSearchParams();
   const statusParam = searchParams.get('status') ?? '';
   const reviewParam = searchParams.get('review') ?? '';
-  const [filters, setFilters] = useState<IInvoiceTableFilters>(() => ({
-    ...defaultFilters,
-    status: statusParam,
-    review: reviewParam,
-  }));
+  const storageKey = useMemo(() => (user ? getFiltersStorageKey(user) : null), [user]);
+  const lastStorageKeyRef = useRef<string | null>(null);
+  const [filters, setFilters] = useState<IInvoiceTableFilters>(() => {
+    if (!storageKey) {
+      return { ...defaultFilters, status: statusParam, review: reviewParam };
+    }
+    const stored = readStoredFilters(storageKey);
+    return { ...(stored ?? defaultFilters), status: statusParam, review: reviewParam };
+  });
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const table = useTable({ defaultRowsPerPage: 25, defaultDense: true, defaultOrderBy: 'period', defaultOrder: 'desc' });
@@ -85,6 +110,36 @@ export function InvoiceOverviewView() {
     ],
     [t]
   );
+
+  useEffect(() => {
+    if (!storageKey) return;
+    const stored = readStoredFilters(storageKey);
+    if (!stored) return;
+    setFilters((prev) => {
+      if (isEqual(stored, prev)) return prev;
+      return { ...stored, status: statusParam, review: reviewParam };
+    });
+    table.onResetPage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!storageKey) return;
+    localStorage.setItem(storageKey, JSON.stringify(filters));
+  }, [filters, storageKey]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (user && storageKey) {
+      lastStorageKeyRef.current = storageKey;
+      return;
+    }
+    if (!user && lastStorageKeyRef.current) {
+      localStorage.removeItem(lastStorageKeyRef.current);
+      lastStorageKeyRef.current = null;
+    }
+  }, [storageKey, user]);
 
   useEffect(() => {
     setFilters((prev) => {
