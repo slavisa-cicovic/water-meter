@@ -60,7 +60,7 @@ export const POST = withPermission(PERMISSIONS.BILLING_GENERATE, async (req: Nex
   return NextResponse.json(result.data, { status: 201 });
 });
 
-export const PATCH = withPermission(PERMISSIONS.BILLING_CONFIRM, async (req: NextRequest) => {
+export const PATCH = withPermission(PERMISSIONS.BILLING_CONFIRM, async (req: NextRequest, _ctx, guard) => {
   const body = await req.json();
   if (!body?.ids || !Array.isArray(body.ids)) {
     return NextResponse.json({ success: false, error: 'VALIDATION_FAILED' }, { status: 400 });
@@ -71,7 +71,9 @@ export const PATCH = withPermission(PERMISSIONS.BILLING_CONFIRM, async (req: Nex
   }
 
   const result =
-    body.status === 'confirmed' ? await BillingService.confirmInvoices(body.ids) : await BillingService.voidInvoices(body.ids);
+    body.status === 'confirmed'
+      ? await BillingService.confirmInvoices(body.ids)
+      : await BillingService.voidInvoices(body.ids, guard.payload.accountId);
   if (!result.success) {
     return NextResponse.json({ success: false, error: result.error }, { status: 400 });
   }

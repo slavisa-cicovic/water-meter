@@ -291,7 +291,15 @@ export const BillingRepository = {
   async findInvoicesByIds(ids: string[], client: Prisma.TransactionClient | PrismaClient = prisma) {
     return client.invoice.findMany({
       where: { id: { in: ids } },
-      select: { id: true, status: true, reviewFlags: true },
+      select: {
+        id: true,
+        status: true,
+        reviewFlags: true,
+        accountId: true,
+        periodStart: true,
+        periodEnd: true,
+        account: { select: { locale: true } },
+      },
     });
   },
 

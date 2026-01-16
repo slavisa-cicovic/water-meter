@@ -1,6 +1,7 @@
 import { Prisma, PrismaClient } from '@prisma/client';
 import { AccountRepository } from 'src/repositories/accountRepository';
 import { BillingRepository } from 'src/repositories/billingRepository';
+import { MessageService } from 'src/services/messageService';
 import { MeterRepository } from 'src/repositories/meterRepository';
 import { ReadingRepository } from 'src/repositories/readingRepository';
 import {
@@ -1069,14 +1070,31 @@ export const BillingService = {
     });
   },
 
-  async voidInvoices(ids: string[]) {
+  async voidInvoices(ids: string[], actorAccountId?: string) {
     if (!ids.length) return { success: false, error: 'NO_IDS' };
-    return prisma.$transaction(async (tx) => {
+    const toNotify: Array<{
+      accountId: string;
+      periodStart: Date | null;
+      periodEnd: Date | null;
+      locale?: string | null;
+    }> = [];
+    const result = await prisma.$transaction(async (tx) => {
       const invoices = await BillingRepository.findInvoicesByIds(ids, tx);
       if (invoices.length !== ids.length) return { success: false, error: 'NOT_FOUND' };
 
       const invalid = invoices.filter((invoice) => !['draft', 'issued'].includes(invoice.status));
       if (invalid.length) return { success: false, error: 'INVALID_STATUS' };
+
+      invoices.forEach((invoice) => {
+        if (invoice.status === 'issued' && invoice.accountId) {
+          toNotify.push({
+            accountId: invoice.accountId,
+            periodStart: invoice.periodStart,
+            periodEnd: invoice.periodEnd,
+            locale: invoice.account?.locale ?? null,
+          });
+        }
+      });
 
       const updated = await BillingRepository.bulkUpdateStatus(
         {
@@ -1087,6 +1105,43 @@ export const BillingService = {
       );
       return { success: true, data: { updated } };
     });
+
+    if (result.success && actorAccountId && toNotify.length) {
+      const normalizeLocale = (value?: string | null) => {
+        if (!value) return 'en';
+        if (value === 'sr') return 'sr-Latn';
+        if (value === 'sr-Latn' || value === 'sr-Cyrl' || value === 'en') return value;
+        return 'en';
+      };
+      const formatDate = (value: Date | null) => (value ? value.toISOString().slice(0, 10) : '-');
+      const formatPeriod = (periodStart: Date | null, periodEnd: Date | null) =>
+        `${formatDate(periodStart)} - ${formatDate(periodEnd)}`;
+      const buildMessage = (locale: string, period: string) => {
+        if (locale === 'sr-Cyrl') {
+          return (
+            `\u0412\u0430\u0448 \u0440\u0430\u0447\u0443\u043d \u0437\u0430 \u043f\u0435\u0440\u0438\u043e\u0434 ${period} ` +
+            `\u0458\u0435 \u0441\u0442\u043e\u0440\u043d\u0438\u0440\u0430\u043d. ` +
+            `\u041d\u0438\u0458\u0435 \u043f\u043e\u0442\u0440\u0435\u0431\u043d\u0430 \u043d\u0438\u043a\u0430\u043a\u0432\u0430 ` +
+            `\u0430\u043a\u0446\u0438\u0458\u0430 \u0441\u0430 \u0432\u0430\u0448\u0435 \u0441\u0442\u0440\u0430\u043d\u0435. ` +
+            `\u0418\u0437\u0432\u0438\u045a\u0430\u0432\u0430\u043c\u043e \u0441\u0435 \u0437\u0431\u043e\u0433 ` +
+            `\u043d\u0435\u043f\u0440\u0438\u0458\u0430\u0442\u043d\u043e\u0441\u0442\u0438.`
+          );
+        }
+        if (locale === 'sr-Latn') {
+          return `Vas racun za period ${period} je storniran. Nije potrebna nikakva akcija sa vase strane. Izvinjavamo se zbog neprijatnosti.`;
+        }
+        return `Your invoice for period ${period} has been cancelled. No action is required on your side. We apologize for the inconvenience.`;
+      };
+      await Promise.all(
+        toNotify.map((invoice) => {
+          const period = formatPeriod(invoice.periodStart, invoice.periodEnd);
+          const message = buildMessage(normalizeLocale(invoice.locale), period);
+          return MessageService.createWebMessage(invoice.accountId, actorAccountId, message);
+        })
+      );
+    }
+
+    return result;
   },
 
   async issueConfirmedInvoices() {
