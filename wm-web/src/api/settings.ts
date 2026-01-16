@@ -23,4 +23,10 @@ export const SettingsApi = {
     const res = await axiosInstance.put(endpoints.settings, payload);
     return res.data;
   },
+  async uploadCompanyLogo(file: File) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await axiosInstance.post(endpoints.settingsLogo, formData);
+    return res.data;
+  },
 };

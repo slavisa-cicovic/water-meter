@@ -786,7 +786,8 @@
     "company": {
       "title": "Podaci o preduzecu",
       "subtitle": "Definisite zaglavlje fakture i registracione podatke.",
-      "logo": "Logo URL",
+      "logoUpload": "Otpremi logo",
+      "logoChange": "Promeni logo",
       "name": "Naziv",
       "address": "Adresa",
       "zip": "Postanski broj",
@@ -795,7 +796,9 @@
       "companyNumber": "Maticni broj",
       "taxId": "PIB",
       "errors": {
-        "saveFailed": "Nije moguce sacuvati podatke o preduzecu."
+        "saveFailed": "Nije moguce sacuvati podatke o preduzecu.",
+        "uploadFailed": "Nije moguce otpremiti logo.",
+        "invalidLogoType": "Logo mora biti slika."
       }
     },
     "roles": {

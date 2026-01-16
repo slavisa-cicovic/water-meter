@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   Box,
@@ -34,6 +34,9 @@ export default function CompanyProfileManager() {
   const [companyRegistrationNumber, setCompanyRegistrationNumber] = useState("");
   const [companyCompanyNumber, setCompanyCompanyNumber] = useState("");
   const [companyTaxId, setCompanyTaxId] = useState("");
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!data) return;
@@ -46,6 +49,14 @@ export default function CompanyProfileManager() {
     setCompanyCompanyNumber(data.companyCompanyNumber || "");
     setCompanyTaxId(data.companyTaxId || "");
   }, [data]);
+
+  useEffect(() => {
+    return () => {
+      if (logoPreview) {
+        URL.revokeObjectURL(logoPreview);
+      }
+    };
+  }, [logoPreview]);
 
   const isCompanyDirty = useMemo(() => {
     if (!data) return false;
@@ -118,6 +129,42 @@ export default function CompanyProfileManager() {
     setCompanyError(null);
   }, [data]);
 
+  const handleLogoClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleLogoChange = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      setCompanyError(null);
+      if (!file.type?.startsWith("image/")) {
+        setCompanyError(t("settings.company.errors.invalidLogoType"));
+        event.target.value = "";
+        return;
+      }
+      setLogoUploading(true);
+      const previewUrl = URL.createObjectURL(file);
+      setLogoPreview((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return previewUrl;
+      });
+      try {
+        const response = await SettingsApi.uploadCompanyLogo(file);
+        const url = response?.data?.url;
+        if (typeof url === "string") {
+          setCompanyLogoUrl(url);
+        }
+      } catch (error) {
+        setCompanyError(t("settings.company.errors.uploadFailed"));
+      } finally {
+        setLogoUploading(false);
+        event.target.value = "";
+      }
+    },
+    [t]
+  );
+
   return (
     <Card sx={{ gridColumn: { xs: "1 / -1", sm: "span 2", lg: "span 2" } }}>
       <CardContent sx={{ height: "100%" }}>
@@ -155,18 +202,27 @@ export default function CompanyProfileManager() {
                 >
                   <Box
                     component="img"
-                    src={companyLogoUrl.trim() || "/logo/logo.png"}
+                    src={logoPreview || companyLogoUrl.trim() || "/logo/logo.png"}
                     alt={companyName || "Company logo"}
                     sx={{ width: "100%", height: "100%", objectFit: "contain" }}
                   />
                 </Box>
-                <TextField
-                  label={t("settings.company.logo")}
-                  value={companyLogoUrl}
-                  onChange={(event) => setCompanyLogoUrl(event.target.value)}
-                  size="small"
-                  disabled={!canUpdateSettings}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={handleLogoChange}
                 />
+                <Button
+                  variant="outlined"
+                  onClick={handleLogoClick}
+                  disabled={!canUpdateSettings || logoUploading}
+                >
+                  {companyLogoUrl
+                    ? t("settings.company.logoChange")
+                    : t("settings.company.logoUpload")}
+                </Button>
               </Stack>
 
               <Stack spacing={2}>

@@ -144,5 +144,6 @@ export const endpoints = {
     entry: (id: string) => `/api/ai/faq/${id}`,
   },
   settings: '/api/settings',
+  settingsLogo: '/api/settings/logo',
   translations: '/api/translations',
 };

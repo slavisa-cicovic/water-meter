@@ -786,7 +786,8 @@
     "company": {
       "title": "Company profile",
       "subtitle": "Define invoice header details and registration data.",
-      "logo": "Logo URL",
+      "logoUpload": "Upload logo",
+      "logoChange": "Change logo",
       "name": "Name",
       "address": "Address",
       "zip": "ZIP",
@@ -795,7 +796,9 @@
       "companyNumber": "Company number",
       "taxId": "Tax ID",
       "errors": {
-        "saveFailed": "Unable to save company settings."
+        "saveFailed": "Unable to save company settings.",
+        "uploadFailed": "Unable to upload logo.",
+        "invalidLogoType": "Logo must be an image file."
       }
     },
     "roles": {
