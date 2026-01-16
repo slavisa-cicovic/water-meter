@@ -137,7 +137,6 @@ export default function PaymentScreen() {
   return (
     <ScrollScreen title={t("payment.title")} contentContainerStyle={styles.content}>
       <View style={styles.card}>
-        <Text style={styles.title}>{t("payment.latestInvoice")}</Text>
         {loading ? <Text style={styles.subtle}>{t("payment.loadingInvoice")}</Text> : null}
         {error ? <Text style={styles.error}>{error}</Text> : null}
         {!loading && !error && !invoice ? (
