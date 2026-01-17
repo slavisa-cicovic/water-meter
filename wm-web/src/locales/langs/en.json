@@ -32,7 +32,15 @@
     "inputPlaceholder": "Write a reply...",
     "send": "Send",
     "loadOlder": "Load older",
-    "openInInbox": "Open in inbox"
+    "openInInbox": "Open in inbox",
+    "aiReplies": {
+      "label": "AI replies",
+      "enableTitle": "Enable AI replies?",
+      "disableTitle": "Disable AI replies?",
+      "enableBody": "AI will be allowed to respond to this user.",
+      "disableBody": "AI will no longer respond to this user. Messages will be routed to a human.",
+      "outOfScope": "Marked as out-of-scope by AI."
+    }
   },
   "accounts": {
     "title": "Accounts",
@@ -913,7 +921,8 @@
       "noPreviousReading": "You have {{countLabel}} consumers missing previous readings",
       "noHouseholdSize": "You have {{countLabel}} consumers missing household size",
       "draftInvoices": "You have {{countLabel}} draft invoices awaiting confirmation",
-      "unreadMessages": "You have {{countLabel}} unread messages"
+      "unreadMessages": "You have {{countLabel}} unread messages",
+      "outOfScopeMessages": "You have {{countLabel}} out-of-scope messages"
     }
   },
   "dashboard": {

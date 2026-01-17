@@ -31,6 +31,7 @@ const toMessageItem = (row: {
   readAtWeb: Date | null;
   status: 'received' | 'processing' | 'ai_replied' | 'needs_human' | 'human_replied' | 'closed' | null;
   aiError?: string | null;
+  aiOutOfScope?: boolean;
   senderAccount?: { id: string; firstName: string; lastName: string } | null;
 }) => ({
   id: row.id,
@@ -38,6 +39,7 @@ const toMessageItem = (row: {
   senderType: row.senderType,
   status: row.status ?? null,
   aiError: row.aiError ?? null,
+  aiOutOfScope: row.aiOutOfScope ?? false,
   senderAccountId: row.senderAccountId ?? null,
   senderName: row.senderAccount
     ? `${row.senderAccount.firstName} ${row.senderAccount.lastName}`.trim()
@@ -152,7 +154,7 @@ export const MessageService = {
   async listWebThreads(): Promise<ServiceResult<{
     threads: Array<{
       threadId: string;
-      account: { id: string; firstName: string; lastName: string; email: string; type: string };
+      account: { id: string; firstName: string; lastName: string; email: string; type: string; aiEnabled: boolean };
       lastMessage: { body: string; senderType: 'mobile' | 'web' | 'ai'; createdAt: string } | null;
       lastMessageAt: string | null;
       unreadCount: number;
@@ -168,6 +170,7 @@ export const MessageService = {
         account: {
           ...thread.account,
           type: resolveAccountType(thread.account),
+          aiEnabled: thread.account.aiEnabled ?? true,
         },
         lastMessage: last
           ? { body: last.body, senderType: last.senderType, createdAt: last.createdAt.toISOString() }
@@ -182,7 +185,7 @@ export const MessageService = {
 
   async getWebThread(accountId: string, options?: { limit?: number; before?: string | null }): Promise<ServiceResult<{
     threadId: string | null;
-    account: { id: string; firstName: string; lastName: string; email: string; type: string } | null;
+    account: { id: string; firstName: string; lastName: string; email: string; type: string; aiEnabled: boolean } | null;
     messages: ReturnType<typeof toMessageItem>[];
     unreadCount: number;
   }>> {
@@ -195,7 +198,7 @@ export const MessageService = {
         success: true,
         data: {
           threadId: null,
-          account: { ...account, type: resolveAccountType(account) },
+          account: { ...account, type: resolveAccountType(account), aiEnabled: account.aiEnabled ?? true },
           messages: [],
           unreadCount: 0,
         },
@@ -216,7 +219,7 @@ export const MessageService = {
       success: true,
       data: {
         threadId: thread.id,
-        account: { ...account, type: resolveAccountType(account) },
+        account: { ...account, type: resolveAccountType(account), aiEnabled: account.aiEnabled ?? true },
         messages: messages
           .slice()
           .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())

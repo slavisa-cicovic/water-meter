@@ -37,6 +37,43 @@ const formatFaqEntries = (entries: Array<{ question: string; answer: string }>) 
 const buildFaqContext = (entries: string[]) =>
   entries.length ? `Reference notes:\n- ${entries.join('\n- ')}` : '';
 
+const buildOutputFormatPrompt = () =>
+  [
+    'Output format (must be valid JSON, no extra text):',
+    '{',
+    '"reply": "<short reply to the user in the same language>",',
+    '"shouldEscalate": true|false,',
+    '"outOfScope": true|false,',
+    '"reason": "<one of: out_of_scope, sensitive_data, billing_dispute, legal, account_change, meter_correction, complaint, low_confidence, other>"',
+    '}',
+    'Set outOfScope=true if the user asks about anything not related to the water meter app or municipal water services.',
+    'If shouldEscalate=true, reply must be a short escalation message.',
+  ].join('\n');
+
+const parseAiJson = (raw: string) => {
+  const trimmed = raw.trim();
+  const tryParse = (value: string) => {
+    try {
+      return JSON.parse(value) as {
+        reply?: string;
+        shouldEscalate?: boolean;
+        outOfScope?: boolean;
+        reason?: string;
+      };
+    } catch {
+      return null;
+    }
+  };
+  const direct = tryParse(trimmed);
+  if (direct) return direct;
+  const start = trimmed.indexOf('{');
+  const end = trimmed.lastIndexOf('}');
+  if (start >= 0 && end > start) {
+    return tryParse(trimmed.slice(start, end + 1));
+  }
+  return null;
+};
+
 type ProcessingResult = {
   status: MessageStatus;
   aiMessage?: MessageItem;
@@ -89,6 +126,7 @@ export const AiMessagingService = {
     const faqMessages: ChatMessage[] = faqContext ? [{ role: 'system', content: faqContext }] : [];
     const promptMessages: ChatMessage[] = [
       { role: 'system', content: systemPrompt },
+      { role: 'system', content: buildOutputFormatPrompt() },
       ...faqMessages,
       ...ordered.map((item) => ({
         role: toPromptRole(item.senderType),
@@ -100,10 +138,18 @@ export const AiMessagingService = {
     const provider = getLlmProvider();
     const result = await provider.generateReply({ messages: promptMessages, userId: accountId });
 
-    if (!result.reply || shouldEscalateFromReply(result.reply)) {
-      const aiError = truncateError(result.error || (result.reply ? 'ESCALATED_BY_GUARD' : 'NO_REPLY'));
+    const parsed = result.reply ? parseAiJson(result.reply) : null;
+    const replyText = parsed?.reply?.trim() || (result.reply ? result.reply.trim() : '');
+    const shouldEscalate = Boolean(parsed?.shouldEscalate) || shouldEscalateFromReply(replyText);
+    const outOfScope = Boolean(parsed?.outOfScope);
+
+    if (!replyText || shouldEscalate || outOfScope) {
+      const aiError = truncateError(
+        result.error || parsed?.reason || (replyText ? 'ESCALATED_BY_GUARD' : 'NO_REPLY')
+      );
       await MessageRepository.updateMessageStatus(messageId, 'needs_human');
       await MessageRepository.updateMessageAiError(messageId, aiError);
+      await MessageRepository.updateMessageOutOfScope(messageId, outOfScope);
       console.info('[AiMessaging] escalation', {
         threadId,
         messageId,
@@ -114,7 +160,7 @@ export const AiMessagingService = {
 
     const now = new Date();
     const aiMessageRow = await MessageRepository.createMessage(threadId, {
-      body: result.reply,
+      body: replyText,
       senderType: 'ai',
       status: 'ai_replied',
       readAtWeb: now,
@@ -122,6 +168,7 @@ export const AiMessagingService = {
     });
     await MessageRepository.updateMessageStatus(messageId, 'ai_replied');
     await MessageRepository.updateMessageAiError(messageId, null);
+    await MessageRepository.updateMessageOutOfScope(messageId, false);
     await MessageRepository.touchThread(threadId, now);
     console.info('[AiMessaging] reply sent', { threadId, messageId });
 

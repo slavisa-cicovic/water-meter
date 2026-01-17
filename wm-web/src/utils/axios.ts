@@ -138,6 +138,7 @@ export const endpoints = {
   },
   messages: {
     root: '/api/messages',
+    aiEnabled: '/api/messages/ai-enabled',
   },
   aiFaq: {
     root: '/api/ai/faq',

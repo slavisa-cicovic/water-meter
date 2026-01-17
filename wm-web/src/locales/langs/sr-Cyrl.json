@@ -32,7 +32,15 @@
     "inputPlaceholder": "Напишите одговор...",
     "send": "Пошаљи",
     "loadOlder": "Учитај старије",
-    "openInInbox": "Отвори у inbox-у"
+    "openInInbox": "Отвори у inbox-у",
+    "aiReplies": {
+      "label": "AI одговори",
+      "enableTitle": "Омогућити AI одговоре?",
+      "disableTitle": "Онемогућити AI одговоре?",
+      "enableBody": "AI ће моћи да одговара овом кориснику.",
+      "disableBody": "AI више неће одговарати овом кориснику. Поруке иду на људску подршку.",
+      "outOfScope": "AI је означио поруку као ван домена."
+    }
   },
   "accounts": {
     "title": "Налози",
@@ -913,7 +921,8 @@
       "noPreviousReading": "Имате {{countLabel}} потрошача без претходног очитавања",
       "noHouseholdSize": "Имате {{countLabel}} потрошача без броја чланова",
       "draftInvoices": "Имате {{countLabel}} нацрта фактура за потврду",
-      "unreadMessages": "Имате {{countLabel}} непрочитаних порука"
+      "unreadMessages": "Имате {{countLabel}} непрочитаних порука",
+      "outOfScopeMessages": "Имате {{countLabel}} порука ван домена"
     }
   },
   "dashboard": {

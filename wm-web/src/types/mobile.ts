@@ -152,6 +152,7 @@ export type MobileMessage = {
   senderType: "mobile" | "web" | "ai";
   status: "received" | "processing" | "ai_replied" | "needs_human" | "human_replied" | "closed" | null;
   aiError: string | null;
+  aiOutOfScope: boolean;
   createdAt: string;
 };
 

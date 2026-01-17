@@ -103,6 +103,18 @@ export function NotificationPopover() {
           },
         ]
       : []),
+    ...(summary?.outOfScopeMessages
+      ? [
+          {
+            id: 'out-of-scope-messages',
+            count: summary.outOfScopeMessages,
+            title: t('notifications.items.outOfScopeMessages', {
+              countLabel: formatCount(summary.outOfScopeMessages),
+            }),
+            href: paths.dashboard.messages.root,
+          },
+        ]
+      : []),
   ];
 
   const unreadCount = notificationItems.reduce((total, item) => total + item.count, 0);

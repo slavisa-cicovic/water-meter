@@ -1,0 +1,2 @@
+ALTER TABLE `Message`
+  ADD COLUMN `aiOutOfScope` BOOLEAN NOT NULL DEFAULT false;

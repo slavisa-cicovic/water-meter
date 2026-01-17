@@ -25,11 +25,12 @@ export const NotificationService = {
       return acc;
     }, {} as Record<ReviewFlagKey, number>);
 
-    const [draftInvoices, unreadMessages] = await Promise.all([
+    const [draftInvoices, unreadMessages, outOfScopeMessages] = await Promise.all([
       BillingRepository.countDraftInvoicesWithoutFlags(),
       MessageRepository.countUnreadForWeb(),
+      MessageRepository.countOutOfScopeForWeb(),
     ]);
 
-    return { success: true, data: { reviewFlags, draftInvoices, unreadMessages } };
+    return { success: true, data: { reviewFlags, draftInvoices, unreadMessages, outOfScopeMessages } };
   },
 };

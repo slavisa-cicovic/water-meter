@@ -42,4 +42,8 @@ export const MessagesApi = {
     const res = await axiosInstance.post(endpoints.messages.root, { accountId, body });
     return res.data;
   },
+  async updateAiEnabled(accountId: string, enabled: boolean) {
+    const res = await axiosInstance.put(endpoints.messages.aiEnabled, { accountId, enabled });
+    return res.data;
+  },
 };

@@ -14,6 +14,7 @@ export type MessageItem = {
   senderType: MessageSenderType;
   status: MessageStatus | null;
   aiError: string | null;
+  aiOutOfScope: boolean;
   senderAccountId: string | null;
   senderName: string | null;
   createdAt: string;
@@ -23,7 +24,7 @@ export type MessageItem = {
 
 export type MessageThreadSummary = {
   threadId: string;
-  account: { id: string; firstName: string; lastName: string; email: string; type: string };
+  account: { id: string; firstName: string; lastName: string; email: string; type: string; aiEnabled: boolean };
   lastMessage: { body: string; senderType: MessageSenderType; createdAt: string } | null;
   lastMessageAt: string | null;
   unreadCount: number;
@@ -31,7 +32,7 @@ export type MessageThreadSummary = {
 
 export type MessageThreadDetail = {
   threadId: string | null;
-  account: { id: string; firstName: string; lastName: string; email: string; type: string } | null;
+  account: { id: string; firstName: string; lastName: string; email: string; type: string; aiEnabled: boolean } | null;
   messages: MessageItem[];
   unreadCount: number;
 };

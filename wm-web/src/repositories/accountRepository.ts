@@ -134,6 +134,13 @@ export const AccountRepository = {
     });
   },
 
+  async updateAiEnabled(accountId: string, aiEnabled: boolean) {
+    return prisma.account.update({
+      where: { id: accountId },
+      data: { aiEnabled },
+    });
+  },
+
   async updateConsumerProfile(
     accountId: string,
     data: { householdSize?: number; tariffId?: string | null }

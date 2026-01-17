@@ -6,6 +6,7 @@ export type NotificationsSummary = {
   reviewFlags: Record<string, number>;
   draftInvoices: number;
   unreadMessages?: number;
+  outOfScopeMessages?: number;
   suppressed?: boolean;
 };
 

@@ -143,6 +143,7 @@ model Account {
   address            String
   locale             String?
   passwordHash       String
+  aiEnabled          Boolean             @default(true)
   permissionsVersion Int                 @default(1)
   verificationStatus VerificationStatus   @default(pending)
   createdAt          DateTime            @default(now())
@@ -185,6 +186,7 @@ model Message {
   senderType      MessageSenderType
   status          MessageStatus?
   aiError         String?           @db.Text
+  aiOutOfScope    Boolean           @default(false)
   senderAccountId String?
   readAtMobile    DateTime?
   readAtWeb       DateTime?

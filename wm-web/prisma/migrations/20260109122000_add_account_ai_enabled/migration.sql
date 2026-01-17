@@ -1,0 +1,2 @@
+ALTER TABLE `Account`
+  ADD COLUMN `aiEnabled` BOOLEAN NOT NULL DEFAULT true;
