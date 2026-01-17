@@ -34,8 +34,8 @@ axiosInstance.interceptors.response.use(
         const refreshed = await refreshPromise;
         refreshPromise = null;
 
-        const accessToken = refreshed?.data?.accessToken || refreshed?.accessToken;
-        const user = refreshed?.data?.user || refreshed?.user;
+        const accessToken = refreshed?.accessToken;
+        const user = refreshed?.user;
 
         if (!accessToken) {
           setSession(null);
