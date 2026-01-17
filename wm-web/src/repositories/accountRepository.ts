@@ -88,7 +88,13 @@ export const AccountRepository = {
     });
   },
 
-  async updateVerification(accountId: string, status: VerificationStatus, reviewerId: string, note?: string, reviewedAt?: string) {
+  async updateVerification(
+    accountId: string,
+    status: VerificationStatus,
+    reviewerId: string,
+    note?: string,
+    reviewedAt?: string
+  ) {
     return prisma.account.update({
       where: { id: accountId },
       data: {
@@ -102,7 +108,9 @@ export const AccountRepository = {
           },
         },
       },
-      include: { verificationLogs: { orderBy: { reviewedAt: "desc" }, take: 1 } },
+      include: {
+        verificationLogs: { orderBy: { reviewedAt: "desc" }, take: 1 },
+      },
     });
   },
 
@@ -118,7 +126,10 @@ export const AccountRepository = {
     });
   },
 
-  async updateAccountDetails(accountId: string, data: { firstName: string; lastName: string; address: string }) {
+  async updateAccountDetails(
+    accountId: string,
+    data: { firstName: string; lastName: string; address: string }
+  ) {
     return prisma.account.update({
       where: { id: accountId },
       data: {
@@ -148,7 +159,9 @@ export const AccountRepository = {
     return prisma.consumerProfile.upsert({
       where: { accountId },
       update: {
-        ...(data.householdSize !== undefined ? { householdSize: data.householdSize } : {}),
+        ...(data.householdSize !== undefined
+          ? { householdSize: data.householdSize }
+          : {}),
         ...(data.tariffId !== undefined ? { tariffId: data.tariffId } : {}),
       },
       create: {
@@ -159,10 +172,7 @@ export const AccountRepository = {
     });
   },
 
-  async updateStaffProfile(
-    accountId: string,
-    data: { staffRole: StaffRole }
-  ) {
+  async updateStaffProfile(accountId: string, data: { staffRole: StaffRole }) {
     return prisma.staffProfile.upsert({
       where: { accountId },
       update: {
@@ -179,7 +189,10 @@ export const AccountRepository = {
     await prisma.$transaction([
       prisma.accountRoleLink.deleteMany({ where: { accountId } }),
       prisma.accountRoleLink.create({ data: { accountId, roleId } }),
-      prisma.account.update({ where: { id: accountId }, data: { permissionsVersion: { increment: 1 } } }),
+      prisma.account.update({
+        where: { id: accountId },
+        data: { permissionsVersion: { increment: 1 } },
+      }),
     ]);
   },
 
@@ -227,17 +240,14 @@ export const AccountRepository = {
 
     const orderByClause =
       orderBy === "name"
-        ? [
-            { lastName: order },
-            { firstName: order },
-          ]
+        ? [{ lastName: order }, { firstName: order }]
         : orderBy === "email"
-        ? [{ email: order }]
-        : orderBy === "verificationStatus"
-        ? [{ verificationStatus: order }]
-        : orderBy === "type"
-        ? [{ createdAt: order }]
-        : [{ createdAt: order }];
+          ? [{ email: order }]
+          : orderBy === "verificationStatus"
+            ? [{ verificationStatus: order }]
+            : orderBy === "type"
+              ? [{ createdAt: order }]
+              : [{ createdAt: order }];
 
     const [total, accounts] = await Promise.all([
       prisma.account.count({ where }),
@@ -256,5 +266,21 @@ export const AccountRepository = {
     ]);
 
     return { total, accounts };
+  },
+
+  async listOutOfScopeAccountIds(accountIds: string[], since: Date) {
+    if (!accountIds.length) return new Set<string>();
+    const rows = await prisma.message.findMany({
+      where: {
+        senderType: "mobile",
+        status: { in: ["needs_human", "human_replied"] },
+        aiOutOfScope: true,
+        createdAt: { gte: since },
+        thread: { accountId: { in: accountIds } },
+      },
+      select: { thread: { select: { accountId: true } } },
+      distinct: ["threadId"],
+    });
+    return new Set(rows.map(row => row.thread.accountId));
   },
 };

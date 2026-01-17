@@ -103,6 +103,7 @@ type BaseAccountRow = {
   verificationStatus: VerificationStatus;
   createdAt?: string;
   updatedAt?: string;
+  outOfScopeRecent?: boolean;
   data: {
     firstName: string;
     lastName: string;

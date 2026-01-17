@@ -57,12 +57,13 @@ const getAccountRoleSlugs = (acct: AccountWithProfiles) => {
   return [];
 };
 
-const mapAccountToRow = (acct: AccountWithProfiles): AccountRow => {
+const mapAccountToRow = (acct: AccountWithProfiles, outOfScopeRecent = false): AccountRow => {
   const base = {
     id: acct.id,
     verificationStatus: acct.verificationStatus as VerificationStatus,
     createdAt: acct.createdAt?.toISOString?.() ?? acct.createdAt,
     updatedAt: acct.updatedAt?.toISOString?.() ?? acct.updatedAt,
+    outOfScopeRecent,
     data: {
       firstName: acct.firstName,
       lastName: acct.lastName,
@@ -319,7 +320,15 @@ export const AccountsService = {
       type: undefined,
       allowedRoles,
     });
-    return { accounts: accounts.map(mapAccountToRow), total };
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const outOfScopeIds = await AccountRepository.listOutOfScopeAccountIds(
+      accounts.map((acct) => acct.id),
+      since
+    );
+    return {
+      accounts: accounts.map((acct) => mapAccountToRow(acct, outOfScopeIds.has(acct.id))),
+      total,
+    };
   },
 
   async findById(id: string, viewerAccountId?: string): Promise<AccountRow | null> {

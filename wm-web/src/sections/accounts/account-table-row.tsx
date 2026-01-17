@@ -34,7 +34,8 @@ export default function AccountTableRow({
         data,
         verificationStatus,
         type,
-        createdAt
+        createdAt,
+        outOfScopeRecent
     } = row;
 
     const initials = `${data.firstName?.[0] ?? ''}${data.lastName?.[0] ?? ''}`.toUpperCase();
@@ -59,9 +60,16 @@ export default function AccountTableRow({
             </TableCell>
             <TableCell>
                 <Stack spacing={0.5}>
-                    <Typography variant="subtitle2">
-                        {data.firstName} {row.data.lastName}
-                    </Typography>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography variant="subtitle2">
+                            {data.firstName} {row.data.lastName}
+                        </Typography>
+                        {outOfScopeRecent ? (
+                            <Tooltip title={t('accounts.flags.outOfScopeHelp')}>
+                                <Chip size="small" color="warning" label={t('accounts.flags.outOfScope')} />
+                            </Tooltip>
+                        ) : null}
+                    </Stack>
                     <Typography variant="caption" color="text.secondary">
                         {data.address}
                     </Typography>

@@ -58,6 +58,10 @@
       "created": "Kreiran",
       "actions": "Akcije"
     },
+    "flags": {
+      "outOfScope": "Van domena",
+      "outOfScopeHelp": "Korisnik je slao poruke koje su van domena aplikacije."
+    },
     "filters": {
       "all": "Svi",
       "searchPlaceholder": "Pretraga",

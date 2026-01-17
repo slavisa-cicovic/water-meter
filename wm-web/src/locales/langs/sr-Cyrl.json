@@ -58,6 +58,10 @@
       "created": "Креиран",
       "actions": "Акције"
     },
+    "flags": {
+      "outOfScope": "Ван домена",
+      "outOfScopeHelp": "Корисник је слао поруке које су ван домена апликације."
+    },
     "filters": {
       "all": "Сви",
       "searchPlaceholder": "Претрага",

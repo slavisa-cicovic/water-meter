@@ -58,6 +58,10 @@
       "created": "Created",
       "actions": "Actions"
     },
+    "flags": {
+      "outOfScope": "Out of scope",
+      "outOfScopeHelp": "User sent messages outside the app domain."
+    },
     "filters": {
       "all": "All",
       "searchPlaceholder": "Search",
