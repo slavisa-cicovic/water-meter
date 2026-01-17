@@ -1,39 +1,21 @@
 import { yupResolver } from '@hookform/resolvers/yup';
-import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as Yup from 'yup';
 import { format } from 'date-fns';
 // @mui
-import LoadingButton from '@mui/lab/LoadingButton';
-import Card from '@mui/material/Card';
-import CardHeader from '@mui/material/CardHeader';
-import CardContent from '@mui/material/CardContent';
 import Grid from '@mui/material/Grid2';
-import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableRow from '@mui/material/TableRow';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Button from '@mui/material/Button';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import MenuItem from '@mui/material/MenuItem';
-import IconButton from '@mui/material/IconButton';
-import EditIcon from '@mui/icons-material/Edit';
-import Tooltip from '@mui/material/Tooltip';
 // routes
 import { useRouter } from 'src/routes/hooks';
 import { paths } from 'src/routes/paths';
-import { formatReadingValue, roundReadingValue } from 'src/utils/reading-format';
 import { formatCurrencyValue } from 'src/utils/format-currency';
 // locales
 import { useLocales } from 'src/locales';
@@ -49,15 +31,17 @@ import { useGetSettings } from 'src/api/settings';
 import { useAuthContext } from 'src/auth/hooks';
 import { PERMISSIONS } from 'src/constants/permissions';
 // components
-import FormProvider, { RHFTextField } from 'src/components/hook-form';
-import { ChartWrapper, useChart } from 'src/components/chart';
+import FormProvider from 'src/components/hook-form';
+import { useChart } from 'src/components/chart';
 // types
 import { AccountRow } from 'src/types/accounts';
 import { Invoice, InvoiceStatus } from 'src/types/billings';
 import { Reading } from 'src/types/readings';
 import { ReadingsReviewDialog } from 'src/components/billing/readings-review-dialog';
 import { ConfirmDialog } from 'src/components/custom-dialog';
-import Iconify from 'src/components/iconify';
+import AccountDetailsSection from './account-details-section';
+import AccountBillingHistory from './account-billing-history';
+import AccountReadingHistory from './account-reading-history';
 
 // ----------------------------------------------------------------------
 
@@ -345,13 +329,6 @@ export default function AccountEditForm({ currentAccount }: Props) {
   const hasChartData = readingsChartData.data.length > 0;
   const readingsFilteredEmpty = !readingsLoading && filteredReadings.length === 0;
 
-  const renderReadingsContent = (content: ReactNode) => {
-    if (readingsLoading) return <Typography variant="body2">{t('accounts.readings.loading')}</Typography>;
-    if (readingsEmpty || readingsFilteredEmpty)
-      return <Typography variant="body2">{t('accounts.readings.empty')}</Typography>;
-    return content;
-  };
-
   const billingBuckets = useMemo(() => {
     const parsedFrom = new Date(billingFrom);
     const baseYear = Number.isNaN(parsedFrom.getTime()) ? new Date().getFullYear() : parsedFrom.getFullYear();
@@ -422,10 +399,6 @@ export default function AccountEditForm({ currentAccount }: Props) {
     [billingChartData.data, t]
   );
 
-  const renderBillingContent = (content: ReactNode) => {
-    if (invoicesLoading) return <Typography variant="body2">{t('accounts.billing.loading')}</Typography>;
-    return content;
-  };
 
   const getInvoiceStatusColor = (status: InvoiceStatus) => {
     if (status === 'paid') return 'success';
@@ -563,316 +536,68 @@ export default function AccountEditForm({ currentAccount }: Props) {
     }
   };
 
-  const renderDetails = (
-    <Grid size={{ xs: 12, md: 5 }}>
-      <Card>
-        {!mdUp && <CardHeader title={t('accounts.detail.editTitle')} />}
-        <CardContent>
-          <Stack spacing={2}>
-            <Typography variant="subtitle2">{t('accounts.detail.sectionTitle')}</Typography>
-            <RHFTextField name="firstName" label={t('accounts.fields.firstName')} disabled={!canEdit} />
-            <RHFTextField name="lastName" label={t('accounts.fields.lastName')} disabled={!canEdit} />
-            <RHFTextField name="address" label={t('accounts.fields.address')} disabled={!canEdit} />
-            <RHFTextField name="email" label={t('accounts.fields.email')} disabled />
-            {canAssignRole && (
-              <RHFTextField
-                name="roleSlug"
-                label={t('accounts.fields.role')}
-                select
-                disabled={!canEdit || rolesLoading}
-              >
-                {roleOptions.map((role) => (
-                  <MenuItem key={role.value} value={role.value}>
-                    {role.label}
-                  </MenuItem>
-                ))}
-              </RHFTextField>
-            )}
-            {isConsumer && (
-              <RHFTextField
-                name="tariffId"
-                label={t('accounts.fields.tariff')}
-                select
-                disabled={!canEdit || tariffsLoading}
-                helperText={
-                  tariffsLoading
-                    ? t('accounts.fields.tariffLoading')
-                    : t('accounts.fields.tariffHelper')
-                }
-              >
-                <MenuItem value="">{t('accounts.fields.tariffDefault')}</MenuItem>
-                {tariffs.map((tariff) => (
-                  <MenuItem key={tariff.id} value={tariff.id}>
-                    {tariff.name}
-                    {tariff.groupCode ? ` (${tariff.groupCode})` : ''}
-                    {tariff.status === 'inactive' ? ` - ${t('accounts.fields.tariffInactive')}` : ''}
-                  </MenuItem>
-                ))}
-              </RHFTextField>
-            )}
-            <Stack direction="row" justifyContent="flex-end">
-              <LoadingButton type="submit" variant="contained" size="large" loading={isSubmitting} disabled={!canEdit}>
-                {t('accounts.actions.saveChanges')}
-              </LoadingButton>
-            </Stack>
-          </Stack>
-        </CardContent>
-      </Card>
-    </Grid>
-  );
-
-  const renderBillingHistory = isConsumer && (
-    <Grid size={{ xs: 12, md: 8 }}>
-      <Card>
-        <CardHeader title={t('accounts.billing.title')} />
-        <CardContent>
-          <Stack direction="row" spacing={2} mb={2}>
-            <TextField
-              label={t('accounts.billing.filters.createdFrom')}
-              type="date"
-              value={billingFrom}
-              onChange={(event) => setBillingFrom(event.target.value)}
-              slotProps={{ inputLabel: { shrink: true } }}
-              sx={{ minWidth: 160 }}
-            />
-            <TextField
-              label={t('accounts.billing.filters.createdTo')}
-              type="date"
-              value={billingTo}
-              onChange={(event) => setBillingTo(event.target.value)}
-              slotProps={{ inputLabel: { shrink: true } }}
-              sx={{ minWidth: 160 }}
-            />
-            <TextField
-              select
-              label={t('accounts.billing.filters.status')}
-              value={billingStatus}
-              onChange={(event) => setBillingStatus(event.target.value as '' | InvoiceStatus)}
-              sx={{ minWidth: 200 }}
-            >
-              <MenuItem value="">{t('accounts.filters.all')}</MenuItem>
-              {billingStatusOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Stack>
-
-          <Tabs value={billingTab} onChange={(_, value) => setBillingTab(value)} sx={{ mb: 2 }}>
-            <Tab value="chart" label={t('accounts.common.chart')} />
-            <Tab value="table" label={t('accounts.common.table')} />
-          </Tabs>
-
-          {billingTab === 'chart' &&
-            renderBillingContent(
-              <ChartWrapper type="bar" series={billingChartSeries} options={billingChartOptions} height={320} />
-            )}
-
-          {billingTab === 'table' &&
-            renderBillingContent(
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ width: 180 }}>{t('accounts.billing.table.month')}</TableCell>
-                      <TableCell sx={{ width: 120 }}>{t('accounts.billing.table.total')}</TableCell>
-                      <TableCell sx={{ width: 120 }}>{t('accounts.billing.table.status')}</TableCell>
-                      <TableCell sx={{ width: 80 }} align="right">
-                        {t('accounts.billing.table.reviewFlags')}
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {billingBuckets.map((bucket) => {
-                      const status = bucket.latestInvoice?.status;
-                      const flags = Array.from(bucket.flags.values());
-                      const invoice = bucket.latestInvoice;
-                      const canEdit =
-                        invoice?.status === 'draft' && bucket.key === currentMonthKey;
-                      const canConfirm =
-                        invoice?.status === 'draft' &&
-                        bucket.key === currentMonthKey &&
-                        (!invoice.reviewFlags || invoice.reviewFlags.length === 0);
-                      return (
-                        <TableRow key={bucket.key}>
-                          <TableCell sx={{ width: 180 }}>{bucket.label}</TableCell>
-                          <TableCell sx={{ width: 120 }}>
-                            {formatCurrencyValue(bucket.total, appSettings?.currency)}
-                          </TableCell>
-                          <TableCell sx={{ width: 120 }}>
-                            {status ? (
-                              <Chip
-                                size="small"
-                                label={t(`accounts.billing.status.${status}`)}
-                                color={getInvoiceStatusColor(status)}
-                                clickable={canConfirm}
-                                onClick={canConfirm && invoice ? () => handleOpenConfirmDialog(invoice) : undefined}
-                              />
-                            ) : (
-                              ''
-                            )}
-                          </TableCell>
-                          <TableCell sx={{ width: 80 }} align="right">
-                            <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
-                              {flags.length > 0 && (
-                                <Tooltip
-                                  title={
-                                    <Stack spacing={0.5} sx={{ py: 0.5 }}>
-                                      {flags.map((flag) => (
-                                        <Typography key={flag} variant="caption" display="block">
-                                          {flag}
-                                        </Typography>
-                                      ))}
-                                    </Stack>
-                                  }
-                                >
-                                  <IconButton
-                                    size="small"
-                                    color="warning"
-                                    onClick={canEdit && invoice ? () => handleOpenReviewDialog(invoice) : undefined}
-                                    aria-label={t('accounts.billing.table.reviewFlags')}
-                                  >
-                                    <Iconify icon="eva:alert-circle-fill" width={16} />
-                                  </IconButton>
-                                </Tooltip>
-                              )}
-                            </Stack>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            )}
-        </CardContent>
-      </Card>
-    </Grid>
-  );
-
-  const renderReadingsHistory = isStaffField && (
-    <Grid size={{ xs: 12, md: 8 }}>
-      <Card>
-        <CardHeader title={t('accounts.readings.title')} />
-        <CardContent>
-          <Stack direction="row" spacing={2} mb={2}>
-            <TextField
-              label={t('accounts.readings.filters.from')}
-              type="date"
-              value={readingFrom}
-              onChange={(event) => setReadingFrom(event.target.value)}
-              slotProps={{ inputLabel: { shrink: true } }}
-              sx={{ minWidth: 160 }}
-            />
-            <TextField
-              label={t('accounts.readings.filters.to')}
-              type="date"
-              value={readingTo}
-              onChange={(event) => setReadingTo(event.target.value)}
-              slotProps={{ inputLabel: { shrink: true } }}
-              sx={{ minWidth: 160 }}
-            />
-            <TextField
-              select
-              label={t('accounts.readings.filters.meter')}
-              value={selectedMeterId}
-              onChange={(event) => setSelectedMeterId(event.target.value)}
-              sx={{ minWidth: 220 }}
-              disabled={!meterOptions.length}
-            >
-              {meterOptions.map((meter) => (
-                <MenuItem key={meter.id} value={meter.id}>
-                  {formatMeterLabel(meter)}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Stack>
-
-          <Tabs value={readingsTab} onChange={(_, value) => setReadingsTab(value)} sx={{ mb: 2 }}>
-            <Tab value="chart" label={t('accounts.common.chart')} />
-            <Tab value="table" label={t('accounts.common.table')} />
-          </Tabs>
-
-          {readingsTab === 'chart' &&
-            renderReadingsContent(
-              hasChartData ? (
-                <ChartWrapper type="bar" series={chartSeries} options={chartOptions} height={360} />
-              ) : (
-                <Typography variant="body2">{t('accounts.readings.chart.emptyHint')}</Typography>
-              )
-            )}
-
-          {readingsTab === 'table' &&
-            renderReadingsContent(
-              <TableContainer>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ width: 140 }}>{t('accounts.readings.table.date')}</TableCell>
-                      <TableCell sx={{ width: 140 }}>{t('accounts.readings.table.method')}</TableCell>
-                      <TableCell sx={{ width: 120 }}>{t('accounts.readings.table.value')}</TableCell>
-                      <TableCell sx={{ width: 140 }}>{t('accounts.readings.table.consumption')}</TableCell>
-                      <TableCell sx={{ width: 200 }}>{t('accounts.readings.table.edited')}</TableCell>
-                      <TableCell>{t('accounts.readings.table.meter')}</TableCell>
-                      <TableCell sx={{ width: 80 }}>{t('accounts.readings.table.actions')}</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {filteredReadings.map((reading, index) => {
-                      const prev = filteredReadings[index + 1];
-                      const consumption = prev ? roundReadingValue(reading.value - prev.value) : undefined;
-                      const latestEdit = reading.edits && reading.edits.length ? reading.edits[0] : undefined;
-                      const editorName = latestEdit
-                        ? [latestEdit.editorFirstName, latestEdit.editorLastName].filter(Boolean).join(' ')
-                        : '';
-
-                      return (
-                        <TableRow key={reading.id}>
-                          <TableCell sx={{ width: 140 }}>{reading.readAt?.slice(0, 10)}</TableCell>
-                          <TableCell sx={{ width: 140 }}>{reading.method}</TableCell>
-                          <TableCell sx={{ width: 120 }}>{formatReadingValue(reading.value)}</TableCell>
-                          <TableCell sx={{ width: 140 }}>
-                            {formatReadingValue(consumption)}
-                          </TableCell>
-                          <TableCell sx={{ width: 200 }}>
-                            {latestEdit ? (
-                              <Tooltip title={latestEdit.reason || t('accounts.readings.table.noReason')}>
-                                <span>{editorName || '-'}</span>
-                              </Tooltip>
-                            ) : (
-                              '-'
-                            )}
-                          </TableCell>
-                          <TableCell>{reading.meter?.serialNumber || reading.meterId}</TableCell>
-                          <TableCell sx={{ width: 80 }}>
-                            <IconButton
-                              size="small"
-                              disabled={!canEditReadings}
-                              onClick={() => handleOpenEditDialog(reading, index)}
-                              aria-label={t('accounts.readings.actions.edit')}
-                            >
-                              <EditIcon fontSize="small" />
-                            </IconButton>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            )}
-        </CardContent>
-      </Card>
-    </Grid>
-  );
-
   return (
     <FormProvider methods={methods} onSubmit={handleSubmit(onSubmit)}>
       <Grid container spacing={3} columns={{ xs: 12, md: 13 }}>
-        {renderDetails}
-        {renderBillingHistory}
-        {renderReadingsHistory}
+        <AccountDetailsSection
+          mdUp={mdUp}
+          t={t}
+          canEdit={canEdit}
+          canAssignRole={canAssignRole}
+          rolesLoading={rolesLoading}
+          roleOptions={roleOptions}
+          isConsumer={isConsumer}
+          tariffs={tariffs}
+          tariffsLoading={tariffsLoading}
+          isSubmitting={isSubmitting}
+        />
+        {isConsumer && (
+          <AccountBillingHistory
+            t={t}
+            billingFrom={billingFrom}
+            billingTo={billingTo}
+            billingStatus={billingStatus}
+            billingStatusOptions={billingStatusOptions}
+            billingTab={billingTab}
+            billingChartSeries={billingChartSeries}
+            billingChartOptions={billingChartOptions}
+            billingBuckets={billingBuckets}
+            currentMonthKey={currentMonthKey}
+            currency={appSettings?.currency}
+            invoicesLoading={invoicesLoading}
+            onBillingFromChange={setBillingFrom}
+            onBillingToChange={setBillingTo}
+            onBillingStatusChange={setBillingStatus}
+            onBillingTabChange={setBillingTab}
+            onOpenReviewDialog={handleOpenReviewDialog}
+            onOpenConfirmDialog={handleOpenConfirmDialog}
+            getInvoiceStatusColor={getInvoiceStatusColor}
+          />
+        )}
+        {isStaffField && (
+          <AccountReadingHistory
+            t={t}
+            readingFrom={readingFrom}
+            readingTo={readingTo}
+            readingsTab={readingsTab}
+            selectedMeterId={selectedMeterId}
+            meterOptions={meterOptions}
+            filteredReadings={filteredReadings}
+            chartSeries={chartSeries}
+            chartOptions={chartOptions}
+            readingsLoading={readingsLoading}
+            readingsEmpty={readingsEmpty}
+            readingsFilteredEmpty={readingsFilteredEmpty}
+            hasChartData={hasChartData}
+            canEditReadings={canEditReadings}
+            onReadingFromChange={setReadingFrom}
+            onReadingToChange={setReadingTo}
+            onSelectedMeterChange={setSelectedMeterId}
+            onReadingsTabChange={setReadingsTab}
+            onOpenEditDialog={handleOpenEditDialog}
+            formatMeterLabel={formatMeterLabel}
+          />
+        )}
       </Grid>
 
       <Dialog open={editDialogOpen} onClose={handleCloseEditDialog} fullWidth maxWidth="sm">
