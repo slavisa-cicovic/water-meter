@@ -369,7 +369,7 @@ export const BillingRepository = {
           { periodEnd: null, createdAt: { gte: monthStart, lte: monthEnd } },
         ],
       },
-      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+      orderBy: [{ createdAt: 'desc' }],
     });
   },
 
