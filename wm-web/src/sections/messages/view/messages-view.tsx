@@ -8,6 +8,8 @@ import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import Stack from '@mui/material/Stack';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -25,6 +27,7 @@ export default function MessagesView() {
   const { threads, threadsLoading } = useGetMessageThreads();
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'consumer' | 'staff_field'>('consumer');
 
   const accountIdParam = searchParams.get('accountId');
 
@@ -52,6 +55,7 @@ export default function MessagesView() {
         accountId: thread.account.id,
         title: `${thread.account.firstName} ${thread.account.lastName}`.trim(),
         email: thread.account.email,
+        type: thread.account.type,
         subtitle: thread.lastMessage?.body ?? '',
         unread: thread.unreadCount,
       })),
@@ -67,6 +71,15 @@ export default function MessagesView() {
     });
   }, [query, threadList]);
 
+  const activeThreads = useMemo(() => {
+    if (activeTab === 'consumer') {
+      return filteredThreads.filter((thread) => thread.type === 'consumer');
+    }
+    return filteredThreads.filter((thread) =>
+      ['staff_field', 'staff_backoffice', 'unknown'].includes(thread.type)
+    );
+  }, [activeTab, filteredThreads]);
+
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
       <Stack spacing={3}>
@@ -75,6 +88,10 @@ export default function MessagesView() {
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
           <Card sx={{ minWidth: 280, flex: { md: '0 0 320px' } }}>
             <Stack spacing={1.5} sx={{ p: 2, pb: 1 }}>
+              <Tabs value={activeTab} onChange={(_, next) => setActiveTab(next)} variant="fullWidth">
+                <Tab value="consumer" label="Consumers" />
+                <Tab value="staff_field" label="Staff (Field)" />
+              </Tabs>
               <TextField
                 size="small"
                 placeholder={t('messages.searchPlaceholder') ?? 'Search...'}
@@ -87,11 +104,11 @@ export default function MessagesView() {
                 {threadsLoading && (
                   <ListItemText primary="Loading..." sx={{ px: 2, py: 2 }} />
                 )}
-                {!threadsLoading && filteredThreads.length === 0 && (
+                {!threadsLoading && activeThreads.length === 0 && (
                   <ListItemText primary={t('messages.empty')} sx={{ px: 2, py: 2 }} />
                 )}
                 {!threadsLoading &&
-                  filteredThreads.map((thread) => (
+                  activeThreads.map((thread) => (
                     <ListItemButton
                       key={thread.id}
                       selected={thread.accountId === selectedAccountId}

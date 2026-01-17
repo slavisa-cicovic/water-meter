@@ -10,6 +10,17 @@ const WEB_DEFAULT_LIMIT = 30;
 
 const normalizeBody = (body?: string | null) => (typeof body === 'string' ? body.trim() : '');
 
+const resolveAccountType = (account?: {
+  consumerProfile?: { id: number } | null;
+  staffProfile?: { staffRole: 'field' | 'backoffice' } | null;
+} | null) => {
+  if (!account) return 'unknown';
+  if (account.consumerProfile) return 'consumer';
+  if (account.staffProfile?.staffRole === 'field') return 'staff_field';
+  if (account.staffProfile?.staffRole === 'backoffice') return 'staff_backoffice';
+  return 'unknown';
+};
+
 const toMessageItem = (row: {
   id: string;
   body: string;
@@ -141,7 +152,7 @@ export const MessageService = {
   async listWebThreads(): Promise<ServiceResult<{
     threads: Array<{
       threadId: string;
-      account: { id: string; firstName: string; lastName: string; email: string };
+      account: { id: string; firstName: string; lastName: string; email: string; type: string };
       lastMessage: { body: string; senderType: 'mobile' | 'web' | 'ai'; createdAt: string } | null;
       lastMessageAt: string | null;
       unreadCount: number;
@@ -154,7 +165,10 @@ export const MessageService = {
       const last = thread.messages[0] ?? null;
       return {
         threadId: thread.id,
-        account: thread.account,
+        account: {
+          ...thread.account,
+          type: resolveAccountType(thread.account),
+        },
         lastMessage: last
           ? { body: last.body, senderType: last.senderType, createdAt: last.createdAt.toISOString() }
           : null,
@@ -168,7 +182,7 @@ export const MessageService = {
 
   async getWebThread(accountId: string, options?: { limit?: number; before?: string | null }): Promise<ServiceResult<{
     threadId: string | null;
-    account: { id: string; firstName: string; lastName: string; email: string } | null;
+    account: { id: string; firstName: string; lastName: string; email: string; type: string } | null;
     messages: ReturnType<typeof toMessageItem>[];
     unreadCount: number;
   }>> {
@@ -177,7 +191,15 @@ export const MessageService = {
 
     const thread = await MessageRepository.findThreadByAccount(accountId);
     if (!thread) {
-      return { success: true, data: { threadId: null, account, messages: [], unreadCount: 0 } };
+      return {
+        success: true,
+        data: {
+          threadId: null,
+          account: { ...account, type: resolveAccountType(account) },
+          messages: [],
+          unreadCount: 0,
+        },
+      };
     }
 
     const limit = options?.limit ?? WEB_DEFAULT_LIMIT;
@@ -194,7 +216,7 @@ export const MessageService = {
       success: true,
       data: {
         threadId: thread.id,
-        account,
+        account: { ...account, type: resolveAccountType(account) },
         messages: messages
           .slice()
           .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())

@@ -5,6 +5,8 @@ type AccountSummary = {
   firstName: string;
   lastName: string;
   email: string;
+  consumerProfile?: { id: number } | null;
+  staffProfile?: { staffRole: 'field' | 'backoffice' } | null;
 };
 
 type MessageRow = {
@@ -25,6 +27,8 @@ const selectAccount = {
   firstName: true,
   lastName: true,
   email: true,
+  consumerProfile: { select: { id: true } },
+  staffProfile: { select: { staffRole: true } },
 };
 
 export const MessageRepository = {

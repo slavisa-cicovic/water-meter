@@ -23,7 +23,7 @@ export type MessageItem = {
 
 export type MessageThreadSummary = {
   threadId: string;
-  account: { id: string; firstName: string; lastName: string; email: string };
+  account: { id: string; firstName: string; lastName: string; email: string; type: string };
   lastMessage: { body: string; senderType: MessageSenderType; createdAt: string } | null;
   lastMessageAt: string | null;
   unreadCount: number;
@@ -31,7 +31,7 @@ export type MessageThreadSummary = {
 
 export type MessageThreadDetail = {
   threadId: string | null;
-  account: { id: string; firstName: string; lastName: string; email: string } | null;
+  account: { id: string; firstName: string; lastName: string; email: string; type: string } | null;
   messages: MessageItem[];
   unreadCount: number;
 };
