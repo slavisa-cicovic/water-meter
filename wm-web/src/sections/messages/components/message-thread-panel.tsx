@@ -121,57 +121,59 @@ export default function MessageThreadPanel({ accountId, compact }: Props) {
           )}
 
           {!threadLoading && !threadError && mergedMessages.length > 0 && (
-            <Stack spacing={1.5} divider={<Divider flexItem />}>
-              {mergedMessages.map((item) => {
-                const isWeb = item.senderType === 'web';
-                const isAi = item.senderType === 'ai';
-                return (
-                  <Box
-                    key={item.id}
-                    sx={{
-                      alignSelf: isWeb ? 'flex-end' : 'flex-start',
-                      width: isWeb ? '80%' : '100%',
-                      bgcolor: isWeb ? 'primary.light' : isAi ? 'info.light' : 'grey.100',
-                      color: 'text.primary',
-                      borderRadius: 2,
-                      px: 1.5,
-                      py: 1,
-                    }}
-                  >
-                    {isWeb && item.senderName ? (
+            <Box sx={{ maxHeight: compact ? 280 : 520, overflowY: 'auto', pr: 1 }}>
+              <Stack spacing={1.5} divider={<Divider flexItem />}>
+                {mergedMessages.map((item) => {
+                  const isWeb = item.senderType === 'web';
+                  const isAi = item.senderType === 'ai';
+                  return (
+                    <Box
+                      key={item.id}
+                      sx={{
+                        alignSelf: isWeb ? 'flex-end' : 'flex-start',
+                        width: isWeb ? '80%' : '100%',
+                        bgcolor: isWeb ? 'primary.light' : isAi ? 'info.light' : 'grey.100',
+                        color: 'text.primary',
+                        borderRadius: 2,
+                        px: 1.5,
+                        py: 1,
+                      }}
+                    >
+                      {isWeb && item.senderName ? (
+                        <Typography variant="caption" color="text.secondary">
+                          {item.senderName}
+                        </Typography>
+                      ) : null}
+                      {isAi ? (
+                        <Typography variant="caption" color="text.secondary">
+                          AI Assistant
+                        </Typography>
+                      ) : null}
+                      <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                        {item.body}
+                      </Typography>
+                      {item.senderType === 'mobile' && item.status === 'needs_human' && item.aiError ? (
+                        <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                          AI error: {item.aiError}
+                        </Typography>
+                      ) : null}
                       <Typography variant="caption" color="text.secondary">
-                        {item.senderName}
+                        {new Date(item.createdAt).toLocaleString()}
                       </Typography>
-                    ) : null}
-                    {isAi ? (
-                      <Typography variant="caption" color="text.secondary">
-                        AI Assistant
-                      </Typography>
-                    ) : null}
-                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                      {item.body}
-                    </Typography>
-                    {item.senderType === 'mobile' && item.status === 'needs_human' && item.aiError ? (
-                      <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
-                        AI error: {item.aiError}
-                      </Typography>
-                    ) : null}
-                    <Typography variant="caption" color="text.secondary">
-                      {new Date(item.createdAt).toLocaleString()}
-                    </Typography>
-                  </Box>
-                );
-              })}
-              <Button
-                size="small"
-                variant="text"
-                onClick={handleLoadOlder}
-                disabled={loadingOlder}
-                sx={{ alignSelf: 'center' }}
-              >
-                {t('messages.loadOlder')}
-              </Button>
-            </Stack>
+                    </Box>
+                  );
+                })}
+                <Button
+                  size="small"
+                  variant="text"
+                  onClick={handleLoadOlder}
+                  disabled={loadingOlder}
+                  sx={{ alignSelf: 'center' }}
+                >
+                  {t('messages.loadOlder')}
+                </Button>
+              </Stack>
+            </Box>
           )}
 
           <Divider flexItem />

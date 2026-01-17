@@ -8,6 +8,7 @@ import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useLocales } from 'src/locales';
@@ -23,6 +24,7 @@ export default function MessagesView() {
   const settings = useSettingsContext();
   const { threads, threadsLoading } = useGetMessageThreads();
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
 
   const accountIdParam = searchParams.get('accountId');
 
@@ -49,11 +51,21 @@ export default function MessagesView() {
         id: thread.threadId,
         accountId: thread.account.id,
         title: `${thread.account.firstName} ${thread.account.lastName}`.trim(),
+        email: thread.account.email,
         subtitle: thread.lastMessage?.body ?? '',
         unread: thread.unreadCount,
       })),
     [threads]
   );
+
+  const filteredThreads = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return threadList;
+    return threadList.filter((thread) => {
+      const haystack = `${thread.title} ${thread.email ?? ''} ${thread.subtitle}`.toLowerCase();
+      return haystack.includes(needle);
+    });
+  }, [query, threadList]);
 
   return (
     <Container maxWidth={settings.themeStretch ? false : 'lg'}>
@@ -62,54 +74,64 @@ export default function MessagesView() {
 
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
           <Card sx={{ minWidth: 280, flex: { md: '0 0 320px' } }}>
-            <List dense>
-              {threadsLoading && (
-                <ListItemText primary="Loading..." sx={{ px: 2, py: 2 }} />
-              )}
-              {!threadsLoading && threadList.length === 0 && (
-                <ListItemText primary={t('messages.empty')} sx={{ px: 2, py: 2 }} />
-              )}
-              {!threadsLoading &&
-                threadList.map((thread) => (
-                  <ListItemButton
-                    key={thread.id}
-                    selected={thread.accountId === selectedAccountId}
-                    onClick={() => handleSelect(thread.accountId)}
-                  >
-                    <ListItemText
-                      primary={
-                        <Stack direction="row" spacing={1} alignItems="center">
-                          <Typography variant="subtitle2">{thread.title}</Typography>
-                          {thread.unread ? (
-                            <Box
-                              sx={{
-                                minWidth: 20,
-                                px: 0.75,
-                                py: 0.25,
-                                borderRadius: 999,
-                                bgcolor: 'error.main',
-                                color: 'common.white',
-                                fontSize: 11,
-                                fontWeight: 700,
-                                textAlign: 'center',
-                              }}
-                            >
-                              {thread.unread}
-                            </Box>
-                          ) : null}
-                        </Stack>
-                      }
-                      secondary={
-                        thread.subtitle ? (
-                          <Typography variant="body2" color="text.secondary" noWrap>
-                            {thread.subtitle}
-                          </Typography>
-                        ) : null
-                      }
-                    />
-                  </ListItemButton>
-                ))}
-            </List>
+            <Stack spacing={1.5} sx={{ p: 2, pb: 1 }}>
+              <TextField
+                size="small"
+                placeholder={t('messages.searchPlaceholder') ?? 'Search...'}
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            </Stack>
+            <Box sx={{ maxHeight: { xs: 320, md: 520 }, overflowY: 'auto', pr: 1 }}>
+              <List dense>
+                {threadsLoading && (
+                  <ListItemText primary="Loading..." sx={{ px: 2, py: 2 }} />
+                )}
+                {!threadsLoading && filteredThreads.length === 0 && (
+                  <ListItemText primary={t('messages.empty')} sx={{ px: 2, py: 2 }} />
+                )}
+                {!threadsLoading &&
+                  filteredThreads.map((thread) => (
+                    <ListItemButton
+                      key={thread.id}
+                      selected={thread.accountId === selectedAccountId}
+                      onClick={() => handleSelect(thread.accountId)}
+                    >
+                      <ListItemText
+                        primary={
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Typography variant="subtitle2">{thread.title}</Typography>
+                            {thread.unread ? (
+                              <Box
+                                sx={{
+                                  minWidth: 20,
+                                  px: 0.75,
+                                  py: 0.25,
+                                  borderRadius: 999,
+                                  bgcolor: 'error.main',
+                                  color: 'common.white',
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                  textAlign: 'center',
+                                }}
+                              >
+                                {thread.unread}
+                              </Box>
+                            ) : null}
+                          </Stack>
+                        }
+                        secondary={
+                          thread.subtitle ? (
+                            <Typography variant="body2" color="text.secondary" noWrap>
+                              {thread.subtitle}
+                            </Typography>
+                          ) : null
+                        }
+                      />
+                    </ListItemButton>
+                  ))}
+              </List>
+            </Box>
           </Card>
 
           <Box sx={{ flex: 1 }}>
